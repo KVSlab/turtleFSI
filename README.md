@@ -9,7 +9,7 @@ python3 monolithic.py -problem=TF_fsi
 
 python3 monolithic.py -problem=TF_cfd
 
-python3 monolithic.py -problem=TF_csm -solidvar=csm
+python3 monolithic.py -problem=TF_csm -extravar=biharmonic -solidvar=csm
 
-
+python3 monolithic.py -problem=turtle_demo -extravar=biharmonic -theta=0.5025 -solver=reusejac
 
