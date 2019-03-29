@@ -101,13 +101,7 @@ else:
 t = 0
 
 # Solvers
-#up_sol.parameters["same_nonzero_pattern"] = True
-#up_sol.parameters["reuse_factorization"] = True
-#up_sol = KrylovSolver('gmres', 'jacobi')
-#up_sol_i.parameters["relative_tolerance"] = 1e-6
-#up_sol_i.parameters["absolute_tolerance"] = 1e-6
-#up_sol_i.parameters["monitor_convergence"] = True
-up_sol = LUSolver()  # LUSolver('mumps') % Not working in Fenics 2018
+up_sol = LUSolver('mumps')
 
 
 vars().update(fluid_setup(**vars()))
@@ -119,7 +113,7 @@ vars().update(create_bcs(**vars()))
 
 atol = 1e-7
 rtol = 1e-7
-max_it = 20
+max_it = 50
 lmbda = 1.0
 
 dvp_res = Function(DVP)
