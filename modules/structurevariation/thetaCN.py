@@ -1,28 +1,27 @@
 from dolfin import Constant, inner, inv, dot, grad, det, Identity,\
     solve, lhs, rhs, assemble, DirichletBC, div, sym, tr, norm, \
     MPI
-#from semi_implicit import *
 
 
-def F_(U):
-    return Identity(len(U)) + grad(U)
+def F_(d):
+    return Identity(len(d)) + grad(d)
 
 
-def J_(U):
-    return det(F_(U))
+def J_(d):
+    return det(F_(d))
 
 
-def E(U):
-    return 0.5*(F_(U).T*F_(U) - Identity(len(U)))
+def E(d):
+    return 0.5*(F_(d).T*F_(d) - Identity(len(d)))
 
 
-def S(U, lamda_s, mu_s):
-    I = Identity(len(U))
-    return 2*mu_s*E(U) + lamda_s*tr(E(U))*I
+def S(d, lamda_s, mu_s):
+    I = Identity(len(d))
+    return 2*mu_s*E(d) + lamda_s*tr(E(d))*I
 
 
-def Piola1(U, lamda_s, mu_s):
-    return F_(U)*S(U, lamda_s, mu_s)
+def Piola1(d, lamda_s, mu_s):
+    return F_(d)*S(d, lamda_s, mu_s)
 
 
 def A_E(d, v,  lamda_s, mu_s, rho_s, delta, psi, phi, dx_s):
@@ -30,8 +29,7 @@ def A_E(d, v,  lamda_s, mu_s, rho_s, delta, psi, phi, dx_s):
         - delta*rho_s*inner(v, phi)*dx_s
 
 
-def structure_setup(d_, v_, p_, phi, psi, gamma, dS, mu_f, n,
-                    dx_s, dx_f, mu_s, rho_s, lamda_s, k, mesh_file, theta, **semimp_namespace):
+def structure_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lamda_s, k, theta, **monolithic):
 
     delta = 1E10
     F_solid_linear = rho_s/k*inner(v_["n"] - v_["n-1"], psi)*dx_s \

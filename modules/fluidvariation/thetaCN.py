@@ -1,13 +1,14 @@
 from dolfin import Constant, inner, inv, dot, grad, det, Identity,\
     solve, lhs, rhs, assemble, DirichletBC, div, sym, nabla_grad
 
+"""Implementation of the ALE-mapped fluid variational form."""
 
-def F_(U):
-    return Identity(len(U)) + grad(U)
+def F_(d):
+    return Identity(len(d)) + grad(d)
 
 
-def J_(U):
-    return det(F_(U))
+def J_(d):
+    return det(F_(d))
 
 
 def sigma_f_u(u, d, mu_f):
@@ -23,7 +24,7 @@ def A_E(J, v, d, rho_f, mu_f, psi, dx_f):
         + inner(J*sigma_f_u(v, d, mu_f)*inv(F_(d)).T, grad(psi))*dx_f
 
 
-def fluid_setup(v_, p_, d_, n, psi, gamma, dx_f, ds, mu_f, rho_f, k, dt, v_deg, theta, **semimp_namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **monolithic):
 
     J_theta = theta*J_(d_["n"]) + (1 - theta)*J_(d_["n-1"])
     F_fluid_linear = rho_f/k*inner(J_theta*(v_["n"] - v_["n-1"]), psi)*dx_f
