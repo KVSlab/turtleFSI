@@ -98,8 +98,9 @@ else:
     phi, psi, gamma = TestFunctions(DVP)
 
 
-lu_solver = LUSolver()  # LUSolver('mumps') % Not working in Fenics 2018
-
+# Solvers
+#lu_solver = LUSolver()
+up_sol = LUSolver('mumps')
 
 vars().update(fluid_setup(**vars()))
 vars().update(structure_setup(**vars()))
@@ -110,7 +111,7 @@ vars().update(create_bcs(**vars()))
 
 atol = 1e-7
 rtol = 1e-7
-max_it = 20
+max_it = 50
 lmbda = 1.0
 
 dvp_res = Function(DVP)

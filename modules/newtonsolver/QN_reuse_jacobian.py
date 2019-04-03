@@ -30,7 +30,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs,
 
     while rel_res > rtol and residual > atol and Iter < max_it:
 
-        if Iter % 5 == 0 or (last_rel_res < rel_res and last_residual < residual):
+        if Iter % 5 == 0 or (last_rel_res < rel_res and last_residual < residual and last_residual < rel_res):
             print("assembling new JAC")
             A = assemble(J_nonlinear, tensor=A,
                          keep_diagonal=True)
