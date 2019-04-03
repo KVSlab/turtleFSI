@@ -1,7 +1,7 @@
 from dolfin import *
 
 def solver_setup(F_fluid_linear, F_fluid_nonlinear,
-                 F_solid_linear, F_solid_nonlinear, DVP, dvp_, up_sol, **monolithic):
+                 F_solid_linear, F_solid_nonlinear, DVP, dvp_, lu_solver, **monolithic):
     F_lin = F_fluid_linear + F_solid_linear
     F_nonlin = F_solid_nonlinear + F_fluid_nonlinear
     F = F_lin + F_nonlin
@@ -14,13 +14,13 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear,
     A = Matrix(A_pre)
     b = None
 
-    up_sol.parameters['reuse_factorization'] = True
+    lu_solver.parameters['reuse_factorization'] = True
 
-    return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol)
+    return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, lu_solver=lu_solver)
 
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, **monolithic):
+                 dvp_, lu_solver, dvp_res, rtol, atol, max_it, T, t, **monolithic):
     Iter = 0
     residual = 10**8
     rel_res = 10**8
@@ -38,7 +38,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs,
             A.axpy(1.0, A_pre, True)
             A.ident_zeros()
             [bc.apply(A) for bc in bcs]
-            up_sol.set_operator(A)
+            lu_solver.set_operator(A)
 
         b = assemble(-F, tensor=b)
 
@@ -46,7 +46,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs,
         last_residual = residual
 
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
-        up_sol.solve(dvp_res.vector(), b)
+        lu_solver.solve(dvp_res.vector(), b)
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
         rel_res = norm(dvp_res, 'l2')

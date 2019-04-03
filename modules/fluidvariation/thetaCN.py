@@ -25,8 +25,8 @@ def A_E(J, v, d, rho_f, mu_f, psi, dx_f):
 
 def fluid_setup(v_, p_, d_, n, psi, gamma, dx_f, ds, mu_f, rho_f, k, dt, v_deg, theta, **semimp_namespace):
 
-	J_theta = theta*J_(d_["n"]) + (1 - theta)*J_(d_["n-1"])
-	F_fluid_linear = rho_f/k*inner(J_theta*(v_["n"] - v_["n-1"]), psi)*dx_f
+    J_theta = theta*J_(d_["n"]) + (1 - theta)*J_(d_["n-1"])
+    F_fluid_linear = rho_f/k*inner(J_theta*(v_["n"] - v_["n-1"]), psi)*dx_f
 
     F_fluid_nonlinear = Constant(theta)*rho_f*inner(J_(d_["n"])*grad(v_["n"])*inv(F_(d_["n"]))*v_["n"], psi)*dx_f
     F_fluid_nonlinear += inner(J_(d_["n"])*sigma_f_p(p_["n"], d_["n"])*inv(F_(d_["n"])).T, grad(psi))*dx_f

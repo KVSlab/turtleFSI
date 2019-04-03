@@ -100,7 +100,7 @@ else:
 
 # Solvers
 #lu_solver = LUSolver()
-up_sol = LUSolver('mumps')
+lu_solver = LUSolver('mumps')
 
 vars().update(fluid_setup(**vars()))
 vars().update(structure_setup(**vars()))

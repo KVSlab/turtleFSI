@@ -115,8 +115,8 @@ def initiate(P, v_deg, d_deg, p_deg, dt, theta, dvp_, args, Det_list, refi, mesh
     extype = args.extype
     bitype = args.bitype
     solver = args.solver
+    print(args)
     if args.extravar == "alfa":
-	print(args)
         path = "results/TF_fsi/%(exva)s_%(extype)s_%(solver)s/dt-%(dt)g_theta-%(theta)g/%(mesh_name)s_refine_%(refi)d_v_deg_%(v_deg)s_d_deg_%(d_deg)s_p_deg_%(p_deg)s" % vars()
     # if args.extravar == "biharmonic" or args.extravar == "laplace" or args.extravar == "elastic":
     else:

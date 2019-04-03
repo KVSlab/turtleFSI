@@ -33,10 +33,10 @@ def A_E(d, v,  lamda_s, mu_s, rho_s, delta, psi, phi, dx_s):
 def structure_setup(d_, v_, p_, phi, psi, gamma, dS, mu_f, n,
                     dx_s, dx_f, mu_s, rho_s, lamda_s, k, mesh_file, theta, **semimp_namespace):
 
-	delta = 1E10
-	F_solid_linear = rho_s/k*inner(v_["n"] - v_["n-1"], psi)*dx_s \
-	               + delta*(1/k)*inner(d_["n"] - d_["n-1"], phi)*dx_s \
-   				   - delta*inner(Constant(theta)*v_["n"] + Constant(1 - theta)*v_["n-1"], phi)*dx_s
+    delta = 1E10
+    F_solid_linear = rho_s/k*inner(v_["n"] - v_["n-1"], psi)*dx_s \
+                   + delta*(1/k)*inner(d_["n"] - d_["n-1"], phi)*dx_s \
+                   - delta*inner(Constant(theta)*v_["n"] + Constant(1 - theta)*v_["n-1"], phi)*dx_s
 
     F_solid_nonlinear = inner(Piola1(Constant(theta)*d_["n"] + Constant(1 - theta)*d_["n-1"], lamda_s, mu_s), grad(psi))*dx_s
 

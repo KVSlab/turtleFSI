@@ -22,7 +22,7 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear,
 
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, DVP,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, **monolithic):
+                 dvp_, lu_solver, dvp_res, rtol, atol, max_it, T, t, **monolithic):
     Iter = 0
     residual = 1
     rel_res = residual
@@ -37,7 +37,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, DVP,
         b = assemble(-F, tensor=b)
         [bc.apply(A, b, dvp_["n"].vector()) for bc in bcs]
 
-        up_sol.solve(A, dvp_res.vector(), b)
+        lu_solver.solve(A, dvp_res.vector(), b)
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
