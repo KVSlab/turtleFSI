@@ -6,11 +6,10 @@
 # PURPOSE.
 
 from dolfin import *
-import sys
-import numpy as np
+from time import time as epoch_time
 
 # Get user input
-from modules.Utils.argpar import *
+from modules.utils.argpar import *
 args = parse()
 
 # Mesh refiner
@@ -32,10 +31,10 @@ vars().update(update_variables)
 
 # Import variationalform and solver
 print(args.solver)
-exec("from modules.Fluidvariation.%s import *" % args.fluidvar)
-exec("from modules.Structurevariation.%s import *" % args.solidvar)
-exec("from modules.Extrapolation.%s import *" % args.extravar)
-exec("from modules.Newtonsolver.%s import *" % args.solver)
+exec("from modules.fluidvariation.%s import *" % args.fluidvar)
+exec("from modules.structurevariation.%s import *" % args.solidvar)
+exec("from modules.extrapolation.%s import *" % args.extravar)
+exec("from modules.newtonsolver.%s import *" % args.solver)
 # Silence FEniCS output
 # set_log_active(False)
 
@@ -98,16 +97,8 @@ else:
 
     phi, psi, gamma = TestFunctions(DVP)
 
-t = 0
 
-# Solvers
-#up_sol.parameters["same_nonzero_pattern"] = True
-#up_sol.parameters["reuse_factorization"] = True
-#up_sol = KrylovSolver('gmres', 'jacobi')
-#up_sol_i.parameters["relative_tolerance"] = 1e-6
-#up_sol_i.parameters["absolute_tolerance"] = 1e-6
-#up_sol_i.parameters["monitor_convergence"] = True
-up_sol = LUSolver()  # LUSolver('mumps') % Not working in Fenics 2018
+lu_solver = LUSolver()  # LUSolver('mumps') % Not working in Fenics 2018
 
 
 vars().update(fluid_setup(**vars()))
@@ -126,8 +117,9 @@ dvp_res = Function(DVP)
 chi = TrialFunction(DVP)
 
 counter = 0
-# tic()
-while t <= T + 1e-8:
+t = 0
+t_start = epoch_time()
+while t <= T:
     t += dt
 
     if MPI.rank(mpi_comm_world()) == 0:
@@ -142,7 +134,5 @@ while t <= T + 1e-8:
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
     vars().update(after_solve(**vars()))
     counter += 1
-
-#simtime = toc()
-#print("Total Simulation time %g" % simtime)
+simtime = epoch_time() - t_start
 post_process(**vars())
