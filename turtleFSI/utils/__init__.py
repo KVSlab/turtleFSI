@@ -1,1 +1,1 @@
-from argpar import *
+from .argpar import *
