@@ -9,9 +9,33 @@
 
 from dolfin import *
 import numpy as np
+from os import path
+from turtleFSI.problems import *
 
-def get_mesh_domain_and_boundaries(pars, **namespace):
-    """ Function for reading or defining the mesh, domains, and boundaries of
+
+def set_problem_parameters(args, default_variables, **namespace):
+    """TODO"""
+    # Overwrite default values
+    default_variables.update(dict(
+                       T = 100,          # End time [s]
+                       dt = 0.001,       # Time step [s]
+                       rho_f = 1.0E3,    # Fluid density [kg/m3]
+                       mu_f = 1.0,       # Fluid dynamic viscosity [Pa.s]
+                       rho_s = 1.0E3,    # Solid density [kg/m3]
+                       mu_s = 5.0E4,     # Solid shear modulus or 2nd Lame Coef. [Pa]
+                       lambda_s = 4.5E5, # Solid Young's modulus [Pa]
+                       nu_s = 0.45,      # Solid Poisson ratio [-]
+                       dx_f_id = 1,      # ID of marker in the fluid domain
+                       dx_s_id = 2))     # ID of marker in the solid domain
+
+    # Overwrite problem specific values with those from commandline
+    default_variables.update(args.__dict__)
+
+    return default_variables
+
+
+def get_mesh_domain_and_boundaries(args, **namespace):
+    """Function for reading or defining the mesh, domains, and boundaries of
     the problem of interest.
 
     Args:
@@ -22,8 +46,8 @@ def get_mesh_domain_and_boundaries(pars, **namespace):
         domains ():
         boundaries ():
     """
-    rel_path = path.dirname(path.abspath(__file__))
-    mesh_folder = path.join(rel_path, "mesh", "turtle_demo")
+    #rel_path = path.dirname(path.abspath(__file__))
+    mesh_folder = path.join("mesh", "turtle_demo")
 
     # In this example, the mesh and markers are stored in the 3 following files
     mesh_file_path = path.join(mesh_folder, "turtle_mesh.xdmf")  # mesh geometry
@@ -34,54 +58,29 @@ def get_mesh_domain_and_boundaries(pars, **namespace):
     # In this example, we import a mesh stored in a .xdmf file, but other formats
     # are supported such as .xml files.
     mesh_file = Mesh()
-    xdmf = XDMFFile(mesh_file_loc)
+    xdmf = XDMFFile(MPI.comm_world, mesh_file_path)
     xdmf.read(mesh_file)
 
     # "domains" collects the element markers of the fluid domain (marked as 1)
     # and the solid domain (marked as 2).
     domains = MeshFunction("size_t", mesh_file, mesh_file.geometry().dim())
-    xdmf = XDMFFile(domains_marker_loc)
+    xdmf = XDMFFile(MPI.comm_world, domains_marker_path)
     xdmf.read(domains)
 
     # "boundaries" collects the boundary markers that are used to apply the
     # Dirichlet boundary conditions on both the fluid and solid domains.
     boundaries = MeshFunction("size_t", mesh_file, mesh_file.geometry().dim() - 1)
-    xdmf = XDMFFile(boundaries_marker_loc)
+    xdmf = XDMFFile(MPI.comm_world, boundaries_marker_path)
     xdmf.read(boundaries)
 
     return mesh_file, domains, boundaries
-
-
-def set_problem_parameters(command_line_arguments):
-    """ TODO"""
-    common = {"v_deg": 2,       # Velocity degree
-              "p_deg": 1,       # Pressure degree
-              "d_deg": 2,       # Deformation degree
-              "T": 100,         # End time [s]
-              "dt": 0.001,      # Time step [s]
-              "rho_f": 1.0E3,   # Fluid density [kg/m3]
-              "mu_f": 1.0,      # Fluid dynamic viscosity [Pa.s]
-              "rho_s": 1.0E3,   # Solid density [kg/m3]
-              "mu_s": 5.0E4,    # Solid shear modulus or 2nd Lame Coef. [Pa]
-              "lamda_s": 4.5E5, # Solid Young's modulus [Pa]
-              "nu_s": 0.45,     # Solid Poisson ratio [-]
-              "step": 1,        # Save every step
-              "checkpoint": 1,  # Checkpoint every step
-              "dx_f_id": 1,     # ID of marker in the fluid domain
-              "dx_s_id": 2}     # ID of marker in the solid domain
-    common.update(command_line_arguments)
-
-    # TODO: Update something else
-    vars().update(common)
-    lamda_s = nu_s*2*mu_s/(1 - 2.*nu_s)  # Solid Young's modulus [Pa]
-
 
 
 class Inlet(Expression):
     def __init__(self, **kwargs):
         self.t = 0.0
         self.t_ramp = 1.0  # time to linearly ramp-up the inlet velocity
-        self.Um = 0.8  # Max. velocity inlet [m/s]
+        self.Um = 0.8      # Max. velocity inlet [m/s]
 
     def update(self, t):
         self.t = t
