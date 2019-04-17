@@ -33,9 +33,7 @@ a mesh and a control dictionary called NS_parameters. See
 problems/NSfracStep/__init__.py for all possible parameters.
 """
 
-import importlib
 from dolfin import *
-
 from turtleFSI.utils import *
 
 # Get user input
@@ -43,42 +41,39 @@ args = parse()
 
 # Import the problem
 # TODO: Look for problem file locally as well
-importlib.import_module('problems.{}'.format(args.problems))
+exec("from turtleFSI.problems.{} import *".format(args.problem))
 
-# Get problem specific parameters and mesh
-vars().update(set_problem_parameters(args))
+# Get problem specific parameters
+vars().update(set_problem_parameters(**vars()))
+
+# Update variables from commandline
+for key, item in list(args.__dict__.items()):
+    if item is None:
+        args.__dict__.pop(key)
+vars().update(args.__dict__)
+
+# Get mesh information
 mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 
-# Refine mesh
-if args.refiner != None:
-    for i in range(args.refiner):
-        mesh = refine(mesh)
-
-# Import variationalform and solver
-importlib.import_module('turtleFSI.modules.{}'.format(args.fluidvar))
-importlib.import_module('turtleFSI.modules.{}'.format(args.solidvar))
-importlib.import_module('turtleFSI.modules.{}'.format(args.extravar))
-importlib.import_module('turtleFSI.modules.{}'.format(args.solver))
-
 # Control FEniCS output
-set_log_level(args.loglevel)
+set_log_level(loglevel)
 
 # Finite Elements
-de = VectorElement('CG', mesh_file.ufl_cell(), d_deg)
-ve = VectorElement('CG', mesh_file.ufl_cell(), v_deg)
-pe = FiniteElement('CG', mesh_file.ufl_cell(), p_deg)
+de = VectorElement('CG', mesh.ufl_cell(), d_deg)
+ve = VectorElement('CG', mesh.ufl_cell(), v_deg)
+pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
 
 # Define coefficients
 k = Constant(dt)
-n = FacetNormal(mesh_file)
+n = FacetNormal(mesh)
 
 # Define function space
-if "biharmonic" in args.extravar:
+if "biharmonic" in extrapolation:
     Elem = MixedElement([de, ve, pe])
 else:
     Elem = MixedElement([de, ve, pe, de])
 
-DVP = FunctionSpace(mesh_file, Elem)
+DVP = FunctionSpace(mesh, Elem)
 
 # Create functions
 dvp_ = {}
@@ -95,10 +90,10 @@ for time in ["n", "n-1", "n-2", "n-3"]:
     d_[time] = dvp_list[0]
     v_[time] = dvp_list[1]
     p_[time] = dvp_list[2]
-    if "biharmonic" in args.extravar:
+    if "biharmonic" in extrapolation:
         w_[time] = w
 
-if "biharmonic" in args.extravar:
+if "biharmonic" in extrapolation:
     phi, psi, gamma = TestFunctions(DVP)
 else:
     phi, psi, gamma, beta = TestFunctions(DVP)
@@ -112,16 +107,20 @@ dx = Measure("dx", subdomain_data=domains)
 dx_f = dx(dx_f_id, subdomain_data=domains)
 dx_s = dx(dx_s_id, subdomain_data=domains)
 
-# Solver
-# TODO: Add solver type in args
-up_sol = LUSolver('mumps')
+# Define solver
+# Adding the Matrix() argument is a FEniCS 2018.1.0 hack
+up_sol = LUSolver(Matrix(), linear_solver)
 
 # Get variation formulations
+exec("from turtleFSI.modules.{} import fluid_setup".format(args.fluidvar))
 vars().update(fluid_setup(**vars()))
+exec("from turtleFSI.modules.{} import solid_setup".format(args.solidvar))
 vars().update(structure_setup(**vars()))
+exec("from turtleFSI.modules.{} import extrapolate_setup".format(args.extravar))
 vars().update(extrapolate_setup(**vars()))
 
 # Set up Newton solver
+exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(args.solver))
 vars().update(solver_setup(**vars()))
 
 # Any pre-processing before the simulation
@@ -147,7 +146,7 @@ while t <= T + dt / 10:
     pre_solve(**vars())
 
     # Solve
-    vars().update(newtonsolver(**vars()))
+    newtonsolver(**vars())
 
     # Update vectors
     times = ["n-2", "n-1", "n"]
@@ -156,7 +155,7 @@ while t <= T + dt / 10:
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
 
     # After solve hook
-    vars().update(after_solve(**vars()))
+    after_solve(**vars())
     counter += 1
 
 simtime = toc()
