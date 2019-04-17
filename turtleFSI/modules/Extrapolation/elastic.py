@@ -1,31 +1,21 @@
+from turtleFSI.modules.common import *
 from dolfin import *
 import numpy as np
 
-
-def extrapolate_setup(F_fluid_linear, extype, mesh_file, d_, phi, gamma, dx_f, P, **semimp_namespace):
-    def F_(U):
-        return Identity(len(U)) + grad(U)
-
-    def J_(U):
-        return det(F_(U))
-
-    def eps(U):
-        return 0.5*(grad(U)*inv(F_(U)) + inv(F_(U)).T*grad(U).T)
-
-    def STVK(U, alfa_mu, alfa_lam):
-        return alfa_lam*tr(eps(U))*Identity(len(U)) + 2.0*alfa_mu*eps(U)
-        # return F_(U)*(alfa_lam*tr(eps(U))*Identity(len(U)) + 2.0*alfa_mu*eps(U))
-
-    Bar_area = AutoSubDomain(lambda x: (0.19 <= x[1] <= 0.21) and 0.24 <= x[0] <= 0.6)  # only the "flag" or "bar"
+# FIXME: This only works in serial and is not general
+def extrapolate_setup(F_fluid_linear, extype, mesh, d_, phi, gamma, dx_f, P,
+                      **semimp_namespace):
+    #Bar_area = AutoSubDomain(lambda x: (0.19 <= x[1] <= 0.21) and 0.24 <= x[0] <= 0.6)  # only the "flag" or "bar"
     #domains = CellFunction("size_t", mesh)
     # domains.set_all(1)
     # Bar_area.mark(domains, 2) #Overwrites structure domain
-    cell_domains = CellFunction('size_t', mesh_file, 0)
-    solid = '&&'.join(['((0.24 - TOL < x[0]) && (x[0] < 0.6 + TOL))',
-                       '((0.19 - TOL < x[1]) && (x[1] < 0.21 + TOL))'])
-    solid = CompiledSubDomain(solid, TOL=DOLFIN_EPS)
+    #cell_domains = CellFunction('size_t', mesh_file, 0)
+    #solid = '&&'.join(['((0.24 - TOL < x[0]) && (x[0] < 0.6 + TOL))',
+    #                   '((0.19 - TOL < x[1]) && (x[1] < 0.21 + TOL))'])
+    #solid = CompiledSubDomain(solid, TOL=DOLFIN_EPS)
+
     # Int so that solid point distance to fluid is 0
-    distance_f = VertexFunction('double', mesh_file, 1)
+    distance_f = VertexFunction('double', mesh, 1)
     solid.mark(distance_f, 0)
 
     # Fluid vertices
@@ -49,11 +39,6 @@ def extrapolate_setup(F_fluid_linear, extype, mesh_file, d_, phi, gamma, dx_f, P
     data = distance_f.get_local()[transform]
     alfa.vector().set_local(data)
     alfa.vector().apply('insert')
-    hmin = mesh_file.hmin()
-    #E_y =  1./(J_(d_["n"]))
-    # nu = -0.2 #(-1, 0.5)
-    #E_y = 1./CellVolume(mesh_file)
-    #nu = 0.25
     E_y = 1./alfa
     nu = 0.1
     alfa_lam = nu*E_y / ((1. + nu)*(1. - 2.*nu))

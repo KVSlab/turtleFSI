@@ -1,21 +1,15 @@
-from dolfin import Constant, inner, inv, dot, grad, det, Identity,\
+""" Solves
+
+"""
+
+from turtleFSI.modules.common import *
+from dolfin import inner, inv, dot, grad, det, Identity,\
 solve, lhs, rhs, assemble, DirichletBC, div, sym, tr, norm, \
 MPI
-#from semi_implicit import *
 
 
-#Wall.mark(boundaries, 2)
-#Inlet.mark(boundaries, 3)
-#Outlet.mark(boundaries, 4)
-#Circle.mark(boundaries, 6)
-
-def extrapolate_setup(F_fluid_linear, ds, n, d_, w_, phi, gamma, beta, dx_f, **semimp_namespace):
-    def F_(U):
-        return Identity(len(U)) + grad(U)
-
-    def J_(U):
-         return det(F_(U))
-
+def extrapolate_setup(F_fluid_linear, ds, n, d_, w_, phi, gamma, beta, dx_f, **namespace):
+    # FIXME: This is not general. Should specify a list of ds ids.
     alfa_u = 0.1
     F_ext1 = alfa_u*inner(w_["n"], beta)*dx_f - alfa_u*inner(grad(d_["n"]), grad(beta))*dx_f\
     + alfa_u*inner(grad(d_["n"])*n, beta)*ds(2) \

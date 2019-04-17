@@ -13,38 +13,30 @@ import sys
 refi = 0
 mesh_name = "base0"
 mesh_file = Mesh("problems/mesh/" + mesh_name + ".xml")
-# for i in range(refi):
-#    mesh_file = refine(mesh_file)
 
 # Parameters
 common = {"mesh": mesh_file,
-          "v_deg": 2,  # Velocity degree
-          "p_deg": 1,  # Pressure degree
-          "d_deg": 2,  # Deformation degree
-          "T": 30,  # End time [s]
-          "dt": 0.01,  # Time step [s]
-          "rho_f": 1.0E3,  # Fluid density [kg/m3]
-          "mu_f": 1.0,  # Fluid dynamic viscosity [Pa.s]
-          "rho_s": Constant(10.0E3),  # Solid density [kg/m3]
-          "mu_s": Constant(0.5E6),  # Solid shear modulus or 2nd Lame Coef. [Pa]
-          "nu_s": Constant(0.4),  # Solid Poisson ratio [-]
-          "Um": 1.0,  # Max. velocity inlet (CFD1:0.2, CFD2:1.0, CDF3:2.0) [m/s]
-          "D": 0.1,  # Turek flag specific
-          "H": 0.41,  # Turek flag specific
-          "L": 2.5,  # Turek flag specific
-          "step": 1,  # save every step
+          "v_deg": 2,       # Velocity degree
+          "p_deg": 1,       # Pressure degree
+          "d_deg": 2,       # Deformation degree
+          "T": 30,          # End time [s]
+          "dt": 0.01,       # Time step [s]
+          "rho_f": 1.0E3,   # Fluid density [kg/m3]
+          "mu_f": 1.0,      # Fluid dynamic viscosity [Pa.s]
+          "rho_s": Constant(10.0E3), # Solid density [kg/m3]
+          "mu_s": Constant(0.5E6),   # Solid shear modulus or 2nd Lame Coef. [Pa]
+          "nu_s": Constant(0.4),     # Solid Poisson ratio [-]
+          "Um": 1.0,        # Max. velocity inlet (CFD1:0.2, CFD2:1.0, CDF3:2.0) [m/s]
+          "D": 0.1,         # Turek flag specific
+          "H": 0.41,        # Turek flag specific
+          "L": 2.5,         # Turek flag specific
+          "step": 1,        # save every step
           "checkpoint": 1}  # checkpoint every step
 
 vars().update(common)
 lamda_s = nu_s*2*mu_s/(1 - 2.*nu_s)  # Solid Young's modulus [Pa]
 
-
-for coord in mesh.coordinates():
-    if coord[0] == 0.6 and (0.199 <= coord[1] <= 0.2001):  # to get the point [0.2,0.6] end of bar
-        print(coord)
-        break
 # BOUNDARIES
-
 #NOS = AutoSubDomain(lambda x: "on_boundary" and( near(x[1],0) or near(x[1], 0.41)))
 Inlet = AutoSubDomain(lambda x: "on_boundary" and near(x[0], 0))
 Outlet = AutoSubDomain(lambda x: "on_boundary" and (near(x[0], 2.5)))
@@ -102,8 +94,6 @@ class Inlet(Expression):
 inlet = Inlet(Um, degree=v_deg)
 
 
-#dvp_file = XDMFFile(mpi_comm_world(), "FSI_fresh_checkpoints/CFD-2/P-"+str(v_deg)+"/dt-"+str(dt)+"/dvpFile.xdmf")
-
 
 if checkpoint == "results/TF_CFD/checkpoints/P-"+str(v_deg)+"/dt-"+str(dt)+"/dvpFile.h5":
     sys.exit(0)
@@ -111,8 +101,8 @@ else:
     dvp_file = HDF5File(mpi_comm_world(), "results/TF_CFD/P-"+str(v_deg)+"/dt-"+str(dt)+"/dvpFile.h5", "w")
 
 
-def initiate(P, v_deg, d_deg, p_deg, dt, theta, dvp_, args, Det_list, refi, mesh_file, mesh_name, **semimp_namespace):
-
+def initiate(P, v_deg, d_deg, p_deg, dt, theta, dvp_, args, Det_list, refi, mesh_file,
+             mesh_name, **semimp_namespace):
     exva = args.extravar
     extype = args.extype
     bitype = args.bitype
@@ -273,33 +263,5 @@ def post_process(path, T, dt, Det_list, dis_x, dis_y, Drag_list, Lift_list, Time
         np.savetxt(path + '/Time.txt', Time_list, delimiter=',')
         np.savetxt(path + '/dis_x.txt', dis_x, delimiter=',')
         np.savetxt(path + '/dis_y.txt', dis_y, delimiter=',')
-
-        plt.figure(1)
-        plt.plot(Time_list, dis_x)
-        plt.ylabel("Displacement x")
-        plt.xlabel("Time")
-        plt.grid()
-        plt.savefig(path + "/dis_x.png")
-        plt.figure(2)
-        plt.plot(Time_list, dis_y)
-        plt.ylabel("Displacement y")
-        plt.xlabel("Time")
-        plt.grid()
-        plt.savefig(path + "/dis_y.png")
-        plt.figure(3)
-        plt.plot(Time_list, Drag_list)
-        plt.ylabel("Drag")
-        plt.xlabel("Time")
-        plt.grid()
-        plt.savefig(path + "/drag.png")
-        plt.figure(4)
-        plt.plot(Time_list, Lift_list)
-        plt.ylabel("Lift")
-        plt.xlabel("Time")
-        plt.grid()
-        plt.savefig(path + "/lift.png")
-        # plt.figure(5)
-        # plt.plot(Time_list,Det_list);plt.ylabel("Min_Det(F)");plt.xlabel("Time");plt.grid();
-        #plt.savefig(path + "/Min_J.png")
 
     return {}

@@ -1,4 +1,11 @@
-from dolfin import *
+# Copyright (c) XXXX, XXXX.
+# See LICENSE file for details.
+
+# This software is distributed WITHOUT ANY WARRANTY; without even
+# the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.
+
+from dolfin import TrialFunction, derivative, assemble, MPI
 
 
 def solver_setup(F_fluid_linear, F_fluid_nonlinear,
@@ -34,9 +41,9 @@ def newtonsolver(F, Jac, bcs,
         rel_res = norm(dvp_res, 'l2')
         residual = b.norm('l2')
 
-        if MPI.rank(mpi_comm_world()) == 0:
+        if MPI.rank(MPI.comm_world) == 0:
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
                   % (Iter, residual, atol, rel_res, rtol))
         Iter += 1
 
-    return dict(t=t)
+    return {}
