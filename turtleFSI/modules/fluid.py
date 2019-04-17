@@ -6,19 +6,18 @@
 # PURPOSE.
 
 """
-Solve
+Solve TODO
 
 du/dt + u * grad(u - w) = grad(p) + nu * div(grad(u))
 
 Explain the numerics
 """
 
-from turtleFSI.modules.common import *
+from turtleFSI.modules import *
 from dolfin import Constant, inner, inv, grad, div
 
 
-def fluid_setup(v_, p_, d_, n, psi, gamma, dx_f, ds, mu_f, rho_f, k, dt, v_deg, theta,
-                **namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace):
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
 

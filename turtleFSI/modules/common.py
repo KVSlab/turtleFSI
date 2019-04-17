@@ -41,10 +41,10 @@ def E(U):
     return 0.5*(F_(U).T*F_(U) - Identity(len(U)))
 
 
-def S(U, lamda_s, mu_s):
+def S(U, lambda_s, mu_s):
     I = Identity(len(U))
-    return 2*mu_s*E(U) + lamda_s*tr(E(U))*I
+    return 2*mu_s*E(U) + lambda_s*tr(E(U))*I
 
 
-def Piola1(U, lamda_s, mu_s):
-    return F_(U)*S(U, lamda_s, mu_s)
+def Piola1(U, lambda_s, mu_s):
+    return F_(U)*S(U, lambda_s, mu_s)

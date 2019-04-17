@@ -8,9 +8,8 @@
 from dolfin import TrialFunction, derivative, assemble, MPI
 
 
-def solver_setup(F_fluid_linear, F_fluid_nonlinear,
-                 F_solid_linear, F_solid_nonlinear, DVP, dvp_, **monolithic):
-
+def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonlinear,
+                 DVP, dvp_, **namespace):
     F_lin = F_fluid_linear + F_solid_linear
     F_nonlin = F_fluid_nonlinear + F_solid_nonlinear
     F = F_lin + F_nonlin
@@ -21,9 +20,8 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear,
     return dict(F=F, Jac=Jac)
 
 
-def newtonsolver(F, Jac, bcs,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, **monolithic):
-
+def newtonsolver(F, Jac, bcs, dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t,
+                 **namespace):
     Iter = 0
     residual = 1
     rel_res = residual
@@ -45,5 +43,3 @@ def newtonsolver(F, Jac, bcs,
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
                   % (Iter, residual, atol, rel_res, rtol))
         Iter += 1
-
-    return {}
