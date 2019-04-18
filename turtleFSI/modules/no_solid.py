@@ -12,8 +12,8 @@ Solve xxx
 from dolfin import Constant, inner
 
 
-def fluid_setup(psi, phi, dx_s, **namespace):
-	F_fluid_linear = inner(Constant((0, 0)), psi)*dx_s
-	F_fluid_nonlinear = inner(Constant((0, 0)), phi)*dx_s
+def solid_setup(psi, phi, dx_s, **namespace):
+	F_solid_linear = inner(Constant((0, 0)), psi)*dx_s
+	F_solid_nonlinear = inner(Constant((0, 0)), phi)*dx_s
 
-	return dict(F_fluid_linear=F_fluid_linear, F_fluid_nonlinear=F_fluid_nonlinear)
+	return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)

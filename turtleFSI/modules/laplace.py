@@ -16,12 +16,12 @@ TODO
 from dolfin import inner, inv, grad, CellVolume
 
 
-def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh_file, d_, phi,
+def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
                       dx_f, **namespace):
     if extrapolation_sub_type == "volume":
         alfa = 1./(J_(d_["n"]))
     elif extrapolation_sub_type == "small_constant":
-        alfa = 0.01*(mesh_file.hmin())**2
+        alfa = 0.01*(mesh.hmin())**2
     elif extrapolation_sub_type == "constant":
         alfa = 1.0
     else:

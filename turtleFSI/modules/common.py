@@ -37,6 +37,10 @@ def sigma_f_p(p, u):
     return -p * Identity(len(u))
 
 
+def sigma(u, p, d, mu_f):
+    return sigma_f_u(u, d, mu_f) + sigma_f_p(p, u)
+
+
 def E(U):
     return 0.5*(F_(U).T*F_(U) - Identity(len(U)))
 

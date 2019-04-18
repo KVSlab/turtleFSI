@@ -17,8 +17,8 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, grad
 
 
-def structure_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
-                    gravity, **namespace):
+def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
+                gravity, **namespace):
     delta = 1E10
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
@@ -34,6 +34,6 @@ def structure_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
 
     # Stress
     F_solid_nonlinear = inner(Piola1(theta0*d_["n"], lambda_s, mu_s), grad(psi))*dx_s
-    F_solid_linear = inner(Piola1(theta1*d_["n-1"], lambda_s, mu_s), grad(psi))*dx_s
+    F_solid_linear += inner(Piola1(theta1*d_["n-1"], lambda_s, mu_s), grad(psi))*dx_s
 
     return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)

@@ -20,7 +20,7 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     return dict(F=F, Jac=Jac)
 
 
-def newtonsolver(F, Jac, bcs, dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t,
+def newtonsolver(F, Jac, bcs, dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, verbose,
                  **namespace):
     Iter = 0
     residual = 1
@@ -39,7 +39,7 @@ def newtonsolver(F, Jac, bcs, dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t,
         rel_res = norm(dvp_res, 'l2')
         residual = b.norm('l2')
 
-        if MPI.rank(MPI.comm_world) == 0:
+        if MPI.rank(MPI.comm_world) == 0 and verbose:
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
                   % (Iter, residual, atol, rel_res, rtol))
         Iter += 1
