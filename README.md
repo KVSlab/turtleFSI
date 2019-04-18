@@ -1,9 +1,9 @@
 Note: The Repository is stil under work, and we cannot guaranty any functionalty yet.
 
-## [turtleFSI - Fluid-Structure Interaction](https://turtleFSI.readthedocs.io)
+## [turtleFSI - Fluid-Structure Interaction](https://turtlefsi2.readthedocs.io)
 
-[![Documentation Status](https://readthedocs.org/projects/turtleFSI/badge/?version=latest)](https://turtleFSI.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/KVSlab/morphMan.svg?branch=master)](https://travis-ci.org/KVSlab/morphMan)
+[![Documentation Status](https://readthedocs.org/projects/turtlefsi2/badge/?version=latest)](https://turtlefsi2.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/KVSlab/turtlefsi.svg?branch=master)](https://travis-ci.org/KVSlab/turtlefsi)
 
 TODO: Add gif of a "swiming" turtle.
 
@@ -35,7 +35,7 @@ turtleFSI is Copyright (2016-2019) by the authors.
 
 Documentation
 -------------
-For an introduction to turtleFSI, and tutorials, please refer to the [documentation](https://turtleFSI.readthedocs.io/en/latest/).
+For an introduction to turtleFSI, and tutorials, please refer to the [documentation](https://turtlefsi2.readthedocs.io/en/latest/).
 
 If you wish to use turtleFSI for journal publications, please cite the two master thesis's:
 
@@ -63,7 +63,7 @@ You can execute turtleFSI by running::
 	turtleFSI --problem [path_to_problem]
 
 turtleFSI will first look for a file locally, then check if there is one installed in turtleFSI. Please
-refere to the [documentation](https://turtleFSI.readthedocs.io/en/latest/) on how to create a problem
+refere to the [documentation](https://turtlefsi2.readthedocs.io/en/latest/) on how to create a problem
 file and a more complete description of usage.
 
 
@@ -71,8 +71,8 @@ Contact
 -------
 The latest version of this software can be obtained from
 
-  https://github.com/KVSlab/morphMan
+  https://github.com/KVSlab/turtleFSI
 
 Please report bugs and other issues through the issue tracker at:
   
-  https://github.com/KVSlab/morphMan/issues
+  https://github.com/KVSlab/turtleFSI/issues
