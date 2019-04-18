@@ -112,15 +112,16 @@ dx_s = dx(dx_s_id, subdomain_data=domains)
 up_sol = LUSolver(Matrix(), linear_solver)
 
 # Get variation formulations
-exec("from turtleFSI.modules.{} import fluid_setup".format(args.fluidvar))
+exec("from turtleFSI.modules.{} import fluid_setup".format(fluid))
 vars().update(fluid_setup(**vars()))
-exec("from turtleFSI.modules.{} import solid_setup".format(args.solidvar))
-vars().update(structure_setup(**vars()))
-exec("from turtleFSI.modules.{} import extrapolate_setup".format(args.extravar))
+exec("from turtleFSI.modules.{} import solid_setup".format(solid))
+vars().update(solid_setup(**vars()))
+exec("from turtleFSI.modules.{} import extrapolate_setup".format(extrapolation))
 vars().update(extrapolate_setup(**vars()))
 
+
 # Set up Newton solver
-exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(args.solver))
+exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(solver))
 vars().update(solver_setup(**vars()))
 
 # Any pre-processing before the simulation
@@ -135,12 +136,18 @@ chi = TrialFunction(DVP)
 
 t = 0
 counter = 0
-tic()
+timer = Timer("Total simulation time")
+timer.start()
 while t <= T + dt / 10:
+    counter += 1
     t += dt
 
-    if MPI.rank(mpi_comm_world()) == 0:
-        print("Solving for timestep {:d}".format(t // dt))
+    if MPI.rank(MPI.comm_world) == 0:
+        txt = "Solving for timestep {:6d}, time {:2.04f}".format(counter, t)
+        if verbose:
+            print(txt)
+        else:
+            print(txt, end="\r")
 
     # Pre solve hook
     pre_solve(**vars())
@@ -156,10 +163,10 @@ while t <= T + dt / 10:
 
     # After solve hook
     after_solve(**vars())
-    counter += 1
 
-simtime = toc()
-print("Total Simulation time %g" % simtime)
+timer.stop()
+if MPI.rank(MPI.comm_world) == 0:
+    print("Total simulation time {0:f}".format(total_timer.elapsed()[0]))
 
 # Post-processing of simulation
 post_process(**vars())
