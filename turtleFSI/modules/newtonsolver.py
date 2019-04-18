@@ -17,7 +17,8 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     J_linear = derivative(F_lin, dvp_["n"], chi)
     J_nonlinear = derivative(F_nonlin, dvp_["n"], chi)
 
-    A_pre = assemble(J_linear, form_compiler_parameters=compiler_parameters)
+    A_pre = assemble(J_linear, form_compiler_parameters=compiler_parameters,
+                     keep_diagonal=True)
     A = Matrix(A_pre)
     b = None
 
@@ -40,8 +41,9 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_pa
 
     while rel_res > rtol and residual > atol and Iter < max_it:
         # Check if recompute Jacobian
-        if Iter % recompute == 0 or (last_rel_res < rel_res and last_residual < residual
-                                     and last_residual < rel_res):
+        if Iter % recompute == 0 or (last_rel_res < rel_res and
+                                     last_residual < residual and
+                                     last_residual < rel_res):
             A = assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)

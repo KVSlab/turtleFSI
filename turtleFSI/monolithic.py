@@ -68,10 +68,10 @@ k = Constant(dt)
 n = FacetNormal(mesh)
 
 # Define function space
-if "biharmonic" in extrapolation:
-    Elem = MixedElement([de, ve, pe])
-else:
+if extrapolation == "biharmonic":
     Elem = MixedElement([de, ve, pe, de])
+else:
+    Elem = MixedElement([de, ve, pe])
 
 DVP = FunctionSpace(mesh, Elem)
 
@@ -90,13 +90,13 @@ for time in ["n", "n-1", "n-2", "n-3"]:
     d_[time] = dvp_list[0]
     v_[time] = dvp_list[1]
     p_[time] = dvp_list[2]
-    if "biharmonic" in extrapolation:
-        w_[time] = w
+    if extrapolation == "biharmonic":
+        w_[time] = dvp_list[3]
 
-if "biharmonic" in extrapolation:
-    phi, psi, gamma = TestFunctions(DVP)
-else:
+if extrapolation == "biharmonic":
     phi, psi, gamma, beta = TestFunctions(DVP)
+else:
+    phi, psi, gamma = TestFunctions(DVP)
 
 # Differentials
 ds = Measure("ds", subdomain_data=boundaries)
@@ -143,7 +143,7 @@ while t <= T + dt / 10:
     t += dt
 
     if MPI.rank(MPI.comm_world) == 0:
-        txt = "Solving for timestep {:6d}, time {:2.04f}".format(counter, t)
+        txt = "Solving for timestep {:d}, time {:2.04f}".format(counter, t)
         if verbose:
             print(txt)
         else:
@@ -166,7 +166,7 @@ while t <= T + dt / 10:
 
 timer.stop()
 if MPI.rank(MPI.comm_world) == 0:
-    print("Total simulation time {0:f}".format(total_timer.elapsed()[0]))
+    print("Total simulation time {0:f}".format(timer.elapsed()[0]))
 
 # Post-processing of simulation
 post_process(**vars())

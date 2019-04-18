@@ -30,7 +30,7 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
 
     # Gravity
     if gravity is not None:
-        F_solid_linear -= inner(Constant(0, -gravity*rho_s), psi)*dx_s
+        F_solid_linear -= inner(Constant((0, -gravity*rho_s)), psi)*dx_s
 
     # Stress
     F_solid_nonlinear = inner(Piola1(theta0*d_["n"], lambda_s, mu_s), grad(psi))*dx_s
