@@ -12,7 +12,7 @@ from os import path
 from turtleFSI.problems import *
 from turtleFSI.modules import *
 
-def set_problem_parameters(args, default_variables, **namespace):
+def set_problem_parameters(default_variables, **namespace):
     # Overwrite or add new variables to 'default_variables'
     default_variables.update(dict(
             # Temporal variables
@@ -30,7 +30,7 @@ def set_problem_parameters(args, default_variables, **namespace):
             lambda_s = 4e6,                 # Solid Young's modulus [Pa]
 
             # Problem specific
-            folder = "TF_fsi_results",      # Name of the results fulter
+            folder = "TF_fsi_results",      # Name of the results folder
             extrapolation = "biharmonic",   # No displacement to extrapolate
             extrapolation_sub_type = "bc2", # Biharmonic type
             bc_ids = [2, 3, 4, 6],          # Ids for extrapolation weak form

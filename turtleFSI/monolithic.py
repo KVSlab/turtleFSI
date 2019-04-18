@@ -47,8 +47,8 @@ exec("from turtleFSI.problems.{} import *".format(args.problem))
 vars().update(set_problem_parameters(**vars()))
 
 # Update variables from commandline
-for key, item in list(args.__dict__.items()):
-    if item is None:
+for key, value in list(args.__dict__.items()):
+    if value is None:
         args.__dict__.pop(key)
 vars().update(args.__dict__)
 
