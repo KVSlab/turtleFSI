@@ -146,7 +146,7 @@ def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter,
     Time_list.append(t)
 
 
-def post_process(Det_list, Drag_list, Lift_list, Time_list, folder, **namespace):
+def post_process(Drag_list, Lift_list, Time_list, folder, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
         np.savetxt(path.join(folder, 'Drag.txt'), Drag_list, delimiter=',')

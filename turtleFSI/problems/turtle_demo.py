@@ -42,7 +42,7 @@ def get_mesh_domain_and_boundaries(args, **namespace):
         pars (dict):
 
     Returns:
-        mesh_file ():
+        mesh ():
         domains ():
         boundaries ():
     """
@@ -50,30 +50,30 @@ def get_mesh_domain_and_boundaries(args, **namespace):
     mesh_folder = path.join("mesh", "turtle_demo")
 
     # In this example, the mesh and markers are stored in the 3 following files
-    mesh_file_path = path.join(mesh_folder, "turtle_mesh.xdmf")  # mesh geometry
+    mesh_path = path.join(mesh_folder, "turtle_mesh.xdmf")  # mesh geometry
     domains_marker_path = path.join(mesh_folder, "mc.xdmf")      # marker over the elements (domains)
     boundaries_marker_path = path.join(mesh_folder, "mf.xdmf")   # markers of the segments (boundaries)
 
-    # "mesh_file" collects the mesh geometry of the entire domain (fluid + solid).
+    # "mesh" collects the mesh geometry of the entire domain (fluid + solid).
     # In this example, we import a mesh stored in a .xdmf file, but other formats
     # are supported such as .xml files.
-    mesh_file = Mesh()
-    xdmf = XDMFFile(MPI.comm_world, mesh_file_path)
-    xdmf.read(mesh_file)
+    mesh = Mesh()
+    xdmf = XDMFFile(MPI.comm_world, mesh_path)
+    xdmf.read(mesh)
 
     # "domains" collects the element markers of the fluid domain (marked as 1)
     # and the solid domain (marked as 2).
-    domains = MeshFunction("size_t", mesh_file, mesh_file.geometry().dim())
+    domains = MeshFunction("size_t", mesh, mesh.geometry().dim())
     xdmf = XDMFFile(MPI.comm_world, domains_marker_path)
     xdmf.read(domains)
 
     # "boundaries" collects the boundary markers that are used to apply the
     # Dirichlet boundary conditions on both the fluid and solid domains.
-    boundaries = MeshFunction("size_t", mesh_file, mesh_file.geometry().dim() - 1)
+    boundaries = MeshFunction("size_t", mesh, mesh.geometry().dim() - 1)
     xdmf = XDMFFile(MPI.comm_world, boundaries_marker_path)
     xdmf.read(boundaries)
 
-    return mesh_file, domains, boundaries
+    return mesh, domains, boundaries
 
 
 class Inlet(Expression):
@@ -97,7 +97,7 @@ class Inlet(Expression):
         return (2,)
 
 
-def create_bcs(DVP, boundaries, args, **semimp_namespace):
+def create_bcs(DVP, boundaries, args, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         print("Create bcs")
 
@@ -144,13 +144,13 @@ def create_bcs(DVP, boundaries, args, **semimp_namespace):
     return dict(bcs=bcs, inlet=inlet)
 
 
-def initiate(dvp_, **semimp_namespace):
+def initiate(dvp_, **namespace):
     path = "results/turtle_demo/"
 
     # Files for storing results
-    u_file = XDMFFile(mpi_comm_world(), path + "/velocity.xdmf")
-    d_file = XDMFFile(mpi_comm_world(), path + "/d.xdmf")
-    p_file = XDMFFile(mpi_comm_world(), path + "/pressure.xdmf")
+    u_file = XDMFFile(MPI.comm_world, path + "/velocity.xdmf")
+    d_file = XDMFFile(MPI.comm_world, path + "/d.xdmf")
+    p_file = XDMFFile(MPI.comm_world, path + "/pressure.xdmf")
     for tmp_t in [u_file, d_file, p_file]:
         tmp_t.parameters["flush_output"] = True
         tmp_t.parameters["rewrite_function_mesh"] = False
@@ -165,12 +165,12 @@ def initiate(dvp_, **semimp_namespace):
     return dict(u_file=u_file, d_file=d_file, p_file=p_file, path=path)
 
 
-def pre_solve(t, inlet, **semimp_namespace):
+def pre_solve(t, inlet, **namespace):
     """TODO"""
     inlet.update(t)
 
 
-def after_solve(t, dvp_, counter, u_file, p_file, d_file, **semimp_namespace):
+def after_solve(t, dvp_, counter, u_file, p_file, d_file, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)

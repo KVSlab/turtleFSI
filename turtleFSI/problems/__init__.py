@@ -1,4 +1,4 @@
-# Copyright (c) XXXX, XXXX.
+# Co (c) XXXX, XXXX.
 # See LICENSE file for details.
 
 # This software is distributed WITHOUT ANY WARRANTY; without even
@@ -12,18 +12,19 @@ commandline.
 
 from dolfin import parameters
 
-_compiler_parameters = parameters["form_compiler"]
+_compiler_parameters = dict(parameters["form_compiler"])
+_compiler_parameters.update({"quadrature_degree": 4,
+                             "optimize": True}),
 default_variables = dict(
               # Temporal settings
               dt = 0.001,
-              tetha = 0.501,
+              theta = 0.501,
               T = 5,
 
               # Spatial settings
-              refine = None,
               v_deg = 2,
               p_deg = 1,
-              d_def = 2,
+              d_deg = 2,
 
               # Domain settings
               dx_f_id = 1,
@@ -44,49 +45,48 @@ default_variables = dict(
               extrapolation = "laplace",            # biharmonic, linear, no_extrapolation
               extrapolation_sub_type = "constant",  # small_constant, volume, constant,
                                                     # bc1, bc2
-              gravity = None,
+              bc_ids = [],                          # List of ids for weak form and bc2
 
               # Solver settings
-              linear_solver = "mumps",
+              linear_solver = "mumps",  # use list_linear_solvers() to check alternatives
+              solver = "newtonsolver",  # newtonsolver_naive
               atol = 1e-7,
               rtol = 1e-7,
               max_it = 50,
               lmbda = 1.0,
               recompute = 5,
-              compiler_parameters=_compiler_parameters.update({"quadrature_degree": 4,
-                                                               "optimize": True}),
+              compiler_parameters=_compiler_parameters,
 
-              # FEniCS settings
-              loglevel = 40,
-
-              # Post-processing and storing settings
-              step = 1,
-              checkpoint = 1)
+              # Output settings
+              loglevel = 40,    # Log level from FEniCS
+              verbose = False,  # Turn on/off verbose printing
+              save_step = 1)    # Save file frequency
 
 
-def set_problem_parameters():
+def set_problem_parameters(**namespace):
     return {}
 
 
-def get_mesh_domain_and_boundaries():
-    return None, None, None
+def get_mesh_domain_and_boundaries(**namespace):
+    raise NotImplementedError("You need to define the mesh, domains and boundaries" +
+                              "of the problem")
 
 
-def initiate():
+def initiate(**namespace):
     return {}
 
 
-def create_bcs():
+def create_bcs(**namespace):
     return {}
 
 
-def pre_solve():
-    return {}
+def pre_solve(**namespace):
+    pass
 
 
-def after_solve():
-    return {}
+def after_solve(**namespace):
+    pass
 
 
-def post_process():
-    return {}
+def post_process(**namespace):
+    pass

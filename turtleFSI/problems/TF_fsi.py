@@ -20,14 +20,14 @@ def set_problem_parameters(args, default_variables, **namespace):
             dt = 0.01,                      # Time step [s]
             theta = 0.51,                    # Temporal scheme
 
-            # Physical constants
-            Um = 1.0,                       # Max. velocity inlet, CDF3: 2.0 [m/s]
+            # Physical constants ('FSI 3')
+            Um = 2.0,                       # Max. velocity inlet, CDF3: 2.0 [m/s]
             rho_f = 1.0e3,                  # Fluid density [kg/m3]
             mu_f = 1.0,                     # Fluid dynamic viscosity [Pa.s]
-            rho_s = 1.0e4,                  # Solid density[kg/m3]
+            rho_s = 1.0e3,                  # Solid density[kg/m3]
             nu_s = 0.4,                     # Solid Poisson ratio [-]
-            mu_s = 0.5e6,                   # Shear modulus, CSM3: 0.5E6 [Pa]
-            lambda_s = 2e6,                 # Solid Young's modulus [Pa]
+            mu_s = 2.0e6,                   # Shear modulus, CSM3: 0.5E6 [Pa]
+            lambda_s = 4e6,                 # Solid Young's modulus [Pa]
 
             # Problem specific
             folder = "TF_fsi_results",      # Name of the results fulter
@@ -163,7 +163,7 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
     bcs = [u_wall, u_inlet, u_circ, u_barwall, p_out]
 
     # Boundary conditions on the displacement / extrapolation
-    if extrapolation_sub_type == "bc1":
+    if extrapolation_sub_type != "bc2":
         d_wall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 2)
         d_inlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 3)
         d_outlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 4)
@@ -172,17 +172,17 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
         for i in [d_wall, d_inlet, d_outlet, d_circle, d_barwall]:
             bcs.append(i)
 
-    if extrapolation_sub_type == "bc2":
+    else:
         w_wall = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 2)
         w_inlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 3)
         w_outlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 4)
-        w_circle = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 6)
+        w_circle = DirichletBC(DVP.sub(0), (0.0, 0.0), boundaries, 6)
         w_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 7)
 
         d_wall = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 2)
         d_inlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 3)
         d_outlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 4)
-        d_circle = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 6)
+        d_circle = DirichletBC(DVP.sub(0), (0.0, 0.0), boundaries, 6)
         d_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 7)
 
         for i in [w_wall, w_inlet, w_outlet, w_circle, w_barwall,

@@ -122,5 +122,5 @@ def after_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step
 def post_process(folder, dis_x, dis_y, Time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
-        np.savetxt(path.join(folder, 'dis_x.txt', dis_x), delimiter=',')
-        np.savetxt(path.join(folder, 'dis_y.txt', dis_y), delimiter=',')
+        np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
+        np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
