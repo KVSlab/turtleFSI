@@ -11,7 +11,10 @@ from os import system
 
 
 def compare(one, two):
-    return '{:0.6e}'.format(one) == '{:0.6e}'.format(two)
+    if one < 1e-7 or two < 1e-7:
+        return '{:0.5e}'.format(one) == '{:0.5e}'.format(two)
+    else:
+        return '{:0.6e}'.format(one) == '{:0.6e}'.format(two)
 
 
 def test_cfd():
