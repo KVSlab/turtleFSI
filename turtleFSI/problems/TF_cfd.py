@@ -37,21 +37,23 @@ def set_problem_parameters(args, default_variables, **namespace):
     return default_variables
 
 
-def get_mesh_domain_and_boundaries(L, **namespace):
+def get_mesh_domain_and_boundaries(L, H, **namespace):
     mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh",
                           "TF_cfd.xml.gz"))
     mesh = refine(mesh)
 
     # Define the boundaries
     Inlet = AutoSubDomain(lambda x: near(x[0], 0))
-    Outlet = AutoSubDomain(lambda x: (near(x[0], L)))
+    Outlet = AutoSubDomain(lambda x: near(x[0], L))
+    Walls = AutoSubDomain(lambda x: near(x[1], 0) or near(x[1], H))
 
     # Mark the boundaries
     Allboundaries = DomainBoundary()
     boundaries = MeshFunction("size_t", mesh, mesh.geometry().dim() - 1)
     boundaries.set_all(0)
-    Allboundaries.mark(boundaries, 2) # Wall
+    Allboundaries.mark(boundaries, 4) # Circle and flag
     Inlet.mark(boundaries, 1)
+    Walls.mark(boundaries, 2)
     Outlet.mark(boundaries, 3)
 
     # Define the domain
@@ -115,11 +117,12 @@ def create_bcs(DVP, dvp_, Um, H, v_deg, boundaries, extrapolation_sub_type, **na
     # Fluid velocity conditions
     u_inlet = DirichletBC(DVP.sub(1), inlet, boundaries, 1)
     u_wall = DirichletBC(DVP.sub(1), ((0.0, 0.0)), boundaries, 2)
+    u_flag = DirichletBC(DVP.sub(1), ((0.0, 0.0)), boundaries, 4)
 
     # Pressure Conditions
     p_out = DirichletBC(DVP.sub(2), 0, boundaries, 3)
 
-    return dict(bcs=[u_wall, u_inlet, p_out], inlet=inlet)
+    return dict(bcs=[u_wall, u_flag, u_inlet, p_out], inlet=inlet)
 
 
 def pre_solve(t, inlet, **namespace):
@@ -128,7 +131,7 @@ def pre_solve(t, inlet, **namespace):
 
 
 def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, u_file,
-                p_file, d_file, mu_f, **namespace):
+                p_file, d_file, mu_f, verbose, ds, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
@@ -138,13 +141,14 @@ def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter,
         d_file.write(d, t)
         u_file.write(v, t)
 
-    Dr = -assemble((sigma(v, p, d, mu_f)*n)[0]*ds(6))
-    Li = -assemble((sigma(v, p, d, mu_f)*n)[1]*ds(6))
-    Dr += -assemble((sigma(v("+"), p("+"), d("+"), mu_f)*n("+"))[0]*dS(5))
-    Li += -assemble((sigma(v("+"), p("+"), d("+"), mu_f)*n("+"))[1]*dS(5))
-    Drag_list.append(Dr)
-    Lift_list.append(Li)
+    force = dot(sigma(v, p, d, mu_f), n)
+    Drag_list.append(-assemble(force[0]*ds(4)))
+    Lift_list.append(-assemble(force[1]*ds(4)))
     Time_list.append(t)
+
+    if MPI.rank(MPI.comm_world) == 0 and verbose:
+        print("Drag:", Drag_list[0])
+        print("Lift:", Lift_list[0])
 
 
 def post_process(Drag_list, Lift_list, Time_list, folder, **namespace):

@@ -199,7 +199,7 @@ def pre_solve(t, inlet, **namespace):
 
 
 def after_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
-                counter, u_file, p_file, d_file, verbose, save_step, Time_list,
+                counter, u_file, p_file, d_file, verbose, save_step, Time_list, ds, dS,
                 **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
