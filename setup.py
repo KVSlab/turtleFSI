@@ -38,5 +38,7 @@ setuptools.setup(
               "turtleFSI.problems",
               "turtleFSI.utils"],
     package_dir={"turtleFSI": "turtleFSI"},
+    include_package_data = True,
+    #package_data = {'mesh': ['turtleFSI/mesh/*']},
     entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']}
 )
