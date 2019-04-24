@@ -10,9 +10,9 @@ notifications:
 matrix:
     include:
         - os: linux
-          python: 3.7
+          python: 3.6
         - os: osx
-          python: 3.7
+          python: 3.6
 
 
 install:
@@ -31,10 +31,11 @@ install:
   - conda config --add channels conda-forge
 
   # Set up environment
-  - conda create -n turtleFSI turtleFSI pytest
+  - conda create -n turtleFSI fenics pytest #turtleFSI
 
   # Activate environment
   - source activate turtleFSI
+  - python setup.py install
 
   # Useful for debugging any issues with conda
   - conda info -a
