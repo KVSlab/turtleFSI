@@ -42,7 +42,7 @@ default_variables = dict(
               # Variational formulations
               fluid = "fluid",
               solid = "solid",
-              extrapolation = "laplace",            # biharmonic, linear, no_extrapolation
+              extrapolation = "laplace",            # biharmonic, elastic, no_extrapolation
               extrapolation_sub_type = "constant",  # small_constant, volume, constant,
                                                     # bc1, bc2
               bc_ids = [],                          # List of ids for weak form and bc2

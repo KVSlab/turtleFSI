@@ -37,8 +37,9 @@ def set_problem_parameters(args, default_variables, **namespace):
     return default_variables
 
 
-def get_mesh_domain_and_boundaries(L, mesh, **namespace):
-    mesh = Mesh(path.join("mesh", "TF_cfd.xml.gz"))
+def get_mesh_domain_and_boundaries(L, **namespace):
+    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh",
+                          "TF_cfd.xml.gz"))
     mesh = refine(mesh)
 
     # Define the boundaries

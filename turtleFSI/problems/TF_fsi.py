@@ -54,7 +54,8 @@ def set_problem_parameters(default_variables, **namespace):
 
 def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
     # Read mesh
-    mesh = Mesh(path.join("mesh", "TF_fsi.xml.gz"))
+    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh",
+                          "TF_fsi.xml.gz"))
 
     # Define boundaries
     Inlet = AutoSubDomain(lambda x: near(x[0], 0))

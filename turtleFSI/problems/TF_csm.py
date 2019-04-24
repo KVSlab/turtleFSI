@@ -46,7 +46,7 @@ def set_problem_parameters(args, default_variables, **namespace):
 
 def get_mesh_domain_and_boundaries(mesh, c_x, c_y, R, **namespace):
     # Read mesh
-    mesh = Mesh(path.join("mesh", "TF_csm.xml.gz"))
+    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "mesh", "TF_csm.xml.gz"))
     mesh = refine(mesh)
 
     # Mark boundaries
