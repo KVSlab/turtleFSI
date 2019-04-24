@@ -147,8 +147,8 @@ def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter,
     Time_list.append(t)
 
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("Drag:", Drag_list[0])
-        print("Lift:", Lift_list[0])
+        print("Drag:", Drag_list[-1])
+        print("Lift:", Lift_list[-1])
 
 
 def post_process(Drag_list, Lift_list, Time_list, folder, **namespace):

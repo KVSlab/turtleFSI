@@ -104,7 +104,7 @@ def parse():
                         help="Turn off solid and only solve the fluid equation")
     parser.add_argument("-e", "--extrapolation", type=str, default=None,
                         metavar="Extrapolation method",
-                        choices=["laplace", "linear", "biharmonic", "no-extrapolation"],
+                        choices=["laplace", "elastic", "biharmonic", "no-extrapolation"],
                         help="Set approach for extrapolating the deformation into the fluid" +
                             "domain")
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,

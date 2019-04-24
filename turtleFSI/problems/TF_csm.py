@@ -116,7 +116,8 @@ def after_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step
     dis_y.append(dsy)
 
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("dis_x | dis_y : %g %g " % (dsx, dsy))
+        print("Distance x: {:e}".format(dsx))
+        print("Distance y: {:e}".format(dsy))
 
 
 def post_process(folder, dis_x, dis_y, Time_list, **namespace):

@@ -111,7 +111,7 @@ def test_biharmonic(extrapolation_sub_type):
 
 def test_elastic():
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
-           " --extrapolation linear --new-arguments folder=tmp")
+           " --extrapolation elastic --new-arguments folder=tmp")
     d = system(cmd)
 
     drag = np.loadtxt("tmp/Drag.txt")[-1]

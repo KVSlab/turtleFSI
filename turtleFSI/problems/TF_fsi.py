@@ -210,24 +210,28 @@ def after_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n
         d_file.write(d, t)
         u_file.write(v, t)
 
+    # Compute drag and lift
     Dr = -assemble((sigma(v, p, d, mu_f)*n)[0]*ds(6))
     Li = -assemble((sigma(v, p, d, mu_f)*n)[1]*ds(6))
     Dr += -assemble((sigma(v("+"), p("+"), d("+"), mu_f)*n("+"))[0]*dS(5))
     Li += -assemble((sigma(v("+"), p("+"), d("+"), mu_f)*n("+"))[1]*dS(5))
+
+    # Append results
     Drag_list.append(Dr)
     Lift_list.append(Li)
     Time_list.append(t)
+    dis_x.append(d(coord)[0])
+    dis_y.append(d(coord)[1])
 
-    dsx = d(coord)[0]
-    dsy = d(coord)[1]
-    dis_x.append(dsx)
-    dis_y.append(dsy)
+    # Print
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("LIFT = {:e},  DRAG = {:e}".format(Li, Dr))
-        print("dis_x | dis_y: {:e} {:e}".format(dsx, dsy))
+        print("Distance x: {:e}".format(dis_x[-1]))
+        print("Distance y: {:e}".format(dis_y[-1]))
+        print("Drag: {:e}", Drag_list[-1])
+        print("Lift: {:e}", Lift_list[-1])
 
 
-def post_process(folder, Det_list, dis_x, dis_y, Drag_list, Lift_list, Time_list,
+def post_process(folder, dis_x, dis_y, Drag_list, Lift_list, Time_list,
                  **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
