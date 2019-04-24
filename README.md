@@ -1,7 +1,7 @@
 
 
 [![Documentation Status](https://readthedocs.org/projects/turtlefsi2/badge/?version=latest)](https://turtlefsi2.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/KVSlab/turtlefsi.svg?branch=master)](https://travis-ci.org/KVSlab/turtlefsi)
+[![Build Status](https://travis-ci.org/KVSlab/turtleFSI.svg?branch=master)](https://travis-ci.org/KVSlab/turtleFSI)
 
 ## turtleFSI - Fluid-Structure Interaction
 Note: The Repository is stil under work, and we cannot guaranty any functionalty yet.
