@@ -5,19 +5,19 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Solve TODO
-
-du/dt + u * grad(u - w) = grad(p) + nu * div(grad(u))
-
-Explain the numerics
-"""
-
 from turtleFSI.modules import *
 from dolfin import Constant, inner, inv, grad, div
 
 
 def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace):
+    """
+    Solve TODO
+
+    du/dt + u * grad(u - w) = grad(p) + nu * div(grad(u))
+
+    Explain the numerics
+    """
+
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
 

@@ -5,16 +5,15 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Solves xxx
-TODO
-"""
-
 from turtleFSI.modules import *
 from dolfin import CellVolume, inner, grad, inv
 
 
 def extrapolate_setup(F_fluid_linear, mesh, d_, phi, gamma, dx_f, **namespace):
+    """
+    Solves xxx
+    TODO
+    """
     E_y = 1./CellVolume(mesh)
     nu = 0.25
     alfa_lam = nu*E_y / ((1. + nu)*(1. - 2.*nu))

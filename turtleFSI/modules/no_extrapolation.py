@@ -5,9 +5,11 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Do not move mesh
-"""
 
 def extrapolate_setup(**namespace):
+    """
+    If only solving for solid or fluid, use this to also remove the mesh lifting
+    operator Do not move mesh
+    """
+
     return {}

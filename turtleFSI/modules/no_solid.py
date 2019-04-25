@@ -5,14 +5,14 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-No contribution from the structure, for when solving only the fluid equation.
-"""
-
 from dolfin import Constant, inner
 
 
 def solid_setup(psi, phi, dx_s, mesh, **namespace):
+    """
+    No contribution from the structure, for when solving only the fluid equation.
+    """
+
 	F_solid_linear = inner(Constant(tuple([0]*mesh.geometry().dim())), psi)*dx_s
 	F_solid_nonlinear = inner(Constant(tuple([0]*mesh.geometry().dim())), phi)*dx_s
 

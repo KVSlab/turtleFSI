@@ -64,29 +64,57 @@ default_variables = dict(
 
 
 def set_problem_parameters(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     return {}
 
 
 def get_mesh_domain_and_boundaries(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     raise NotImplementedError("You need to define the mesh, domains and boundaries" +
                               "of the problem")
 
 
 def initiate(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     return {}
 
 
 def create_bcs(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     return {}
 
 
 def pre_solve(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     pass
 
 
 def after_solve(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     pass
 
 
 def post_process(**namespace):
+    """
+    TODO: Short explenation of what should happen in this function
+    """
+
     pass

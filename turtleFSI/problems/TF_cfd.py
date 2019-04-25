@@ -12,6 +12,7 @@ from os import path
 from turtleFSI.problems import *
 from turtleFSI.modules import *
 
+
 def set_problem_parameters(args, default_variables, **namespace):
     # Overwrite or add new variables to 'default_variables'
     default_variables.update(dict(

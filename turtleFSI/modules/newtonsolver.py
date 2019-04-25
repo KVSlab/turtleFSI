@@ -9,6 +9,9 @@ from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI
 
 def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonlinear,
                  DVP, dvp_, up_sol, compiler_parameters, **namespace):
+    """
+    TODO
+    """
     F_lin = F_fluid_linear + F_solid_linear
     F_nonlin = F_solid_nonlinear + F_fluid_nonlinear
     F = F_lin + F_nonlin
@@ -30,6 +33,9 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_parameters,
                  dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, verbose, **namespace):
+    """
+    TODO
+    """
     # Initial values
     Iter = 0
     residual = 10**8

@@ -5,20 +5,20 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Solves the equation
-
-du/dt - w + PI(u) = 0
-
-or something like that. Explain the numerics.
-"""
-
 from turtleFSI.modules import *
 from dolfin import Constant, inner, grad
 
 
 def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
                 gravity, **namespace):
+    """
+    Solves the equation
+
+    du/dt - w + PI(u) = 0
+
+    or something like that. Explain the numerics.
+    """
+
     delta = 1E10
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)

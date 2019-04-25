@@ -5,19 +5,19 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Solves the equation
-
-bla bla
-
-TODO
-"""
-
 from dolfin import inner, inv, grad, CellVolume
 from turtleFSI.modules import *
 
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
                       dx_f, **namespace):
+    """
+    Solves the equation
+
+    bla bla
+
+    TODO
+    """
+
     if extrapolation_sub_type == "volume_change":
         alfa = 1./(J_(d_["n"]))
     elif extrapolation_sub_type == "volume":

@@ -5,16 +5,16 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""
-Solves XXX
-TODO
-"""
-
 from dolfin import inner, grad, div
 
 
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta, dx_f,
                       ds, n, bc_ids, **namespace):
+    """
+    Solves XXX
+    TODO
+    """
+
     alfa_u = 0.01
     F_ext1 = alfa_u*inner(w_["n"], beta)*dx_f - alfa_u*inner(grad(d_["n"]),
                                                              grad(beta))*dx_f
