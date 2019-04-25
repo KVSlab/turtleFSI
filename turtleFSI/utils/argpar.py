@@ -83,7 +83,7 @@ def parse():
     parser = argparse.ArgumentParser(description="TODO: Full description of the entire turtleFSI")
 
     # Define solver, numerics, and problem file
-    parser.add_argument("-p", "--problem", type=str, default=None, metavar="Problem",
+    parser.add_argument("-p", "--problem", type=str, default="turtle_demo", metavar="Problem",
                         help="Name of problem file to solve. Could either be loced in the" +
                         " turtleFSI repository (TF_cfd, TF_csm, TF_fsi, turtle_demo) or it" +
                         " could be a problem file you have created locally.")
