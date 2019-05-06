@@ -111,7 +111,7 @@ initiate
 ~~~~~~~~
 This function is not necessary but can be used to initiate any variables or data files before
 entering the time loop of the simulation. In ``turtle_demo.py``, the function is used to initialize
-the files where the data are stored during the simulation:
+the files where the data are stored during the simulation::
 
 
             def initiate(dvp_, folder, **namespace):
@@ -141,7 +141,7 @@ The function is used to define the boundary conditions of the problem to be solv
 the inlet boundary condition is defined as a Inlet() class, which inherits the FEniCS UserExpression() class.
 This class is then used in the function ``create_bcs`` to prescribe Dirichlet boundary condition to the
 inlet velocity. When defining the boundary conditions to specific domain regions or boundaries, make sure of
-the consistency between the markers used and the one provided with the ``get_mesh_domain_and_boundaries`` function.
+the consistency between the markers used and the one provided with the ``get_mesh_domain_and_boundaries`` function::
 
 
             class Inlet(UserExpression):
@@ -211,7 +211,7 @@ pre_solve
 ~~~~~~~~~
 This function is called iteratively within the time loop of the simulation before calling the solver
 at the given time step. In ``turtle_demo.py``, we used this function to update the time variable of the
-Inlet() expression used for the inlet boundary conditions.
+Inlet() expression used for the inlet boundary conditions::
 
 
             def pre_solve(t, inlet, **namespace):
@@ -224,7 +224,7 @@ after_solve
 ~~~~~~~~~~~
 This function is called iteratively within the time loop of the simulation after
 calling the solver at the given time step. In ``turtle_demo.py``, we used this function to
-save the updated solution vector to the data files initialized in the ``initiate`` function.
+save the updated solution vector to the data files initialized in the ``initiate`` function::
 
 
             def after_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
@@ -246,7 +246,7 @@ save the updated solution vector to the data files initialized in the ``initiate
 post_process
 ~~~~~~~~~~~~
 Function called once at the end of the time loop. An example of use is given in the
-``TF_fsi.py`` where text file are saved to store informations from the simulation.
+``TF_fsi.py`` where text file are saved to store informations from the simulation::
 
 
             def post_process(folder, dis_x, dis_y, Drag_list, Lift_list, Time_list,
