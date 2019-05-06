@@ -7,16 +7,19 @@
 
 """
 Parsing provided on the command line. Although the list of parameters is rather extensive,
-the user is free to add new once on the commandline. These will stil be parsed and added.
-For instance a problem specific parameter like inlet flow rate could also be overwritten
-from the command line options. Also, there are options like setting the absolute and
-relative tolerance which is not added here, but with default values from __init__.py in
-problems. For instane to overwrite the absolute tolerance simply add '--atol 1e-8' to the
-command line call, or set it explicitly in the problem file.
+the user is free to add new ones on the commandline. These will still be parsed and added.
+For instance, the variable "folder", used to specified the results folder, can be set by
+simply adding '--new-argument folder=TF_fsi_results' to the command line call or
+by adding (folder=TF_fsi_results) as a variable in the "set_problem_parameters" function
+of the problem file.
+NOTE: Any command line argument will overwrite the variable value given in the problem
+file "set_problem_parameters". Any variable set in the problem file "set_problem_parameters"
+will overwrite the default value defined in the problems/__init__.py file.
 """
 
 import argparse
 import string
+
 
 class StoreDictKeyPair(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -26,14 +29,14 @@ class StoreDictKeyPair(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         my_dict = {}
         for kv in values:
-            k,v = kv.split("=")
+            k, v = kv.split("=")
             try:
                 # Int
-                if set(v).issubset(set(string.digits)):
+                if set(v).issubset(set(string.digits+"-")):
                     my_dict[k] = int(v)
 
                 # Float
-                elif set(v).issubset(set(string.digis+".")):
+                elif set(v).issubset(set(string.digits+".eE+-")):
                     my_dict[k] = float(v)
 
                 # Boolean
@@ -80,33 +83,41 @@ def restricted_float(x):
 
 
 def parse():
-    parser = argparse.ArgumentParser(description="TODO: Full description of the entire turtleFSI")
+
+    parser = argparse.ArgumentParser(description=(
+        "turtleFSI is an open source Fluid-Structure Interaction (FSI) solver written in Python "
+        + "and built upon the FEniCS finite element library. The purpose of turtleFSI is to "
+        + "provide a user friendly and numerically robust monolithic FSI solver able to handle "
+        + "problems characterized by large deformation. turtleFSI benefites from the state-of-the-art "
+        + "parrallel computing features available from the FEniCS library and can be executed with "
+        + "MPI on large computing resources."))
 
     # Define solver, numerics, and problem file
     parser.add_argument("-p", "--problem", type=str, default="turtle_demo", metavar="Problem",
-                        help="Name of problem file to solve. Could either be loced in the" +
+                        help="Name of problem file to solve. Could either be located in the" +
                         " turtleFSI repository (TF_cfd, TF_csm, TF_fsi, turtle_demo) or it" +
                         " could be a problem file you have created locally.")
     parser.add_argument("-t", "--theta", type=restricted_float, default=None,
                         metavar="Theta",
-                        help="Setting temporal integration. For theta = 0 the scheme is" +
-                        " explicit, thetha = 1 the scheme is implicit, and for theta = 0.5" +
-                        " it becommes a second-order Crank-Nicolson. Of note is that theta =" +
-                        " 0.5 + dt gives a better long-term numerical stability while" +
-                        " keeping the second order accuracy.")
+                        help="Setting temporal integration. " +
+                        "(theta=0 : first order explicit forward Euler scheme) " +
+                        "(theta=1 : first order implicit backward Euler scheme) " +
+                        "(theta=0.5 : second-order Crank-Nicolson scheme) " +
+                        "(theta=0.5+dt : gives a better long-term numerical stability" +
+                        " while keeping the second order accuracy of the Crank-Nicolson scheme)")
 
     # Set fluid, solid, and extrapolation
     parser.add_argument("-f", "--fluid", type=str, default=None,
                         choices=["fluid", "no-fluid"], metavar="Fluid",
-                        help="Turn off fluid and only solve the structure equation")
+                        help="Turn off fluid and only solve the solid problem")
     parser.add_argument("-s", "--solid", type=str, default=None, metavar="Solid",
                         choices=["solid", "no-solid"],
-                        help="Turn off solid and only solve the fluid equation")
+                        help="Turn off solid and only solve the fluid problem")
     parser.add_argument("-e", "--extrapolation", type=str, default=None,
                         metavar="Extrapolation method",
                         choices=["laplace", "elastic", "biharmonic", "no-extrapolation"],
                         help="Set approach for extrapolating the deformation into the fluid" +
-                            "domain")
+                        "domain")
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,
                         metavar="Extrapolation sub type", default=None,
                         choices=["constant", "small_constant", "volume", "volume_change",
@@ -128,7 +139,7 @@ def parse():
     parser.add_argument("--mu_s", type=float, default=None,
                         help="Shear modulus in the solid")
     parser.add_argument("--nu_s", type=float, default=None,
-                        help="Poisson ratio in the fluid")
+                        help="Poisson ratio in the solid")
     parser.add_argument("--lambda_s", type=float, default=None,
                         help="Young's modulus in the solid")
     parser.add_argument("--gravity", type=float, default=None,
@@ -141,19 +152,15 @@ def parse():
                         help="Domain id of the solid domain")
 
     # Solver settings
-    parser.add_argument("--solver", type=str, default=None,
-                        choices=["newtonsolver", "newtonsolver_naive"],
-                        help="Chooce between a newtonsolver with multiple options or a" +
-                             " naive solver withot any")
     parser.add_argument("--linear-solver", type=str, default=None,
                         help="Choose the linear solver for each Newton iteration," +
                         " to see a complete list run list_linear_solvers()")
     parser.add_argument("--atol", type=float, default=None,
                         metavar="Absolute tolerance",
-                        help="The absolute tolerance for the Newton iterations")
+                        help="The absolute error tolerance for the Newton iterations")
     parser.add_argument("--rtol", type=float, default=None,
                         metavar="Relative tolerance",
-                        help="The relative tolerance for the Newton iterations")
+                        help="The relative error tolerance for the Newton iterations")
     parser.add_argument("--max_it", type=int, default=None,
                         metavar="Maximum iterations",
                         help="Maximum number of iterations in the Newton solver")
@@ -174,10 +181,9 @@ def parse():
     parser.add_argument("-v", "--verbose", type=str2bool, default=None,
                         help="Turn on/off verbose printing")
     parser.add_argument("--loglevel", type=int, default=None,
-                         help="Set FEniCS loglevel")
+                        help="Set FEniCS loglevel")
     parser.add_argument("--save-step", type=int, default=None,
-                        help="Save file frequency. What should be stored have to be" +
-                        " defined in the problem file")
+                        help="Saving frequency of the files defined in the problem file")
 
     # Set spatial and temporal resolution
     parser.add_argument("-dt", metavar="Time step", type=float,

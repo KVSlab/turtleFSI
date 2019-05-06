@@ -10,7 +10,7 @@ turtleFSI is a ... TODO
 
 The goal of turtleFSI is to ... TODO
 
-However, 
+However,
 
 The numerical schemes in turtleFSI is presented and tested in Slyngstad [1]_ and Gjertsen [2]_.
 
@@ -38,4 +38,4 @@ Our only request is that you follow our
 
 .. [1] Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting operators. MS thesis. 2017.
 .. [2] Gjertsen, Sebastian. Development of a Verified and Validated Computational Framework for Fluid-Structure Interaction: Investigating Lifting Operators and Numerical Stability. MS thesis. 2017.
-.. [3] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction between an elastic object and laminar incompressible flow." Fluid-structure interaction. Springer, Berlin, Heidelberg, 2006. 371-385. 
+.. [3] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction between an elastic object and laminar incompressible flow." Fluid-structure interaction. Springer, Berlin, Heidelberg, 2006. 371-385.

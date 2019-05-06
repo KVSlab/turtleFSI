@@ -7,15 +7,18 @@
 
 """
 Entry point for the setup.py. This small wrapper function makes it possible to run
-turtleFSI from any location. The idea for this file came from github.com/mikaem/Oasis
+turtleFSI from any location. Inspired by github.com/mikaem/Oasis
 """
 
-import sys, os
+import sys
+import os
 
 sys.path.append(os.getcwd())
 
+
 def main():
     from turtleFSI import monolithic
+
 
 if __name__ == '__main__':
     main()

@@ -8,9 +8,9 @@ turtleFSI is a entry-level simple FSI solver. The solver is slow, but a perfect 
 
 Compatibility and Dependencies
 ==============================
-The general dependencies of turtleFSI are 
+The general dependencies of turtleFSI are:
 
-* FEniCS 2018.1.0
+* FEniCS 2019.1.0
 * Numpy >1.1X
 * Python >=3.5
 

@@ -8,14 +8,28 @@
 from dolfin import inner, inv, grad, CellVolume
 from turtleFSI.modules import *
 
+
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
                       dx_f, **namespace):
     """
-    Solves the equation
+    Laplace lifting operator. Can be used for small to moderate deformations.
+    The diffusion parameter "alfa", which is specified by "extrapolation_sub_type",
+    can be used to control the deformation field from the wall boundaries to the
+    fluid domain. "alfa" is assumed constant within elements.
 
-    bla bla
+    - alfa * laplace(d) = 0   in the fluid domain
+    d = 0                     on the fluid boundaries other than FSI interface
+    d = solid_def             on the FSI interface
 
-    TODO
+    References:
+
+    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
+        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
+        operators. MS thesis. 2017.
+
+    Gjertsen, Sebastian. Development of a Verified and Validated Computational
+        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
+        and Numerical Stability. MS thesis. 2017.
     """
 
     if extrapolation_sub_type == "volume_change":

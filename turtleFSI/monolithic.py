@@ -6,42 +6,28 @@
 # PURPOSE.
 
 """
-TODO
-This module implements a generic form of the fractional step method for
-solving the incompressible Navier-Stokes equations. There are several
-possible implementations of the pressure correction and the more low-level
-details are chosen at run-time and imported from any one of:
-
-  solvers/NSfracStep/IPCS_ABCN.py    # Implicit convection
-  solvers/NSfracStep/IPCS_ABE.py     # Explicit convection
-  solvers/NSfracStep/IPCS.py         # Naive implict convection
-  solvers/NSfracStep/BDFPC.py        # Naive Backwards Differencing IPCS in rotational form
-  solvers/NSfracStep/BDFPC_Fast.py   # Fast Backwards Differencing IPCS in rotational form
-  solvers/NSfracStep/Chorin.py       # Naive
-
-The naive solvers are very simple and not optimized. They are intended
-for validation of the other optimized versions. The fractional step method
-can be used both non-iteratively or with iterations over the pressure-
-velocity system.
-
-The velocity vector is segregated, and we use three (in 3D) scalar
-velocity components.
-
-Each new problem needs to implement a new problem module to be placed in
-the problems/NSfracStep folder. From the problems module one needs to import
-a mesh and a control dictionary called NS_parameters. See
-problems/NSfracStep/__init__.py for all possible parameters.
+This module implements the monolithic Fluid-Structure Interaction (FSI) solver
+used in the turtleFSI package.
 """
 
 from dolfin import *
 from turtleFSI.utils import *
+import os
+import sys
 
 # Get user input
 args = parse()
 
 # Import the problem
-# TODO: Look for problem file locally as well
-exec("from turtleFSI.problems.{} import *".format(args.problem))
+if os.path.isfile(os.path.abspath(args.problem+'.py')):
+    exec("from {} import *".format(args.problem))
+else:
+    try:
+        exec("from turtleFSI.problems.{} import *".format(args.problem))
+    except:
+        raise ImportError("""Can not find the problem file. Make sure that the
+        problem file is specified in the current directory or in the solver
+        turtleFSI/problems/... directory.""")
 
 # Get problem specific parameters
 vars().update(set_problem_parameters(**vars()))

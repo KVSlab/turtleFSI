@@ -11,11 +11,20 @@ from dolfin import Constant, inner, inv, grad, div
 
 def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace):
     """
-    Solve TODO
+    ALE formulation (theta-scheme) of the incompressible Navier-Stokes flow problem:
 
-    du/dt + u * grad(u - w) = grad(p) + nu * div(grad(u))
+        du/dt + u * grad(u - w) = grad(p) + nu * div(grad(u))
+        div(u) = 0
 
-    Explain the numerics
+    References:
+
+    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
+        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
+        operators. MS thesis. 2017.
+
+    Gjertsen, Sebastian. Development of a Verified and Validated Computational
+        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
+        and Numerical Stability. MS thesis. 2017.
     """
 
     theta0 = Constant(theta)
@@ -35,7 +44,7 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace
     F_fluid_nonlinear += inner(J_(d_["n"]) * sigma_f_p(p_["n"], d_["n"]) *
                                inv(F_(d_["n"])).T, grad(psi)) * dx_f
 
-    # Stress for velocity
+    # Stress from velocity
     F_fluid_nonlinear += theta0 * inner(J_(d_["n"]) * sigma_f_u(v_["n"], d_["n"], mu_f) *
                                         inv(F_(d_["n"])).T, grad(psi)) * dx_f
     F_fluid_linear += theta1 * inner(J_(d_["n-1"]) * sigma_f_u(v_["n-1"], d_["n-1"], mu_f)

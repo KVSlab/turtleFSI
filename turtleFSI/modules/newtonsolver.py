@@ -7,10 +7,11 @@
 
 from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI
 
+
 def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonlinear,
                  DVP, dvp_, up_sol, compiler_parameters, **namespace):
     """
-    TODO
+    Pre-assemble the system of equations for the jacobian matrix for the newton solver
     """
     F_lin = F_fluid_linear + F_solid_linear
     F_nonlin = F_solid_nonlinear + F_fluid_nonlinear
@@ -32,9 +33,10 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
 
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_parameters,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, T, t, verbose, **namespace):
+                 dvp_, up_sol, dvp_res, rtol, atol, max_it, verbose, **namespace):
     """
-    TODO
+    Solve the non-linear system of equations with Newton iterations scheme.
+    The jacobian matrix is re-evaluated at every "recompute" iteration steps. 
     """
     # Initial values
     Iter = 0

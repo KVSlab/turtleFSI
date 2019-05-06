@@ -12,11 +12,19 @@ from dolfin import Constant, inner, grad
 def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
                 gravity, **namespace):
     """
-    Solves the equation
+    ALE formulation (theta-scheme) of the non-linear elastic problem:
 
-    du/dt - w + PI(u) = 0
+    dv/dt - f + div(sigma) = 0   with v = d(d)/dt
 
-    or something like that. Explain the numerics.
+    References:
+
+    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
+        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
+        operators. MS thesis. 2017.
+
+    Gjertsen, Sebastian. Development of a Verified and Validated Computational
+        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
+        and Numerical Stability. MS thesis. 2017.
     """
 
     delta = 1E10
@@ -25,8 +33,8 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
 
     # Temporal term and convection
     F_solid_linear = (rho_s/k*inner(v_["n"] - v_["n-1"], psi)*dx_s
-                     + delta*(1/k)*inner(d_["n"] - d_["n-1"], phi)*dx_s
-                     - delta*inner(theta0*v_["n"] + theta1*v_["n-1"], phi)*dx_s)
+                      + delta*(1/k)*inner(d_["n"] - d_["n-1"], phi)*dx_s
+                      - delta*inner(theta0*v_["n"] + theta1*v_["n-1"], phi)*dx_s)
 
     # Gravity
     if gravity is not None:

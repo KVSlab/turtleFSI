@@ -8,8 +8,9 @@
 
 def extrapolate_setup(**namespace):
     """
+    Do not move mesh.
     If only solving for solid or fluid, use this to also remove the mesh lifting
-    operator Do not move mesh
+    operator.
     """
 
     return {}

@@ -11,8 +11,33 @@ from dolfin import inner, grad, div
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta, dx_f,
                       ds, n, bc_ids, **namespace):
     """
-    Solves XXX
-    TODO
+    Biharmonic lifting operator. Should be used for large deformations.
+
+    alfa * laplace^2(d) = 0   in the fluid domain
+
+    By introducing w = - grad(d) we obtain the equivalent system of equations:
+        w = - alfa * laplace(d)
+        - alfa * grad(w) = 0
+
+    Two types of boundary conditions can be setup for this problem:
+
+        - "bc1" with conditions only on (d):
+            d(d)/dn = 0    on the fluid boundaries other than FSI interface
+            d = solid_def  on the FSI interface
+
+        - "bc2" with conditions on (d) and (w):
+            d(d(x))/dn = 0 and d(w(x))/dn = 0   on the inlet and outlet fluid boundaries
+            d(d(y))/dn = 0 and d(w(y))/dn = 0   on the FSI interface
+
+    References:
+
+    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
+        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
+        operators. MS thesis. 2017.
+
+    Gjertsen, Sebastian. Development of a Verified and Validated Computational
+        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
+        and Numerical Stability. MS thesis. 2017.
     """
 
     alfa_u = 0.01
