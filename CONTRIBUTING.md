@@ -1,11 +1,11 @@
-# Contributing to morphMan
+# Contributing to turtleFSI
 
 When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change. 
+email, or any other method with the owners of this repository before making a change.
 
-### Testing 
+### Testing
 
-Please provide unit tests for the new code you create, testing the main functionality or feature to be submitted. We can always use more test coverage! 
+Please provide unit tests for the new code you create, testing the main functionality or feature to be submitted. We can always use more test coverage!
 
 ### Submitting changes
 
@@ -14,12 +14,12 @@ In order to submit you changes, please send a [GitHub Pull Request to turtleFSI]
 Always write a clear commit message when submitting your changes. One-line messages are fine for small changes, but bigger changes should look like this:
 
     > $ git commit -m "A brief summary of the commit
-    > 
+    >
     > A paragraph describing what changed and its impact."
 
 ### Coding conventions
 
-#### Formatting 
+#### Formatting
 * Avoid inline comments.
 * Break long lines after 120 characters.
 * Delete trailing whitespace.
@@ -102,11 +102,11 @@ further defined and clarified by project maintainers.
 ### Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at henrik.kjeldsberg@live.no. All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
+reported by contacting the project team at alban@simula.no. All complaints will be reviewed and
+investigated and will result in a response that is deemed necessary and
+appropriate to the circumstances. The project team is obligated to maintain
+confidentiality with regard to the reporter of an incident. Further details of
+specific enforcement policies may be posted separately.
 
 Project maintainers who do not follow or enforce the Code of Conduct in good
 faith may face temporary or permanent repercussions as determined by other
@@ -121,4 +121,3 @@ available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.ht
 
 For answers to common questions about this code of conduct, see
 https://www.contributor-covenant.org/faq
-
