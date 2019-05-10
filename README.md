@@ -5,7 +5,7 @@
 
 ## turtleFSI - Fluid-Structure Interaction
 
-<p align="center"> <span style="color:red"> <em> <strong> <font size="+2"> !!! The repository is under construction !!! </font> </strong> </em> </span> </p>
+<p align="center"> <span style="color:red"> <font size="+2"> !!! The repository is under construction !!! </font> </span> </p>
 
 <p align="center">
     <img src="figs/turtleFSI_swim.gif" width="360" height="250" alt="turtleFSI_swim"/>
