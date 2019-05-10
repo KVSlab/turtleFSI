@@ -1,5 +1,7 @@
 .. title:: Installation
 
+.. _installation:
+
 ============
 Installation
 ============
