@@ -10,8 +10,9 @@ Welcome to turtleFSI's documentation!
 =====================================
 
 .. toctree::
-   :maxdepth: 2
-   
+   :maxdepth: 3
+
    installation
-   getting_started
-   create_problem_file
+   using_turtleFSI
+   new_features
+   acknow_ref
