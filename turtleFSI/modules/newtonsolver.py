@@ -1,6 +1,4 @@
-# Copyright (c) XXXX, XXXX.
-# See LICENSE file for details.
-
+# File under GNU GPL (v3) licence, see LICENSE file for details.
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -36,7 +34,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_pa
                  dvp_, up_sol, dvp_res, rtol, atol, max_it, verbose, **namespace):
     """
     Solve the non-linear system of equations with Newton iterations scheme.
-    The jacobian matrix is re-evaluated at every "recompute" iteration steps. 
+    The jacobian matrix is re-evaluated at every "recompute" iteration steps.
     """
     # Initial values
     Iter = 0

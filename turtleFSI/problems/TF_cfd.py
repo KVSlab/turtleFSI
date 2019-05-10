@@ -1,6 +1,4 @@
-# Copyright (c) XXXX, XXXX.
-# See LICENSE file for details.
-
+# File under GNU GPL (v3) licence, see LICENSE file for details.
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -16,24 +14,24 @@ from turtleFSI.modules import *
 def set_problem_parameters(args, default_variables, **namespace):
     # Overwrite or add new variables to 'default_variables'
     default_variables.update(dict(
-            # Temporal variables
-            T = 30,                     # End time [s]
-            dt = 0.01,                  # Time step [s]
-            theta = 0.5,                # Temporal scheme
+        # Temporal variables
+        T=30,                     # End time [s]
+        dt=0.01,                  # Time step [s]
+        theta=0.5,                # Temporal scheme
 
-            # Physical constants
-            rho_f = 1.0E3,              # Fluid density [kg/m3]
-            mu_f = 1.0,                 # Fluid dynamic viscosity [Pa.s]
-            Um = 2.0,                   # Max. velocity inlet (CDF3: 2.0) [m/s]
+        # Physical constants
+        rho_f=1.0E3,              # Fluid density [kg/m3]
+        mu_f=1.0,                 # Fluid dynamic viscosity [Pa.s]
+        Um=2.0,                   # Max. velocity inlet (CDF3: 2.0) [m/s]
 
-            # Problem specific
-            folder = "TF_cfd_results",  # Name of the results fulter
-            solid = "no_solid",         # Do not solve for the solid
-            extrapolation = "no_extrapolation", # No displacement to extrapolate
+        # Problem specific
+        folder="TF_cfd_results",  # Name of the results fulter
+        solid="no_solid",         # Do not solve for the solid
+        extrapolation="no_extrapolation",  # No displacement to extrapolate
 
-            # Geometric variables
-            H = 0.41,                   # Total height
-            L = 2.5))                   # Length of domain
+        # Geometric variables
+        H=0.41,                   # Total height
+        L=2.5))                   # Length of domain
 
     return default_variables
 
@@ -52,7 +50,7 @@ def get_mesh_domain_and_boundaries(L, H, **namespace):
     Allboundaries = DomainBoundary()
     boundaries = MeshFunction("size_t", mesh, mesh.geometry().dim() - 1)
     boundaries.set_all(0)
-    Allboundaries.mark(boundaries, 4) # Circle and flag
+    Allboundaries.mark(boundaries, 4)  # Circle and flag
     Inlet.mark(boundaries, 1)
     Walls.mark(boundaries, 2)
     Outlet.mark(boundaries, 3)

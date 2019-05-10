@@ -62,8 +62,8 @@ default_variables = dict(
     compiler_parameters=_compiler_parameters,  # Update the defaul values of the compiler arguments (FEniCS)
 
     # Output settings
-    loglevel=40,    # Log level from FEniCS
-    verbose=False,  # Turn on/off verbose printing
+    loglevel=20,    # Log level from FEniCS
+    verbose=True,  # Turn on/off verbose printing
     save_step=1)    # Save file frequency
 
 

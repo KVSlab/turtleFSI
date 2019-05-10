@@ -1,6 +1,4 @@
-# Copyright (c) XXXX, XXXX.
-# See LICENSE file for details.
-
+# File under GNU GPL (v3) licence, see LICENSE file for details.
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -39,7 +37,8 @@ def set_problem_parameters(default_variables, **namespace):
         nu_s=0.45,      # Solid Poisson ratio [-]
         dx_f_id=1,      # ID of marker in the fluid domain
         dx_s_id=2,      # ID of marker in the solid domain
-        extrapolation="biharmonic",  # laplace, elastic, biharmonic, no-extrapolation
+        extrapolation="laplace",  # laplace, elastic, biharmonic, no-extrapolation
+        extrapolation_sub_type="volume_change",
         folder="turtle_demo_results"),  # name of the folder to save the data
         save_step=10  # frequency of data saving
     )

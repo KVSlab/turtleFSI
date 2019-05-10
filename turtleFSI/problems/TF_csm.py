@@ -1,6 +1,4 @@
-# Copyright (c) XXXX, XXXX.
-# See LICENSE file for details.
-
+# File under GNU GPL (v3) licence, see LICENSE file for details.
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -11,35 +9,36 @@ from os import path
 
 from turtleFSI.problems import *
 
+
 def set_problem_parameters(args, default_variables, **namespace):
     # Parameters
     default_variables.update(dict(
-            # Temporal variables
-            T = 30,          # End time [s]
-            dt = 0.01,       # Time step [s]
-            theta = 0.5,     # Temporal scheme
+        # Temporal variables
+        T=30,          # End time [s]
+        dt=0.01,       # Time step [s]
+        theta=0.5,     # Temporal scheme
 
-            # Physical constants
-            rho_f = 1.0e3,   # Fluid density [kg/m3]
-            mu_f = 1.0,      # Fluid dynamic viscosity [Pa.s]
-            rho_s = 1.0e3,   # Solid density[kg/m3]
-            mu_s = 0.5e6,    # Shear modulus, 2nd Lame Coef. CSM3: 0.5E6 [Pa]
-            nu_s = 0.4,      # Solid Poisson ratio [-]
-            gravity = 2.0,   # Gravitational force [m/s^2]
-            lambda_s = 2e6,  # Solid Young's modulus [Pa]
+        # Physical constants
+        rho_f=1.0e3,   # Fluid density [kg/m3]
+        mu_f=1.0,      # Fluid dynamic viscosity [Pa.s]
+        rho_s=1.0e3,   # Solid density[kg/m3]
+        mu_s=0.5e6,    # Shear modulus, 2nd Lame Coef. CSM3: 0.5E6 [Pa]
+        nu_s=0.4,      # Solid Poisson ratio [-]
+        gravity=2.0,   # Gravitational force [m/s^2]
+        lambda_s=2e6,  # Solid Young's modulus [Pa]
 
-            # Problem specific
-            dx_f_id = 0,     # Id of the fluid domain
-            dx_s_id = 1,     # Id of the solid domain
-            folder = "TF_csm_results",          # Folder to store the results
-            fluid = "no_fluid",                 # Do not solve for the fluid
-            extrapolation = "no_extrapolation", # No displacement to extrapolate
+        # Problem specific
+        dx_f_id=0,     # Id of the fluid domain
+        dx_s_id=1,     # Id of the solid domain
+        folder="TF_csm_results",          # Folder to store the results
+        fluid="no_fluid",                 # Do not solve for the fluid
+        extrapolation="no_extrapolation",  # No displacement to extrapolate
 
-            # Geometric variables
-            R = 0.05,        # Radius of the circle
-            c_x = 0.2,       # Center of the circle x-direction
-            c_y = 0.2,       # Center of the circle y-direction
-            f_L = 0.35))     # Length of the flag
+        # Geometric variables
+        R=0.05,        # Radius of the circle
+        c_x=0.2,       # Center of the circle x-direction
+        c_y=0.2,       # Center of the circle y-direction
+        f_L=0.35))     # Length of the flag
 
     return default_variables
 
