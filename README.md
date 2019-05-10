@@ -4,13 +4,15 @@
 [![Build Status](https://travis-ci.org/KVSlab/turtleFSI.svg?branch=master)](https://travis-ci.org/KVSlab/turtleFSI)
 
 ## turtleFSI - Fluid-Structure Interaction
-Note: The Repository is still under work, and we cannot guaranty any functionalty yet.
+
+<p align="center"> <span style="color:red"> <em> <strong> <font size="+2"> !!! The repository is under construction !!! </font> </strong> </em> </span> </p>
 
 <p align="center">
     <img src="figs/turtleFSI_swim.gif" width="360" height="250" alt="turtleFSI_swim"/>
+    <img src="figs/turek_benchmark.gif" width="505" height="250" alt="turtleFSI_swim"/>
 </p>
 <p align="center">
-turtleFSI racing
+  left: racing turtleFSI, right: Turek benchmark FSI2
 </p>
 
 
