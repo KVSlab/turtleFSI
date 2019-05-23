@@ -310,7 +310,6 @@ Function called once at the end of the time loop. An example of use is given in 
                     np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
 
 
-
 .. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
    :width: 600px
    :align: center
