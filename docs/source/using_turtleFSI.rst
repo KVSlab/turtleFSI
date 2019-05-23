@@ -137,7 +137,7 @@ In ``turtle_demo.py``, the function looks like this::
 
                 return mesh, domains, boundaries
 
-.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_boundaries.png
+.. figure:: ../../figs/Turtle_boundaries.png
    :width: 400px
    :align: center
 
@@ -315,4 +315,4 @@ Function called once at the end of the time loop. An example of use is given in 
    :width: 400px
    :align: center
 
-   Pressure and velocity fields at 2.5 s. obtain by running the turtle_demo.py problem file.
+   Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
