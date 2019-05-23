@@ -250,7 +250,7 @@ the consistency between the markers used and the one provided with the ``get_mes
 
     FSI and Fixed boundaries.
 
-.. figure:: ../../figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+.. figure:: ../../figs/Turtle_inlet_vel.png
    :width: 600px
    :align: center
 
@@ -311,7 +311,7 @@ Function called once at the end of the time loop. An example of use is given in 
 
 
 
-.. figure:: ../../figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+.. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
    :width: 600px
    :align: center
 
