@@ -138,7 +138,7 @@ In ``turtle_demo.py``, the function looks like this::
                 return mesh, domains, boundaries
 
 .. figure:: ../../figs/Turtle_boundaries.png
-   :width: 400px
+   :width: 600px
    :align: center
 
    Domain boundaries.
@@ -244,14 +244,14 @@ the consistency between the markers used and the one provided with the ``get_mes
                 return dict(bcs=bcs, inlet=inlet)
 
 
-.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_boundaries_zoom.png
-    :width: 400px
+.. figure:: ../../figs/Turtle_boundaries_zoom.png
+    :width: 600px
     :align: center
 
     FSI and Fixed boundaries.
 
-.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_flow_Pressure_Fields_t_2.5s.png
-   :width: 400px
+.. figure:: ../../figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+   :width: 600px
    :align: center
 
    Inlet velocity amplitude variation with time as defined by the class Inlet().
@@ -311,8 +311,8 @@ Function called once at the end of the time loop. An example of use is given in 
 
 
 
-.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_flow_Pressure_Fields_t_2.5s.png
-   :width: 400px
+.. figure:: ../../figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+   :width: 600px
    :align: center
 
    Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
