@@ -25,22 +25,23 @@ from turtleFSI.problems import *
 def set_problem_parameters(default_variables, **namespace):
     # Overwrite default values
     default_variables.update(dict(
-        T=10,          # End time [s]
-        dt=0.001,       # Time step [s]
-        theta=0.501,    # theta value (0.5 + dt), shifted Crank-Nicolson scheme
-        Um=0.8,         # Max. velocity inlet [m/s]
+        T=15,          # End time [s]
+        dt=0.005,       # Time step [s]
+        theta=0.505,    # theta value (0.5 + dt), shifted Crank-Nicolson scheme
+        Um=1.0,         # Max. velocity inlet [m/s]
         rho_f=1.0E3,    # Fluid density [kg/m3]
         mu_f=1.0,       # Fluid dynamic viscosity [Pa.s]
         rho_s=1.0E3,    # Solid density [kg/m3]
         mu_s=5.0E4,     # Solid shear modulus or 2nd Lame Coef. [Pa]
-        lambda_s=4.5E5,  # Solid Young's modulus [Pa]
+        lambda_s=4.5E5,  # lambda_s=4.5E5,  # Solid Young's modulus [Pa]
         nu_s=0.45,      # Solid Poisson ratio [-]
         dx_f_id=1,      # ID of marker in the fluid domain
         dx_s_id=2,      # ID of marker in the solid domain
-        extrapolation="laplace",  # laplace, elastic, biharmonic, no-extrapolation
-        extrapolation_sub_type="volume_change",
+        extrapolation="biharmonic",  # laplace, elastic, biharmonic, no-extrapolation
+        extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
+        recompute=15,
         folder="turtle_demo_results"),  # name of the folder to save the data
-        save_step=10  # frequency of data saving
+        save_step=1  # frequency of data saving
     )
 
     return default_variables
@@ -82,18 +83,19 @@ def get_mesh_domain_and_boundaries(args, **namespace):
 class Inlet(UserExpression):
     def __init__(self, Um, **kwargs):
         self.t = 0.0
-        self.t_ramp = 1.0  # time to linearly ramp-up the inlet velocity
+        self.t_ramp = 0.5  # time to ramp-up to max inlet velocity (from 0 to Um)
         self.Um = Um       # Max. velocity inlet [m/s]
         super().__init__(**kwargs)
 
     def update(self, t):
         self.t = t
         if self.t < self.t_ramp:
-            self.value = self.Um * np.abs(np.cos(self.t * np.pi) - 1)  # ramp-up the inlet velocity
+            self.value = self.Um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
+            print(self.value)
         else:
-            min_amp = self.Um / 5  # set a lower threshold to the inlet flow
-            time_amp = self.Um * np.abs(np.cos(self.t * np.pi) - 1)  # cosine inlet flow evolution
-            self.value = np.max([min_amp, time_amp])
+            Um_min = self.Um/6  # lower velocity during oscillations
+            self.value = (self.Um-Um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + Um_min
+            print(self.value)
 
     def eval(self, value, x):
         value[0] = self.value

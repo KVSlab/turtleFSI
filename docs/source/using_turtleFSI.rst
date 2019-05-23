@@ -9,9 +9,27 @@ Using turtleFSI
 
 Execute a run
 =============
-For turtleFSI to be user friendly, we provide a tutorial on you can create your own problem file.
 
-If you have any questions beyond the tutorials, please do not hesitate to get in touch with us.
+turtleFSI is aimed to be user friendly and most of the parameters  we provide a tutorial on you can create your own problem file.
+
+Run turtleFSI with all the default parameters:
+ turtleFSI
+
+See all the command line parameters run the following command:
+ turtleFSI -h
+
+Run a specific problem file:: turtleFSI --problem [path_to_problem]
+
+
+Parsing provided on the command line. Although the list of parameters is rather extensive,
+the user is free to add new ones on the commandline. These will still be parsed and added.
+For instance, the variable "folder", used to specified the results folder, can be set by
+simply adding '--new-argument folder=TF_fsi_results' to the command line call or
+by adding (folder=TF_fsi_results) as a variable in the "set_problem_parameters" function
+of the problem file.
+NOTE: Any command line argument will overwrite the variable value given in the problem
+file "set_problem_parameters". Any variable set in the problem file "set_problem_parameters"
+will overwrite the default value defined in the problems/__init__.py file.
 
 
 
@@ -51,10 +69,10 @@ A simple example of this function can look like this::
         def set_problem_parameters(default_variables, **namespace):
             # Overwrite default values
             default_variables.update(dict(
-                T=10,          # End time [s]
-                dt=0.001,       # Time step [s]
-                theta=0.501,    # theta value (0.5 + dt), shifted Crank-Nicolson scheme
-                Um=0.8,         # Max. velocity inlet [m/s]
+                T=15,          # End time [s]
+                dt=0.005,       # Time step [s]
+                theta=0.505,    # theta value (0.5 + dt), shifted Crank-Nicolson scheme
+                Um=1.0,         # Max. velocity inlet [m/s]
                 rho_f=1.0E3,    # Fluid density [kg/m3]
                 mu_f=1.0,       # Fluid dynamic viscosity [Pa.s]
                 rho_s=1.0E3,    # Solid density [kg/m3]
@@ -64,8 +82,10 @@ A simple example of this function can look like this::
                 dx_f_id=1,      # ID of marker in the fluid domain
                 dx_s_id=2,      # ID of marker in the solid domain
                 extrapolation="biharmonic",  # laplace, elastic, biharmonic, no-extrapolation
+                extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
+                recompute=15, # recompute the Jacobian matrix every "recompute" Newton iterations
                 folder="turtle_demo_results"),  # name of the folder to save the data
-                save_step=10  # frequency of data saving
+                save_step=1  # frequency of data saving
             )
             return default_variables
 
@@ -117,6 +137,11 @@ In ``turtle_demo.py``, the function looks like this::
 
                 return mesh, domains, boundaries
 
+.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_boundaries.png
+   :width: 400px
+   :align: center
+
+   Domain boundaries.
 
 
 initiate
@@ -159,18 +184,19 @@ the consistency between the markers used and the one provided with the ``get_mes
             class Inlet(UserExpression):
                 def __init__(self, Um, **kwargs):
                     self.t = 0.0
-                    self.t_ramp = 1.0  # time to linearly ramp-up the inlet velocity
+                    self.t_ramp = 0.5  # time to ramp-up to max inlet velocity (from 0 to Um)
                     self.Um = Um       # Max. velocity inlet [m/s]
                     super().__init__(**kwargs)
 
                 def update(self, t):
                     self.t = t
                     if self.t < self.t_ramp:
-                        self.value = self.Um * np.abs(np.cos(self.t * np.pi) - 1)  # ramp-up the inlet velocity
+                        self.value = self.Um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
+                        print(self.value)
                     else:
-                        min_amp = self.Um / 5  # set a lower threshold to the inlet flow
-                        time_amp = self.Um * np.abs(np.cos(self.t * np.pi) - 1)  # cosine inlet flow evolution
-                        self.value = np.max([min_amp, time_amp])
+                        Um_min = self.Um/6  # lower velocity during oscillations
+                        self.value = (self.Um-Um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + Um_min
+                        print(self.value)
 
                 def eval(self, value, x):
                     value[0] = self.value
@@ -216,6 +242,19 @@ the consistency between the markers used and the one provided with the ``get_mes
                     bcs.append(i)
 
                 return dict(bcs=bcs, inlet=inlet)
+
+
+.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_boundaries_zoom.png
+    :width: 400px
+    :align: center
+
+    FSI and Fixed boundaries.
+
+.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+   :width: 400px
+   :align: center
+
+   Inlet velocity amplitude variation with time as defined by the class Inlet().
 
 
 
@@ -269,3 +308,11 @@ Function called once at the end of the time loop. An example of use is given in 
                     np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
                     np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
                     np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
+
+
+
+.. figure:: https://github.com/KVSlab/turtleFSI/blob/master/figs/Turtle_flow_Pressure_Fields_t_2.5s.png
+   :width: 400px
+   :align: center
+
+   Pressure and velocity fields at 2.5 s. obtain by running the turtle_demo.py problem file.
