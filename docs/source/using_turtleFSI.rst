@@ -281,6 +281,11 @@ save the updated solution vector to the data files initialized in the ``initiate
                     d_file.write(d, t)
                     u_file.write(v, t)
 
+.. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
+   :width: 600px
+   :align: center
+
+   Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
 
 
 post_process
@@ -298,9 +303,3 @@ Function called once at the end of the time loop. An example of use is given in 
                     np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
                     np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
 
-
-.. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
-   :width: 600px
-   :align: center
-
-   Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
