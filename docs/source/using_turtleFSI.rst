@@ -10,27 +10,16 @@ Using turtleFSI
 Execute a run
 =============
 
-turtleFSI is aimed to be user friendly and most of the parameters  we provide a tutorial on you can create your own problem file.
+turtleFSI is aimed to be user friendly and most of the parameters can be controlled from the command line. In this page, we provide a tutorial on creating your own problem file.
 
 Run turtleFSI with all the default parameters:
  turtleFSI
 
-See all the command line parameters run the following command:
+Run a specific problem file:
+ turtleFSI --problem [path_to_problem]
+
+See the full list of the command line parameters:
  turtleFSI -h
-
-Run a specific problem file:: turtleFSI --problem [path_to_problem]
-
-
-Parsing provided on the command line. Although the list of parameters is rather extensive,
-the user is free to add new ones on the commandline. These will still be parsed and added.
-For instance, the variable "folder", used to specified the results folder, can be set by
-simply adding '--new-argument folder=TF_fsi_results' to the command line call or
-by adding (folder=TF_fsi_results) as a variable in the "set_problem_parameters" function
-of the problem file.
-NOTE: Any command line argument will overwrite the variable value given in the problem
-file "set_problem_parameters". Any variable set in the problem file "set_problem_parameters"
-will overwrite the default value defined in the problems/__init__.py file.
-
 
 
 Create your own problem file
