@@ -103,16 +103,16 @@ vars().update(solid_setup(**vars()))
 exec("from turtleFSI.modules.{} import extrapolate_setup".format(extrapolation))
 vars().update(extrapolate_setup(**vars()))
 
-
-# Set up Newton solver
-exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(solver))
-vars().update(solver_setup(**vars()))
-
 # Any pre-processing before the simulation
 vars().update(initiate(**vars()))
 
 # Create boundary conditions
 vars().update(create_bcs(**vars()))
+
+# Set up Newton solver
+exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(solver))
+vars().update(solver_setup(**vars()))
+
 
 # Functions for residuals
 dvp_res = Function(DVP)

@@ -166,8 +166,11 @@ def parse():
                         metavar="Relaxation factor",
                         help="Relaxation factor in the Netwon solver")
     parser.add_argument("--recompute", type=int, default=None,
-                        metavar="Recompute Jacobian",
-                        help="How often to recompute the Jacobian.")
+                        metavar="Recompute Jacobian over Newton iterations",
+                        help="How often to recompute the Jacobian over Newton iterations.")
+    parser.add_argument("--recompute_tstep", type=int, default=None,
+                        metavar="Recompute Jacobian over time steps",
+                        help="How often to recompute the Jacobian over time steps.")
     parser.add_argument("--compiler-parameters", dest="compiler_parameters",
                         action=StoreDictKeyPair, nargs="+", metavar="KEY=VAL",
                         help="Update the defaul values of the compiler arguments" +

@@ -53,12 +53,13 @@ default_variables = dict(
 
     # Solver settings
     linear_solver="mumps",  # use list_linear_solvers() to check alternatives
-    solver="newtonsolver",  # newtonsolver, newtonsolver_naive
+    solver="newtonsolver",  # newtonsolver
     atol=1e-7,  # absolute error tolerance for the Newton iterations
     rtol=1e-7,  # relative error tolerance for the Newton iterations
     max_it=50,  # maximum number of Newton iterations
     lmbda=1.0,  # (>0-1.0) Cst relaxation factor for the Newton solution update
     recompute=5,  # recompute the Jacobian after "recompute" Newton iterations
+    recompute_tstep=1,  # recompute the Jacobian after "recompute_tstep" time steps (advanced option: =1 is preferred)
     compiler_parameters=_compiler_parameters,  # Update the defaul values of the compiler arguments (FEniCS)
 
     # Output settings

@@ -30,11 +30,13 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol)
 
 
-def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_parameters,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, verbose, **namespace):
+def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
+                 dvp_, up_sol, dvp_res, rtol, atol, max_it, counter, verbose, **namespace):
     """
     Solve the non-linear system of equations with Newton iterations scheme.
-    The jacobian matrix is re-evaluated at every "recompute" iteration steps.
+    There are two ways to control the reuse do the jacobian matrix:
+        - reused over iteration steps and re-evaluated at every "recompute" iteration steps. (faster, but may impact the rate of convergence)
+        - reused over time steps and re-evaluated at every "recompute_tstep" time steps. (advanced option, "recompute_tstep=1" is preferred)
     """
     # Initial values
     Iter = 0
@@ -46,10 +48,21 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_pa
     last_residual = rel_res
 
     while rel_res > rtol and residual > atol and Iter < max_it:
-        # Check if recompute Jacobian
-        if Iter % recompute == 0 or (last_rel_res < rel_res and
-                                     last_residual < residual and
-                                     last_residual < rel_res):
+
+        # Check if recompute Jacobian over time steps
+        if Iter == 0 and ((counter-1) % recompute_tstep == 0):
+            A = assemble(J_nonlinear, tensor=A,
+                         form_compiler_parameters=compiler_parameters,
+                         keep_diagonal=True)
+            A.axpy(1.0, A_pre, True)
+            A.ident_zeros()
+            [bc.apply(A) for bc in bcs]
+            up_sol.set_operator(A)
+
+        # Check if recompute Jacobian over Newton's iteration steps
+        if Iter > 0 and (Iter % recompute == 0 or (last_rel_res < rel_res and
+                                                   last_residual < residual and
+                                                   last_residual < rel_res)):
             A = assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
@@ -81,3 +94,5 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, compiler_pa
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
                   % (Iter, residual, atol, rel_res, rtol))
         Iter += 1
+
+    return dict(up_sol=up_sol)
