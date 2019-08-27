@@ -118,6 +118,8 @@ def after_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step
         print("Distance x: {:e}".format(dsx))
         print("Distance y: {:e}".format(dsy))
 
+    return {}
+
 
 def post_process(folder, dis_x, dis_y, Time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:

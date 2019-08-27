@@ -51,6 +51,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
 
         # Check if recompute Jacobian over time steps
         if Iter == 0 and ((counter-1) % recompute_tstep == 0):
+            if MPI.rank(MPI.comm_world) == 0 and verbose:
+                print("Compute Jacobian matrix")
             A = assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
@@ -63,6 +65,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         if Iter > 0 and (Iter % recompute == 0 or (last_rel_res < rel_res and
                                                    last_residual < residual and
                                                    last_residual < rel_res)):
+            if MPI.rank(MPI.comm_world) == 0 and verbose:
+                print("Compute Jacobian matrix")
             A = assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
@@ -95,4 +99,4 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
                   % (Iter, residual, atol, rel_res, rtol))
         Iter += 1
 
-    return dict(up_sol=up_sol)
+    return dict(up_sol=up_sol, A=A)

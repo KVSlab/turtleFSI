@@ -122,6 +122,7 @@ t = 0
 counter = 0
 timer = Timer("Total simulation time")
 timer.start()
+last_t = 0.0
 while t <= T + dt / 10:
     counter += 1
     t += dt
@@ -134,10 +135,10 @@ while t <= T + dt / 10:
             print(txt, end="\r")
 
     # Pre solve hook
-    pre_solve(**vars())
+    vars().update(pre_solve(**vars()))
 
     # Solve
-    newtonsolver(**vars())
+    vars().update(newtonsolver(**vars()))
 
     # Update vectors
     times = ["n-2", "n-1", "n"]
@@ -146,7 +147,16 @@ while t <= T + dt / 10:
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
 
     # After solve hook
-    after_solve(**vars())
+    vars().update(after_solve(**vars()))
+
+    if MPI.rank(MPI.comm_world) == 0:
+        last_n = timer.elapsed()[0]
+        txt = "Elapsed time: {0:f}".format(last_n-last_t)
+        last_t = last_n
+        if verbose:
+            print(txt)
+        else:
+            print(txt, end="\r")
 
 timer.stop()
 if MPI.rank(MPI.comm_world) == 0:

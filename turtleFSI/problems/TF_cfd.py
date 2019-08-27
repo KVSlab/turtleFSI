@@ -127,6 +127,7 @@ def create_bcs(DVP, dvp_, Um, H, v_deg, boundaries, extrapolation_sub_type, **na
 def pre_solve(t, inlet, **namespace):
     """Update boundary conditions"""
     inlet.update(t)
+    return {}
 
 
 def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, u_file,
@@ -148,6 +149,8 @@ def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter,
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Drag:", Drag_list[-1])
         print("Lift:", Lift_list[-1])
+
+    return {}
 
 
 def post_process(Drag_list, Lift_list, Time_list, folder, **namespace):

@@ -167,6 +167,8 @@ def pre_solve(t, inlet, **namespace):
     # Update the time variable used for the inlet boundary condition
     inlet.update(t)
 
+    return {}
+
 
 def after_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
     # Extract the variables to save

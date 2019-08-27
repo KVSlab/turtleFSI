@@ -195,6 +195,7 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
 def pre_solve(t, inlet, **namespace):
     """Update boundary conditions"""
     inlet.update(t)
+    return {}
 
 
 def after_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
@@ -228,6 +229,8 @@ def after_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n
         print("Distance y: {:e}".format(dis_y[-1]))
         print("Drag: {:e}", Drag_list[-1])
         print("Lift: {:e}", Lift_list[-1])
+
+    return {}
 
 
 def post_process(folder, dis_x, dis_y, Drag_list, Lift_list, Time_list,
