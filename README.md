@@ -1,11 +1,8 @@
-
-
 [![Documentation Status](https://readthedocs.org/projects/turtlefsi2/badge/?version=latest)](https://turtlefsi2.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/KVSlab/turtleFSI.svg?branch=master)](https://travis-ci.org/KVSlab/turtleFSI)
 
-## turtleFSI - Fluid-Structure Interaction
 
-<p align="center"> <span style="color:red"> <font size="+2"> !!! The repository is under construction !!! </font> </span> </p>
+# turtleFSI - a Fluid-Structure Interaction Solver
 
 <p align="center">
     <img src="figs/turtleFSI_swim.gif" width="360" height="250" alt="turtleFSI_swim"/>
@@ -18,9 +15,7 @@
 
 Description
 -----------
-TODO: Take some text from the paper and write a two-paragraph text about turtleFSI.
-
-The goal of turtleFSI is to provide research groups, and other individuals, with a tools ....
+turtleFSI is a monolithic fluid-structure interaction solver written in FEniCS, and has out-of-the-box high performance capabilities. The goal of turtleFSI is to provide research groups, and other individuals, with a simple, but powerfull solver to investigate fluid structure interaction problems.
 
 
 Authors
@@ -67,7 +62,7 @@ You are now all set, and can start running fluid-structure interaction simulatio
 Use
 ---
 Run turtleFSI with all the default parameters::
-	``turtleFSI``
+   ``turtleFSI``
 
 See all the command line parameters run the following command::
   ``turtleFSI -h``
