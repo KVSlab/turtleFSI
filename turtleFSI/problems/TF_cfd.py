@@ -130,7 +130,7 @@ def pre_solve(t, inlet, **namespace):
     return {}
 
 
-def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, u_file,
+def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, u_file,
                 p_file, d_file, mu_f, verbose, ds, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
@@ -153,7 +153,7 @@ def after_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter,
     return {}
 
 
-def post_process(Drag_list, Lift_list, Time_list, folder, **namespace):
+def finished(Drag_list, Lift_list, Time_list, folder, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
         np.savetxt(path.join(folder, 'Drag.txt'), Drag_list, delimiter=',')

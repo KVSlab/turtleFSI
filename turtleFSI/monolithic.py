@@ -147,7 +147,7 @@ while t <= T + dt / 10:
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
 
     # After solve hook
-    vars().update(after_solve(**vars()))
+    vars().update(post_solve(**vars()))
 
     if MPI.rank(MPI.comm_world) == 0:
         last_n = timer.elapsed()[0]
@@ -163,4 +163,4 @@ if MPI.rank(MPI.comm_world) == 0:
     print("Total simulation time {0:f}".format(timer.elapsed()[0]))
 
 # Post-processing of simulation
-post_process(**vars())
+finished(**vars())

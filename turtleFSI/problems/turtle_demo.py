@@ -10,9 +10,11 @@ turtle immersed in a pulsative flow. The turtle's head and tail are kept still
 while the rest of the body, wings and legs are free to move with the flow.
 The inlet flow (left to right) is initially gradually increased to a maximum value
 to, then, fluctuates as a sine function with time.
+
 The fluid flow is approximated by solving the incompressible Navier-Stokes equations.
 The elastic deformation of the turtle is solved assuming a nonlinear elastic
 Saint Venant-Kirchhoff constitutive model.
+
 Note: this setup has no aim to reproduce any realistic or physical problem.
 """
 
@@ -25,23 +27,23 @@ from turtleFSI.problems import *
 def set_problem_parameters(default_variables, **namespace):
     # Overwrite default values
     default_variables.update(dict(
-        T=15,          # End time [s]
-        dt=0.005,       # Time step [s]
-        theta=0.505,    # theta value (0.5 + dt), shifted Crank-Nicolson scheme
-        Um=1.0,         # Max. velocity inlet [m/s]
-        rho_f=1.0E3,    # Fluid density [kg/m3]
-        mu_f=1.0,       # Fluid dynamic viscosity [Pa.s]
-        rho_s=1.0E3,    # Solid density [kg/m3]
-        mu_s=5.0E4,     # Solid shear modulus or 2nd Lame Coef. [Pa]
-        lambda_s=4.5E5,  # lambda_s=4.5E5,  # Solid Young's modulus [Pa]
-        nu_s=0.45,      # Solid Poisson ratio [-]
-        dx_f_id=1,      # ID of marker in the fluid domain
-        dx_s_id=2,      # ID of marker in the solid domain
-        extrapolation="biharmonic",  # laplace, elastic, biharmonic, no-extrapolation
+        T=15,                          # End time [s]
+        dt=0.005,                      # Time step [s]
+        theta=0.505,                   # Theta value (0.5 + dt), shifted Crank-Nicolson scheme
+        Um=1.0,                        # Max. velocity inlet [m/s]
+        rho_f=1.0E3,                   # Fluid density [kg/m3]
+        mu_f=1.0,                      # Fluid dynamic viscosity [Pa.s]
+        rho_s=1.0E3,                   # Solid density [kg/m3]
+        mu_s=5.0E4,                    # Solid shear modulus or 2nd Lame Coef. [Pa]
+        lambda_s=4.5E5,                # Solid Young's modulus [Pa]
+        nu_s=0.45,                     # Solid Poisson ratio [-]
+        dx_f_id=1,                     # ID of marker in the fluid domain
+        dx_s_id=2,                     # ID of marker in the solid domain
+        extrapolation="biharmonic",    # Laplace, elastic, biharmonic, no-extrapolation
         extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
-        recompute=15,
-        folder="turtle_demo_results"),  # name of the folder to save the data
-        save_step=1  # frequency of data saving
+        recompute=15,                  # Recompute the Jacobian matrix every "recompute" Newton iterations
+        folder="turtle_demo_results"), # Mame of the folder to save the data
+        save_step=1                    # Frequency of data saving
     )
 
     return default_variables
@@ -54,7 +56,7 @@ def get_mesh_domain_and_boundaries(args, **namespace):
     # In this example, the mesh and markers are stored in the 3 following files
     mesh_path = path.join(mesh_folder, "turtle_mesh.xdmf")     # mesh geometry
     domains_marker_path = path.join(mesh_folder, "mc.xdmf")    # marker over the elements (domains)
-    boundaries_marker_path = path.join(mesh_folder, "mf.xdmf")  # markers of the segments (boundaries)
+    boundaries_marker_path = path.join(mesh_folder, "mf.xdmf") # markers of the segments (boundaries)
 
     # "mesh" collects the mesh geometry of the entire domain (fluid + solid).
     # In this example, we import a mesh stored in a .xdmf file, but other formats
@@ -113,10 +115,10 @@ def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, **namespace):
     noslip = ((0.0, 0.0))
 
     # Segments indices (make sure of the consistency with the boundary file)
-    bottom_id = 11  # segments at the bottom of the model
-    outlet_id = 12  # segments at the outlet (right wall) of the model
-    top_id = 13     # segments at the top (right wall) of the model
-    inlet_id = 14   # segments at the inlet (left wall) of the model
+    bottom_id = 11             # segments at the bottom of the model
+    outlet_id = 12             # segments at the outlet (right wall) of the model
+    top_id = 13                # segments at the top (right wall) of the model
+    inlet_id = 14              # segments at the inlet (left wall) of the model
     turtle_head_tail_id = 15   # segments along the head and tail of the turtle
 
     # Fluid velocity boundary conditions
@@ -151,10 +153,12 @@ def initiate(dvp_, folder, **namespace):
     for tmp_t in [u_file, d_file, p_file]:
         tmp_t.parameters["flush_output"] = True
         tmp_t.parameters["rewrite_function_mesh"] = False
+
     # Extract the variables to save
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
+
     # Save the data to the simulation time=0.0
     d_file.write(d, 0.0)
     u_file.write(v, 0.0)
@@ -163,19 +167,14 @@ def initiate(dvp_, folder, **namespace):
     return dict(u_file=u_file, d_file=d_file, p_file=p_file)
 
 
-def pre_solve(t, inlet, **namespace):
+def post_solve(t, inlet, **namespace):
     # Update the time variable used for the inlet boundary condition
     inlet.update(t)
 
     return {}
 
 
-def after_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
-    # Extract the variables to save
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    p = dvp_["n"].sub(2, deepcopy=True)
-    # Saving
+def finished(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
     if counter % save_step == 0:
         d = dvp_["n"].sub(0, deepcopy=True)
         v = dvp_["n"].sub(1, deepcopy=True)

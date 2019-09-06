@@ -97,7 +97,7 @@ def create_bcs(DVP, boundaries, **namespace):
     return dict(bcs=[u_barwall])
 
 
-def after_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
+def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
                 Time_list, verbose, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
@@ -121,7 +121,7 @@ def after_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step
     return {}
 
 
-def post_process(folder, dis_x, dis_y, Time_list, **namespace):
+def finished(folder, dis_x, dis_y, Time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
         np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
