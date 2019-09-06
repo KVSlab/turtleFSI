@@ -5,11 +5,11 @@
 # turtleFSI - a Fluid-Structure Interaction Solver
 
 <p align="center">
-    <img src="figs/turtleFSI_swim.gif" width="360" height="250" alt="turtleFSI_swim"/>
-    <img src="figs/turek_benchmark.gif" width="505" height="250" alt="turtleFSI_swim"/>
+    <img src="figs/turtleFSI_swim.gif" width="288" height="200" alt="turtleFSI_swim"/>
+    <img src="figs/turek_benchmark.gif" width="404" height="200" alt="turtleFSI_swim"/>
 </p>
 <p align="center">
-  left: racing turtleFSI, right: Turek benchmark FSI2
+  racing turtleFSI, right: Turek benchmark FSI2
 </p>
 
 
