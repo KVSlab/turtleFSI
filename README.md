@@ -9,7 +9,7 @@
     <img src="figs/turek_benchmark.gif" width="404" height="200" alt="turtleFSI_swim"/>
 </p>
 <p align="center">
-  racing turtleFSI, right: Turek benchmark FSI2
+  To the left we show a turtle swimming (in turtleFSI), and to the right, the classical Turek benchmark (FSI2).
 </p>
 
 
