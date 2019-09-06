@@ -5,8 +5,6 @@
 ============
 Installation
 ============
-turtleFSI is a entry-level simple FSI solver. The solver is slow, but a perfect starting point for exploring problems with FSI. The project is accessible through
-`GitHub <https://github.com/KVSlab/turtleFSI/>`_.
 
 Compatibility and Dependencies
 ==============================
@@ -25,13 +23,14 @@ Then execute the following command in a terminal window::
     $ conda create -n your_environment -c conda-forge turtleFSI
 
 You can then activate your environment by running ``source activate your_environment``.
-Now you are all set, and can start using turtleFSI.
-You can run turtleFSI directly through the terminal, by typing::
+Now you are all set, and can start using turtleFSI. You can execute turtleFSI directly
+through the terminal by typing::
 
     $ turtleFSI
 
-followed by the command line arguments. Use ``-h`` to see all the options.
-A detailed explanation for usage of turtleFSI is described in :ref:`getting_started`.
+followed by any additional options, for instance, which problem to run and the time step size.
+Use ``-h`` to see all availeble options. A detailed explanation for usage of turtleFSI can be found
+`here <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>`.
 
 
 Development version
@@ -41,7 +40,6 @@ Downloading
 ~~~~~~~~~~~
 The latest development version of turtleFSI can be found on the official
 `turtleFSI git repository <https://github.com/KVSlab/turtleFSI>`_ on Github.
-Make sure Git (>=1.6) is installed, which is needed to clone the repository.
 To clone the turtleFSI repository, navigate to the directory where you wish
 turtleFSI to be stored, type the following command, and press Enter::
 
@@ -53,7 +51,7 @@ in the newly created ``turtleFSI`` folder.
 Building
 ~~~~~~~~
 In order to build and install turtleFSI, navigate into the ``turtleFSI`` folder, where a ``setup.py``
-file will be located. First, make sure that all dependencies are installed. Then, building and installation of turtleFSI
-can be performed by simply running the following command from the terminal window::
+file will be located. First, make sure that all dependencies are installed.
+Then, you can install turtleFSI be executing the following::
 
     $ python setup.py install
