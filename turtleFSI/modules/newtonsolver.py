@@ -62,8 +62,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
             up_sol.set_operator(A)
 
         # Check if recompute Jacobian over Newton's iteration steps
-        if Iter > 0 and (Iter % recompute == 0 or (last_rel_res < rel_res and
-                                                   last_residual < residual and
+        if Iter > 0 and (Iter % recompute == 0 or (last_rel_res < rel_res or
+                                                   last_residual < residual or
                                                    last_residual < rel_res)):
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
