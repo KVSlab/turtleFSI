@@ -53,29 +53,29 @@ def sigma(u, p, d, mu_f):
     return sigma_f_u(u, d, mu_f) + sigma_f_p(p, u)
 
 
-def E(U):
+def E(d):
     """
     Green-Lagrange strain tensor
     """
-    return 0.5*(F_(U).T*F_(U) - Identity(len(U)))
+    return 0.5*(F_(d).T*F_(d) - Identity(len(d)))
 
 
-def S(U, lambda_s, mu_s):
+def S(d, lambda_s, mu_s):
     """
     Second Piola-Kirchhoff Stress (solid problem - Saint Venant-Kirchhoff materials)
     """
-    I = Identity(len(U))
-    return 2*mu_s*E(U) + lambda_s*tr(E(U))*I
+    I = Identity(len(d))
+    return 2*mu_s*E(d) + lambda_s*tr(E(d))*I
 
 
-def Piola1(U, lambda_s, mu_s):
+def Piola1(d, lambda_s, mu_s):
     """
     First Piola-Kirchhoff Stress (solid problem)
     """
-    return F_(U)*S(U, lambda_s, mu_s)
+    return F_(d)*S(d, lambda_s, mu_s)
 
 
-def S_linear(U, alfa_mu, alfa_lam):
+def S_linear(d, alfa_mu, alfa_lam):
     """
     Second Piola-Kirchhoff Stress (mesh problem - Linear Elastic materials)
     """
