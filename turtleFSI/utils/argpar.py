@@ -38,7 +38,7 @@ class StoreDictKeyPair(argparse.Action):
                     my_dict[k] = float(v)
 
                 # Boolean
-                elif v.lower in ["true", "false"]:
+                elif v.lower() in ["true", "false"]:
                     my_dict[k] = bool(v.capitalize())
 
                 # String
