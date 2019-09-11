@@ -113,7 +113,7 @@ def pre_solve(**namespace):
     return {}
 
 
-def after_solve(**namespace):
+def post_solve(**namespace):
     """
     Function called iteratively within the time loop of the simulation after
     solving the problem. Use to save data.
@@ -121,7 +121,7 @@ def after_solve(**namespace):
     return {}
 
 
-def post_process(**namespace):
+def finished(**namespace):
     """
     Function called once at the end of the time loop.
     """

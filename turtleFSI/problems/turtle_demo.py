@@ -42,7 +42,7 @@ def set_problem_parameters(default_variables, **namespace):
         extrapolation="biharmonic",    # Laplace, elastic, biharmonic, no-extrapolation
         extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
         recompute=15,                  # Recompute the Jacobian matrix every "recompute" Newton iterations
-        folder="turtle_demo_results"), # Mame of the folder to save the data
+        folder="turtle_demo_results"),  # Mame of the folder to save the data
         save_step=1                    # Frequency of data saving
     )
 
@@ -56,7 +56,7 @@ def get_mesh_domain_and_boundaries(args, **namespace):
     # In this example, the mesh and markers are stored in the 3 following files
     mesh_path = path.join(mesh_folder, "turtle_mesh.xdmf")     # mesh geometry
     domains_marker_path = path.join(mesh_folder, "mc.xdmf")    # marker over the elements (domains)
-    boundaries_marker_path = path.join(mesh_folder, "mf.xdmf") # markers of the segments (boundaries)
+    boundaries_marker_path = path.join(mesh_folder, "mf.xdmf")  # markers of the segments (boundaries)
 
     # "mesh" collects the mesh geometry of the entire domain (fluid + solid).
     # In this example, we import a mesh stored in a .xdmf file, but other formats
@@ -93,11 +93,11 @@ class Inlet(UserExpression):
         self.t = t
         if self.t < self.t_ramp:
             self.value = self.Um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
-            print(self.value)
+            # print(self.value)
         else:
             Um_min = self.Um/6  # lower velocity during oscillations
             self.value = (self.Um-Um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + Um_min
-            print(self.value)
+            # print(self.value)
 
     def eval(self, value, x):
         value[0] = self.value
@@ -167,10 +167,9 @@ def initiate(dvp_, folder, **namespace):
     return dict(u_file=u_file, d_file=d_file, p_file=p_file)
 
 
-def post_solve(t, inlet, **namespace):
+def pre_solve(t, inlet, **namespace):
     # Update the time variable used for the inlet boundary condition
     inlet.update(t)
-
     return {}
 
 

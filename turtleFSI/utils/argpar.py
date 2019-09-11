@@ -75,7 +75,7 @@ def restricted_float(x):
         x (float): Input argument
     """
     x = float(x)
-    if x <= 0.0 or x >= 1.0:
+    if x < 0.0 or x > 1.0:
         raise argparse.ArgumentTypeError("{} not in range [0.0, 1.0]".format(x))
     return x
 

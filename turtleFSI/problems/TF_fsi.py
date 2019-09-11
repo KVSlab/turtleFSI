@@ -173,16 +173,16 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
             bcs.append(i)
 
     else:
-        w_wall = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 2)
-        w_inlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 3)
-        w_outlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 4)
-        w_circle = DirichletBC(DVP.sub(0), (0.0, 0.0), boundaries, 6)
-        w_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 7)
+        w_wall = DirichletBC(DVP.sub(3).sub(1), (0.0), boundaries, 2)
+        w_inlet = DirichletBC(DVP.sub(3).sub(0), (0.0), boundaries, 3)
+        w_outlet = DirichletBC(DVP.sub(3).sub(0), (0.0), boundaries, 4)
+        w_circle = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 6)
+        w_barwall = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 7)
 
         d_wall = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 2)
         d_inlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 3)
         d_outlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 4)
-        d_circle = DirichletBC(DVP.sub(0), (0.0, 0.0), boundaries, 6)
+        d_circle = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 6)
         d_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 7)
 
         for i in [w_wall, w_inlet, w_outlet, w_circle, w_barwall,
@@ -199,8 +199,8 @@ def pre_solve(t, inlet, **namespace):
 
 
 def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
-                counter, u_file, p_file, d_file, verbose, save_step, Time_list, ds, dS,
-                **namespace):
+               counter, u_file, p_file, d_file, verbose, save_step, Time_list, ds, dS,
+               **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
@@ -234,7 +234,7 @@ def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
 
 
 def finished(folder, dis_x, dis_y, Drag_list, Lift_list, Time_list,
-                 **namespace):
+             **namespace):
     if MPI.rank(MPI.comm_world) == 0:
         np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
         np.savetxt(path.join(folder, 'Drag.txt'), Drag_list, delimiter=',')
