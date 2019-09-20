@@ -106,7 +106,7 @@ def parse():
 
     # Set fluid, solid, and extrapolation
     parser.add_argument("-f", "--fluid", type=str, default=None,
-                        choices=["fluid", "no-fluid"], metavar="Fluid",
+                        choices=["fluid", "no_fluid"], metavar="Fluid",
                         help="Turn off fluid and only solve the solid problem")
     parser.add_argument("-s", "--solid", type=str, default=None, metavar="Solid",
                         choices=["solid", "no-solid"],
