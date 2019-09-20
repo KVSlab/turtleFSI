@@ -66,7 +66,7 @@ v_ = {}
 p_ = {}
 w_ = {}
 
-for time in ["n", "n-1", "n-2", "n-3"]:
+for time in ["n", "n-1", "n-2"]:
     dvp = Function(DVP)
     dvp_[time] = dvp
     dvp_list = split(dvp)
