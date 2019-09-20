@@ -25,7 +25,7 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     b = None
 
     # Option not availeble in FEniCS 2018.1.0
-    #up_sol.parameters['reuse_factorization'] = True
+    # up_sol.parameters['reuse_factorization'] = True
 
     return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol)
 
@@ -63,11 +63,10 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
 
         # Check if recompute Jacobian over Newton's iteration steps
         if Iter > 0 and (Iter % recompute == 0 or (last_rel_res < rel_res or
-                                                   last_residual < residual or
-                                                   last_residual < rel_res)):
+                                                   last_residual < residual):
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
-            A = assemble(J_nonlinear, tensor=A,
+            A=assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
             A.axpy(1.0, A_pre, True)
@@ -76,11 +75,11 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
             up_sol.set_operator(A)
 
         # Compute right hand side
-        b = assemble(-F, tensor=b)
+        b=assemble(-F, tensor=b)
 
         # Reset residuals
-        last_rel_res = rel_res
-        last_residual = residual
+        last_rel_res=rel_res
+        last_residual=residual
 
         # Apply boundary conditions and solve
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
@@ -89,8 +88,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
         # Check residual
-        rel_res = norm(dvp_res, 'l2')
-        residual = b.norm('l2')
+        rel_res=norm(dvp_res, 'l2')
+        residual=b.norm('l2')
         if rel_res > 1E20 or residual > 1E20:
             raise RuntimeError("Error: The simulation has diverged during the Newton solve.")
 
