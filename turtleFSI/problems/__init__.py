@@ -110,7 +110,7 @@ def pre_solve(**namespace):
     solving the problem. Use to update boundary conditions (for instance, time
     variable inflow velocity expression).
     """
-    return {}
+    pass
 
 
 def post_solve(**namespace):
@@ -118,7 +118,7 @@ def post_solve(**namespace):
     Function called iteratively within the time loop of the simulation after
     solving the problem. Use to save data.
     """
-    return {}
+    pass
 
 
 def finished(**namespace):

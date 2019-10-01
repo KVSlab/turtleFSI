@@ -135,7 +135,9 @@ while t <= T + dt / 10:
             print(txt, end="\r")
 
     # Pre solve hook
-    vars().update({} if pre_solve(**vars()) is None else pre_solve(**vars()))
+    tmp_dict = pre_solve(**vars())
+    if tmp_dict is not None:
+        vars().update(tmp_dict)
 
     # Solve
     vars().update(newtonsolver(**vars()))
@@ -147,7 +149,9 @@ while t <= T + dt / 10:
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
 
     # After solve hook
-    vars().update({} if post_solve(**vars()) is None else post_solve(**vars()))
+    tmp_dict = post_solve(**vars())
+    if tmp_dict is not None:
+        vars().update(tmp_dict)
 
     if MPI.rank(MPI.comm_world) == 0:
         last_n = timer.elapsed()[0]
