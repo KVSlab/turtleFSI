@@ -35,7 +35,7 @@ def set_problem_parameters(default_variables, **namespace):
         mu_f=1.0,                      # Fluid dynamic viscosity [Pa.s]
         rho_s=1.0E3,                   # Solid density [kg/m3]
         mu_s=5.0E4,                    # Solid shear modulus or 2nd Lame Coef. [Pa]
-        lambda_s=4.5E5,                # Solid Young's modulus [Pa]
+        lambda_s=4.5E5,                # Solid 1st Lame Coef. [Pa]
         nu_s=0.45,                     # Solid Poisson ratio [-]
         dx_f_id=1,                     # ID of marker in the fluid domain
         dx_s_id=2,                     # ID of marker in the solid domain
@@ -173,7 +173,7 @@ def pre_solve(t, inlet, **namespace):
     return {}
 
 
-def finished(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
+def post_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
     if counter % save_step == 0:
         d = dvp_["n"].sub(0, deepcopy=True)
         v = dvp_["n"].sub(1, deepcopy=True)

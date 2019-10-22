@@ -25,7 +25,7 @@ def set_problem_parameters(args, default_variables, **namespace):
         mu_s=0.5e6,    # Shear modulus, 2nd Lame Coef. CSM3: 0.5E6 [Pa]
         nu_s=0.4,      # Solid Poisson ratio [-]
         gravity=2.0,   # Gravitational force [m/s^2]
-        lambda_s=2e6,  # Solid Young's modulus [Pa]
+        lambda_s=2e6,  # Solid 1st Lame Coef. [Pa]
 
         # Problem specific
         dx_f_id=0,     # Id of the fluid domain
@@ -98,7 +98,7 @@ def create_bcs(DVP, boundaries, **namespace):
 
 
 def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
-                Time_list, verbose, **namespace):
+               Time_list, verbose, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
 

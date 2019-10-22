@@ -26,7 +26,7 @@ def set_problem_parameters(default_variables, **namespace):
         rho_s=1.0e3,                  # Solid density[kg/m3]
         nu_s=0.4,                     # Solid Poisson ratio [-]
         mu_s=2.0e6,                   # Shear modulus, CSM3: 0.5E6 [Pa]
-        lambda_s=4e6,                 # Solid Young's modulus [Pa]
+        lambda_s=4e6,                 # Solid 1st Lame Coef. [Pa]
 
         # Problem specific
         folder="TF_fsi_results",      # Name of the results folder

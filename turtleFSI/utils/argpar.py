@@ -135,11 +135,11 @@ def parse():
     parser.add_argument("--rho_s", type=float, default=None,
                         help="Density of the solid")
     parser.add_argument("--mu_s", type=float, default=None,
-                        help="Shear modulus in the solid")
+                        help="Shear modulus or 2nd Lame Coef. for the solid")
     parser.add_argument("--nu_s", type=float, default=None,
                         help="Poisson ratio in the solid")
     parser.add_argument("--lambda_s", type=float, default=None,
-                        help="Young's modulus in the solid")
+                        help="1st Lame Coef. for the solid")
     parser.add_argument("--gravity", type=float, default=None,
                         help="Gravitational force on the solid")
 

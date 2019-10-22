@@ -38,9 +38,9 @@ default_variables = dict(
     rho_f=1.0E3,  # Density of the fluid
     mu_f=1.0,  # Fluid dynamic viscosity
     rho_s=1.0E3,  # Density of the solid
-    mu_s=5.0E4,  # Shear modulus in the solid
+    mu_s=5.0E4,  # Shear modulus or 2nd Lame Coef. for the solid
     nu_s=0.45,  # Poisson ratio
-    lambda_s=4.5E5,  # Young's modulus in the solid
+    lambda_s=4.5E5,  # 1st Lame Coef. for the solid
     gravity=None,  # Gravitational force on the solid
     Um=0.8,  # Maximum velocity at inlet
 
