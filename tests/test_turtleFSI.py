@@ -55,9 +55,9 @@ def test_fsi():
     distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6581710698812908e-08
-    drag_reference = 2.472928853734468
-    lift_reference = -0.003951019860531757
+    distance_y_reference = -2.6594621765280973e-08
+    drag_reference = 2.472928697982334
+    lift_reference = -0.003950732063025264
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -77,9 +77,9 @@ def test_laplace(extrapolation_sub_type):
     distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6581710698812908e-08
-    drag_reference = 2.472928853734468
-    lift_reference = -0.003951019860531757
+    distance_y_reference = -2.6594621765280973e-08
+    drag_reference = 2.472928697982334
+    lift_reference = -0.003950732063025264
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -87,7 +87,7 @@ def test_laplace(extrapolation_sub_type):
     assert compare(lift, lift_reference)
 
 
-@pytest.mark.parametrize("extrapolation_sub_type", ["bc1", "bc2"])
+@pytest.mark.parametrize("extrapolation_sub_type", ["constrained_disp", "constrained_disp_vel"])
 def test_biharmonic(extrapolation_sub_type):
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
            " --extrapolation biharmonic --new-arguments folder=tmp")
@@ -98,9 +98,9 @@ def test_biharmonic(extrapolation_sub_type):
     distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6581710698812908e-08
-    drag_reference = 2.472928853734468
-    lift_reference = -0.003951019860531757
+    distance_y_reference = -2.6594621765280973e-08
+    drag_reference = 2.472928697982334
+    lift_reference = -0.003950732063025264
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
