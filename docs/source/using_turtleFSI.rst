@@ -11,7 +11,7 @@ Execute a run
 =============
 
 turtleFSI is aimed to be user friendly, where all parameters can be controlled from the command line.
-In this page, we provide an example on how to create your own problem file. First a quick recap on how to 
+In this page, we provide an example on how to create your own problem file. First a quick recap on how to
 execute turtleFSI.
 
 To run turtleFSI with all the default parameters you can execute::
@@ -56,7 +56,7 @@ overwrite the physical variables as these vary from problem to problem.
 
 If you provide any command line arguments these will overwrite both those you have defined in your
 problem file, and the ``default_variables``. In theory, you do not have to specify the ``set_problem_parameters``
-if you just want to use the values defined in ``default_variables``, however in practice you have to 
+if you just want to use the values defined in ``default_variables``, however in practice you have to
 include this function in all your problem files.
 
 A simple example of this function can look like this::
@@ -72,12 +72,12 @@ A simple example of this function can look like this::
             mu_f=1.0,                      # Fluid dynamic viscosity [Pa.s]
             rho_s=1.0E3,                   # Solid density [kg/m3]
             mu_s=5.0E4,                    # Solid shear modulus or 2nd Lame Coef. [Pa]
-            lambda_s=4.5E5,                # Solid Young's modulus [Pa]
+            lambda_s=4.5E5,                # Solid 1st Lame Coef. [Pa]
             nu_s=0.45,                     # Solid Poisson ratio [-]
             dx_f_id=1,                     # ID of marker in the fluid domain
             dx_s_id=2,                     # ID of marker in the solid domain
             extrapolation="biharmonic",    # laplace, elastic, biharmonic, no-extrapolation
-            extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
+            extrapolation_sub_type="constrained_disp",  # ["constant", "small_constant", "volume", "volume_change", "constrained_disp", "constrained_disp_vel"]
             recompute=15,                  # recompute the Jacobian matrix every "recompute" Newton iterations
             folder="turtle_demo_results"), # name of the folder to save the data
             save_step=1                    # frequency of data saving
@@ -301,4 +301,3 @@ Function called once at the end of the time loop. An example of use is given in 
             np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
             np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
             np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
-
