@@ -31,7 +31,7 @@ def set_problem_parameters(default_variables, **namespace):
         # Problem specific
         folder="TF_fsi_results",      # Name of the results folder
         extrapolation="biharmonic",   # No displacement to extrapolate
-        extrapolation_sub_type="bc2",  # Biharmonic type
+        extrapolation_sub_type="constrained_disp_vel",  # Biharmonic type
         bc_ids=[2, 3, 4, 6],          # Ids for extrapolation weak form
 
         # Solver settings
@@ -163,7 +163,7 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
     bcs = [u_wall, u_inlet, u_circ, u_barwall, p_out]
 
     # Boundary conditions on the displacement / extrapolation
-    if extrapolation_sub_type != "bc2":
+    if extrapolation_sub_type != "constrained_disp_vel":
         d_wall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 2)
         d_inlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 3)
         d_outlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 4)
@@ -173,15 +173,15 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
             bcs.append(i)
 
     else:
-        w_wall = DirichletBC(DVP.sub(3).sub(1), (0.0), boundaries, 2)
-        w_inlet = DirichletBC(DVP.sub(3).sub(0), (0.0), boundaries, 3)
-        w_outlet = DirichletBC(DVP.sub(3).sub(0), (0.0), boundaries, 4)
+        w_wall = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 2)
+        w_inlet = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 3)
+        w_outlet = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 4)
         w_circle = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 6)
         w_barwall = DirichletBC(DVP.sub(3), ((0.0, 0.0)), boundaries, 7)
 
-        d_wall = DirichletBC(DVP.sub(0).sub(1), (0.0), boundaries, 2)
-        d_inlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 3)
-        d_outlet = DirichletBC(DVP.sub(0).sub(0), (0.0), boundaries, 4)
+        d_wall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 2)
+        d_inlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 3)
+        d_outlet = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 4)
         d_circle = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 6)
         d_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 7)
 

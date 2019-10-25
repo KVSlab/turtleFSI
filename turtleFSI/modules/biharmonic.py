@@ -19,11 +19,11 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta,
 
     Two types of boundary conditions can be setup for this problem:
 
-        - "bc1" with conditions only on (d):
+        - "constrained_disp" with conditions only on (d):
             d(d)/dn = 0    on the fluid boundaries other than FSI interface
             d = solid_def  on the FSI interface
 
-        - "bc2" with conditions on (d) and (w):
+        - "constrained_disp_vel" with conditions on (d) and (w):
             d(d(x))/dn = 0 and d(w(x))/dn = 0   on the inlet and outlet fluid boundaries
             d(d(y))/dn = 0 and d(w(y))/dn = 0   on the FSI interface
 
@@ -43,7 +43,7 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta,
                                                              grad(beta))*dx_f
     F_ext2 = alfa_u*inner(grad(w_["n"]), grad(phi))*dx_f
 
-    if extrapolation_sub_type == "bc2":
+    if extrapolation_sub_type == "constrained_disp_vel":
         for i in bc_ids:
             F_ext1 += alfa_u*inner(grad(d_["n"])*n, beta)*ds(i)
             F_ext2 -= alfa_u*inner(grad(w_["n"])*n, phi)*ds(i)

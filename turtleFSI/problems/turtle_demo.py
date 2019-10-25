@@ -26,6 +26,11 @@ from turtleFSI.problems import *
 
 def set_problem_parameters(default_variables, **namespace):
     # Overwrite default values
+    E_s_val = 1E6
+    nu_s_val = 0.45
+    mu_s_val = E_s_val/(2*(1+nu_s_val))  # 0.345E6
+    lambda_s_val = nu_s_val*2.*mu_s_val/(1. - 2.*nu_s_val)
+
     default_variables.update(dict(
         T=15,                          # End time [s]
         dt=0.005,                      # Time step [s]
@@ -40,7 +45,7 @@ def set_problem_parameters(default_variables, **namespace):
         dx_f_id=1,                     # ID of marker in the fluid domain
         dx_s_id=2,                     # ID of marker in the solid domain
         extrapolation="biharmonic",    # Laplace, elastic, biharmonic, no-extrapolation
-        extrapolation_sub_type="bc1",  # ["constant", "small_constant", "volume", "volume_change", "bc1", "bc2"]
+        extrapolation_sub_type="constrained_disp",  # ["constant", "small_constant", "volume", "volume_change", "constrained_disp", "constrained_disp_vel"]
         recompute=15,                  # Recompute the Jacobian matrix every "recompute" Newton iterations
         folder="turtle_demo_results"),  # Mame of the folder to save the data
         save_step=1                    # Frequency of data saving

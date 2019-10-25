@@ -48,8 +48,8 @@ default_variables = dict(
     fluid="fluid",  # ["fluid", "no-fluid"] Turn off fluid and only solve the solid problem
     solid="solid",  # ["solid", "no-solid"] Turn off solid and only solve the fluid problem
     extrapolation="laplace",  # laplace, elastic, biharmonic, no-extrapolation
-    extrapolation_sub_type="constant",  # small_constant, volume, constant, bc1, bc2
-    bc_ids=[],  # List of ids for weak form of biharmonic mesh lifting operator with 'bc2'
+    extrapolation_sub_type="constant",  # small_constant, volume, constant, constrained_disp, constrained_disp_vel
+    bc_ids=[],  # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'
 
     # Solver settings
     linear_solver="mumps",  # use list_linear_solvers() to check alternatives

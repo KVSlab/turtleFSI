@@ -119,11 +119,11 @@ def parse():
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,
                         metavar="Extrapolation sub type", default=None,
                         choices=["constant", "small_constant", "volume", "volume_change",
-                                 "bc1", "bc2"],
-                        help="Set the sub type of the extrapolation method. TODO")
+                                 "constrained_disp", "constrained_disp_vel"],
+                        help="Set the sub type of the extrapolation method")
     parser.add_argument("--bc_ids", nargs="+", type=int, default=None, metavar="ID list",
                         help="List of boundary ids for the weak formulation of the" +
-                        " biharmonic mesh lifting operator with 'bc2'")
+                        " biharmonic mesh lifting operator with 'constrained_disp_vel'")
 
     # Meterial settings / physical constants
     parser.add_argument("--Um", type=float, default=None,
