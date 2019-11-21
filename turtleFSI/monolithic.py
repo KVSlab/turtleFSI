@@ -22,19 +22,34 @@ if os.path.isfile(os.path.abspath(args.problem+'.py')):
 else:
     try:
         exec("from turtleFSI.problems.{} import *".format(args.problem))
-    except:
+    except ImportError:
         raise ImportError("""Can not find the problem file. Make sure that the
         problem file is specified in the current directory or in the solver
         turtleFSI/problems/... directory.""")
+    finally:
+        raise RuntimeError("An unexpected error occured when trying to load {}".format(args.problem))
 
 # Get problem specific parameters
-vars().update(set_problem_parameters(**vars()))
+default_parameters = vars().update(set_problem_parameters(**vars()))
 
 # Update variables from commandline
 for key, value in list(args.__dict__.items()):
     if value is None:
         args.__dict__.pop(key)
-vars().update(args.__dict__)
+
+# If restart folder is given, read previous settings
+default_parameters.update(args.__dict__)
+if default_parameters["restart_folder"] is not None:
+    restart_folder = default_parameters["restart_folder"]
+    restart_dict = pickle.load(default_parameters["restart_folder"])
+    default_parameters.update(restart_dict)
+    default_parameters["restart_folder"] = restart_folder
+
+# Set variables in global namespace
+vars().update(default_parameters)
+
+# Create folders
+create_folders(**vars)
 
 # Get mesh information
 mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
@@ -66,7 +81,8 @@ v_ = {}
 p_ = {}
 w_ = {}
 
-for time in ["n", "n-1", "n-2"]:
+times = ["n-2", "n-1", "n"]
+for time in times:
     dvp = Function(DVP)
     dvp_[time] = dvp
     dvp_list = split(dvp)
@@ -113,13 +129,14 @@ vars().update(create_bcs(**vars()))
 exec("from turtleFSI.modules.{} import solver_setup, newtonsolver".format(solver))
 vars().update(solver_setup(**vars()))
 
-
 # Functions for residuals
 dvp_res = Function(DVP)
 chi = TrialFunction(DVP)
 
-t = 0
-counter = 0
+# Set initial conditions from restart folder
+if restart_folder is not None:
+    start_from_checkpoint(**vars())
+
 timer = Timer("Total simulation time")
 timer.start()
 last_t = 0.0
@@ -143,7 +160,6 @@ while t <= T + dt / 10:
     vars().update(newtonsolver(**vars()))
 
     # Update vectors
-    times = ["n-2", "n-1", "n"]
     for i, t_tmp in enumerate(times[:-1]):
         dvp_[t_tmp].vector().zero()
         dvp_[t_tmp].vector().axpy(1, dvp_[times[i+1]].vector())
@@ -153,15 +169,24 @@ while t <= T + dt / 10:
     if tmp_dict is not None:
         vars().update(tmp_dict)
 
+    # Checkpoint
+    if tstep % checkpoint_step == 0:
+        checkpoint(**vars())
+
+    # Store results
+    if tstep % save_step == 0:
+        save_files_visualization(**vars())
+
+    # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:
-        last_n = timer.elapsed()[0]
-        txt = "Elapsed time: {0:f}".format(last_n-last_t)
-        last_t = last_n
+        txt = "Elapsed time: {0:f}".format(timer.elapsed()[0] - last_t)
+        last_t = timer.elapsed()[0]
         if verbose:
             print(txt)
         else:
             print(txt, end="\r")
 
+# Print total time
 timer.stop()
 if MPI.rank(MPI.comm_world) == 0:
     print("Total simulation time {0:f}".format(timer.elapsed()[0]))

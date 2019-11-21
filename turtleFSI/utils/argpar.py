@@ -24,29 +24,69 @@ class StoreDictKeyPair(argparse.Action):
         self._nargs = nargs
         super(StoreDictKeyPair, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
 
+    @static
+    def is_int(string):
+        return set(string).issubset(set(string.digits+"-"))
+
+    @static
+    def is_float(string):
+        return set(v).issubset(set(string.digits+".eE+-"))
+
+    @static
+    def is_boolean(string):
+        return string.lower() in ["true", "false"]
+
+    @static
+    def is_list(string):
+        return True if string.startswith("[") and string.endswith("]") else False
+
+    @static
+    def is_tuple(string):
+        return True if string.startswith("(") and string.endswith(")") else False
+
+    @static
+    def is_dictionary(string):
+        return True if string.startswith("{") and string.endswith("}") else False
+
+    @static
+    def return_typed(string):
+        if self.is_int(string):
+            return int(string)
+
+        elif self.is_float(string):
+            return float(string)
+
+        elif self.is_boolean(string):
+            return bool(string)
+
+        elif self.is_list(string):
+            return list([return_types(i.strip()) for i in string[1:-1].split(",")])
+
+        elif self.is_tuple(string):
+            return tuple([return_types(i.strip()) for i in string[1:-1].split(",")])
+
+        elif self.is_dictionary(string):
+            tmp_dict = {}
+            items = tmp_dict.split(": ")
+            keys = items[::2]
+            values = items[1::2]
+            for k, v in zip(keys, values):
+                tmp_dict[k] = return_types(v)
+            return tmp_dict
+
+        else: # A string
+            return string
+
     def __call__(self, parser, namespace, values, option_string=None):
         my_dict = {}
         for kv in values:
             k, v = kv.split("=")
             try:
-                # Int
-                if set(v).issubset(set(string.digits+"-")):
-                    my_dict[k] = int(v)
-
-                # Float
-                elif set(v).issubset(set(string.digits+".eE+-")):
-                    my_dict[k] = float(v)
-
-                # Boolean
-                elif v.lower() in ["true", "false"]:
-                    my_dict[k] = bool(v.capitalize())
-
-                # String
-                else:
-                    my_dict[k] = v
-            except:
-                # String
+                my_dict[k] = self.return_typed(v)
+            except ValueError:
                 my_dict[k] = v
+            finally:
+                raise RuntimeError("Failed to convert {}={}".format(k, v)
 
         setattr(namespace, self.dest, my_dict)
 
@@ -185,6 +225,13 @@ def parse():
                         help="Set FEniCS loglevel")
     parser.add_argument("--save-step", type=int, default=None,
                         help="Saving frequency of the files defined in the problem file")
+    parser.add_arguments("--chechpoint-step", type=int, default=None,
+                         help="How often to store a checkpoint to restart the simulation from")
+    parser.add_argument("--folder", type=str, default=None,
+                        help="Path to store the results. You can store multiple" +
+                        " simulations in one folder")
+    parser.add_arguments("--sub-folder", type=str, default=None,
+                         help="Over write the standard 1, 2, 3 name of the sub folders")
 
     # Set spatial and temporal resolution
     parser.add_argument("-dt", metavar="Time step", type=float,

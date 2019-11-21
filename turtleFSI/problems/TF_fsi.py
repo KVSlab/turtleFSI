@@ -46,8 +46,8 @@ def set_problem_parameters(default_variables, **namespace):
         c_x=0.2,                      # Center of the circle x-direction
         c_y=0.2))                     # Center of the circle y-direction
 
-    #from IPython import embed; embed()
     default_variables["compiler_parameters"].update({"quadrature_degree": 5})
+
     return default_variables
 
 
@@ -195,7 +195,6 @@ def create_bcs(DVP, v_deg, Um, H, boundaries, extrapolation_sub_type, **namespac
 def pre_solve(t, inlet, **namespace):
     """Update boundary conditions"""
     inlet.update(t)
-    return {}
 
 
 def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
@@ -204,11 +203,6 @@ def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
-
-    if counter % save_step == 0:
-        p_file.write(p, t)
-        d_file.write(d, t)
-        u_file.write(v, t)
 
     # Compute drag and lift
     Dr = -assemble((sigma(v, p, d, mu_f)*n)[0]*ds(6))
