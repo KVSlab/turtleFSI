@@ -82,7 +82,7 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
         # Get path to sub folder for this simulation
         path = Path.cwd() / folder
         if sub_folder is not None:
-            path.joinpath(sub_folder)
+            path = path.joinpath(sub_folder)
         else:
             if [int(str(i.name)) for i in path.glob("*") if str(i.name).isdigit()] == []:
                 path = path.joinpath("1")

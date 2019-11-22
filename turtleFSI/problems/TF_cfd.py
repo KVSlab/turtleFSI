@@ -114,6 +114,10 @@ def pre_solve(t, inlet, **namespace):
 
 def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, counter, mu_f, verbose, ds,
                **namespace):
+    d = dvp_["n"].sub(0, deepcopy=True)
+    v = dvp_["n"].sub(1, deepcopy=True)
+    p = dvp_["n"].sub(2, deepcopy=True)
+
     force = dot(sigma(v, p, d, mu_f), n)
     Drag_list.append(-assemble(force[0]*ds(4)))
     Lift_list.append(-assemble(force[1]*ds(4)))
