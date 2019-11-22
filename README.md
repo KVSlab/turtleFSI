@@ -15,7 +15,7 @@
 
 Description
 -----------
-turtleFSI is a monolithic fluid-structure interaction solver written in FEniCS, and has out-of-the-box high performance capabilities. The goal of turtleFSI is to provide research groups, and other individuals, with a simple, but powerfull solver to investigate fluid structure interaction problems.
+turtleFSI is a monolithic fluid-structure interaction solver written in FEniCS, and has out-of-the-box high performance capabilities. The goal of turtleFSI is to provide research groups, and other individuals, with a simple, but robust solver to investigate fluid structure interaction problems.
 
 
 Authors

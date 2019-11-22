@@ -24,6 +24,28 @@ To get an overview of all parameters, please run::
  turtleFSI -h
 
 
+Built-in functionality
+======================
+We have designed turtleFSI to be lightweight and focus around solving the equiations, not additional 
+functionality. However, we have added two functions: checkpointing/restart, and storing files for visualization.
+
+For checkpointing you can set the variable ``--checkpoint-step`` to set how often a checkpoint should
+be stored. To restart the from a previous run set ``--restart-folder [folder/sub-folder]``. Note that 
+the variables from the previous simulation will overwrite any parameters set in the ``set_problem_parameters``
+or on the commandline. To overwrite any parameters from the previous run, for instance, end time ``T``, you can
+use the ``initiate`` function.
+
+To set how often you save files for visualization you can set ``--save-step``. Note that the default is ``1``.
+
+
+Setting parameters
+==================
+All the the default parameters are set in the ``problem/__init__.py`` file. Problem specific parameters
+are then overwritten in the problem file under ``set_problem_parameters``. Then any parameters given on the
+command line overwrites those given in the problem file. In summary; we have that defualt parameters <
+problem file < command line.
+
+
 Create your own problem file
 ============================
 
@@ -139,33 +161,9 @@ In ``turtle_demo.py``, the function looks like this::
 
 initiate
 ~~~~~~~~
-This function is not strictly necessary, but can be used to initiate variables and data files before
-entering the time loop of the simulation. In ``turtle_demo.py``, the function is used to initialize
-the files where the data are stored during the simulation::
-
-
-    def initiate(dvp_, folder, **namespace):
-        # Files for storing results
-        u_file = XDMFFile(MPI.comm_world, path.join(folder, "velocity.xdmf"))
-        d_file = XDMFFile(MPI.comm_world, path.join(folder, "d.xdmf"))
-        p_file = XDMFFile(MPI.comm_world, path.join(folder, "pressure.xdmf"))
-
-        for tmp_t in [u_file, d_file, p_file]:
-            tmp_t.parameters["flush_output"] = True
-            tmp_t.parameters["rewrite_function_mesh"] = False
-
-        # Extract the variables to save
-        d = dvp_["n"].sub(0, deepcopy=True)
-        v = dvp_["n"].sub(1, deepcopy=True)
-        p = dvp_["n"].sub(2, deepcopy=True)
-
-        # Save the data to the simulation time=0.0
-        d_file.write(d, 0.0)
-        u_file.write(v, 0.0)
-        p_file.write(p, 0.0)
-
-        return dict(u_file=u_file, d_file=d_file, p_file=p_file)
-
+This function is not strictly necessary, but can be used to initiate variables before
+entering the time loop of the simulation. Here we have no need for that, and have therefore
+not included it. See ``TF_fsi.py`` for an example.
 
 
 create_bcs
@@ -270,23 +268,8 @@ at the given time step. In ``turtle_demo.py``, we used this function to update t
 post_solve
 ~~~~~~~~~~~
 This function is called within the time loop of the simulation after
-calling the solver at the given time step. In ``turtle_demo.py``, we used this function to
-save the updated solution vector to the data files initialized in the ``initiate`` function::
-
-    def post_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
-        if counter % save_step == 0:
-            d = dvp_["n"].sub(0, deepcopy=True)
-            v = dvp_["n"].sub(1, deepcopy=True)
-            p = dvp_["n"].sub(2, deepcopy=True)
-            p_file.write(p, t)
-            d_file.write(d, t)
-            u_file.write(v, t)
-
-.. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
-   :width: 600px
-   :align: center
-
-   Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
+calling the solver at the given time step. In ``turtle_demo.py``, we do not have any use for
+this function, but see ``TF_fsi.py`` for an example.
 
 
 finished
@@ -301,3 +284,16 @@ Function called once at the end of the time loop. An example of use is given in 
             np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
             np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
             np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
+
+
+Visualizing the result
+======================
+Given that the parameter ``--save-step`` not was set larger than the number of time steps, there will
+be a folder: ``[folder]/[sub-folder]/Visualization`` with ``xdmf`` files that can be opened in a
+visualization probrem, for instance ParaView. Below we have visualized the pressure and velocity at 2.5 s.
+
+.. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
+   :width: 600px
+   :align: center
+
+   Pressure and velocity fields at 2.5 s. obtained by running the turtle_demo.py problem file.
