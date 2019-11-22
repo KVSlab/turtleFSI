@@ -48,8 +48,7 @@ class StoreDictKeyPair(argparse.Action):
     def is_dictionary(string):
         return True if string.startswith("{") and string.endswith("}") else False
 
-    @staticmethod
-    def return_typed(string):
+    def return_typed(self, string):
         if self.is_int(string):
             return int(string)
 
