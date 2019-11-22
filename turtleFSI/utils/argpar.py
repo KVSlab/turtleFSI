@@ -25,46 +25,46 @@ class StoreDictKeyPair(argparse.Action):
         super(StoreDictKeyPair, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
 
     @staticmethod
-    def is_int(string):
-        return set(string).issubset(set(string.digits+"-"))
+    def is_int(s):
+        return set(s).issubset(set(string.digits+"-"))
 
     @staticmethod
-    def is_float(string):
-        return set(v).issubset(set(string.digits+".eE+-"))
+    def is_float(s):
+        return set(s).issubset(set(string.digits+".eE+-"))
 
     @staticmethod
-    def is_boolean(string):
-        return string.lower() in ["true", "false"]
+    def is_boolean(s):
+        return s.lower() in ["true", "false"]
 
     @staticmethod
-    def is_list(string):
-        return True if string.startswith("[") and string.endswith("]") else False
+    def is_list(s):
+        return True if s.startswith("[") and s.endswith("]") else False
 
     @staticmethod
-    def is_tuple(string):
-        return True if string.startswith("(") and string.endswith(")") else False
+    def is_tuple(s):
+        return True if s.startswith("(") and s.endswith(")") else False
 
     @staticmethod
-    def is_dictionary(string):
-        return True if string.startswith("{") and string.endswith("}") else False
+    def is_dictionary(s):
+        return True if s.startswith("{") and s.endswith("}") else False
 
-    def return_typed(self, string):
-        if self.is_int(string):
-            return int(string)
+    def return_typed(self, s):
+        if self.is_int(s):
+            return int(s)
 
-        elif self.is_float(string):
-            return float(string)
+        elif self.is_float(s):
+            return float(s)
 
-        elif self.is_boolean(string):
-            return bool(string)
+        elif self.is_boolean(s):
+            return bool(s)
 
-        elif self.is_list(string):
-            return list([return_types(i.strip()) for i in string[1:-1].split(",")])
+        elif self.is_list(s):
+            return list([return_types(i.strip()) for i in s[1:-1].split(",")])
 
-        elif self.is_tuple(string):
-            return tuple([return_types(i.strip()) for i in string[1:-1].split(",")])
+        elif self.is_tuple(s):
+            return tuple([return_types(i.strip()) for i in s[1:-1].split(",")])
 
-        elif self.is_dictionary(string):
+        elif self.is_dictionary(s):
             tmp_dict = {}
             items = tmp_dict.split(": ")
             keys = items[::2]
@@ -74,7 +74,7 @@ class StoreDictKeyPair(argparse.Action):
             return tmp_dict
 
         else: # A string
-            return string
+            return s
 
     def __call__(self, parser, namespace, values, option_string=None):
         my_dict = {}
