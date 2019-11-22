@@ -84,8 +84,6 @@ class StoreDictKeyPair(argparse.Action):
                 my_dict[k] = self.return_typed(v)
             except ValueError:
                 my_dict[k] = v
-            else:
-                raise RuntimeError("Failed to convert {}={}".format(k, v))
 
         setattr(namespace, self.dest, my_dict)
 
