@@ -62,7 +62,7 @@ def get_mesh_domain_and_boundaries(L, H, **namespace):
     return mesh, domains, boundaries
 
 
-def initiate(dvp_, folder, **namespace):
+def initiate(**namespace):
     # Lists to hold displacement, forces, and time
     Drag_list = []
     Lift_list = []
@@ -112,8 +112,8 @@ def pre_solve(t, inlet, **namespace):
     inlet.update(t)
 
 
-def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, mu_f,
-               verbose, ds, **namespace):
+def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, counter, mu_f, verbose, ds,
+               **namespace):
     force = dot(sigma(v, p, d, mu_f), n)
     Drag_list.append(-assemble(force[0]*ds(4)))
     Lift_list.append(-assemble(force[1]*ds(4)))
@@ -124,8 +124,8 @@ def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, 
         print("Lift:", Lift_list[-1])
 
 
-def finished(Drag_list, Lift_list, Time_list, folder, **namespace):
+def finished(Drag_list, Lift_list, Time_list, results_folder, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
-        np.savetxt(path.join(folder, 'Drag.txt'), Drag_list, delimiter=',')
-        np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Lift.txt'), Lift_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Drag.txt'), Drag_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')

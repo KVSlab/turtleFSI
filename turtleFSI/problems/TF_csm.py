@@ -62,7 +62,7 @@ def get_mesh_domain_and_boundaries(mesh, c_x, c_y, R, **namespace):
     return mesh, domains, boundaries
 
 
-def initiate(folder, mesh, dvp_, f_L, R, c_x, **namespace):
+def initiate(mesh, f_L, R, c_x, **namespace):
     # Coord to sample
     for coord in mesh.coordinates():
         if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
@@ -83,9 +83,12 @@ def create_bcs(DVP, boundaries, **namespace):
     return dict(bcs=[u_barwall])
 
 
-def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
-               Time_list, verbose, **namespace):
+def post_solve(t, dvp_, coord, dis_x, dis_y, counter, Time_list, verbose, **namespace):
+    # Add time
     Time_list.append(t)
+
+    # Add displacement
+    d = dvp_["n"].sub(0, deepcopy=True)
     dsx = d(coord)[0]
     dsy = d(coord)[1]
     dis_x.append(dsx)
@@ -96,8 +99,8 @@ def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
         print("Distance y: {:e}".format(dsy))
 
 
-def finished(folder, dis_x, dis_y, Time_list, **namespace):
+def finished(results_folder, dis_x, dis_y, Time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
-        np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
-        np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_x.txt'), dis_x, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_y.txt'), dis_y, delimiter=',')

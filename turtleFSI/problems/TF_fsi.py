@@ -92,7 +92,7 @@ def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
     return mesh, domains, boundaries
 
 
-def initiate(dvp_, mesh, folder, c_x, c_y, R, f_L, **namespace):
+def initiate(mesh, c_x, c_y, R, f_L, **namespace):
     # Coord to sample
     for coord in mesh.coordinates():
         if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
@@ -181,7 +181,7 @@ def pre_solve(t, inlet, **namespace):
 
 
 def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
-               counter, verbose, save_step, Time_list, ds, dS, **namespace):
+               counter, verbose, Time_list, ds, dS, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
@@ -206,14 +206,11 @@ def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
         print("Drag: {:e}", Drag_list[-1])
         print("Lift: {:e}", Lift_list[-1])
 
-    return {}
 
-
-def finished(folder, dis_x, dis_y, Drag_list, Lift_list, Time_list,
-             **namespace):
+def finished(results_folder, dis_x, dis_y, Drag_list, Lift_list, Time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(folder, 'Lift.txt'), Lift_list, delimiter=',')
-        np.savetxt(path.join(folder, 'Drag.txt'), Drag_list, delimiter=',')
-        np.savetxt(path.join(folder, 'Time.txt'), Time_list, delimiter=',')
-        np.savetxt(path.join(folder, 'dis_x.txt'), dis_x, delimiter=',')
-        np.savetxt(path.join(folder, 'dis_y.txt'), dis_y, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Lift.txt'), Lift_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Drag.txt'), Drag_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_x.txt'), dis_x, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_y.txt'), dis_y, delimiter=',')

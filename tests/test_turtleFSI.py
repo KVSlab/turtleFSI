@@ -1,6 +1,4 @@
-# Co (c) XXXX, XXXX.
-# See LICENSE file for details.
-
+# File under GNU GPL (v3) licence, see LICENSE file for details.
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -22,8 +20,8 @@ def test_cfd():
            " --new-arguments folder=tmp")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/Lift.txt")[-1]
+    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
+    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
     drag_reference = 2.5637554331614054
     lift_reference = -0.02078995609237899
 
@@ -36,8 +34,8 @@ def test_csm():
            " --new-arguments folder=tmp")
     d = system(cmd)
 
-    distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
-    distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
+    distance_x = np.loadtxt("tmp/1/dis_x.txt")[-1]
+    distance_y = np.loadtxt("tmp/1/dis_y.txt")[-1]
     distance_x_reference = -6.13487990897633e-06
     distance_y_reference = -3.9398599897576816e-05
 
@@ -50,10 +48,10 @@ def test_fsi():
            " --new-arguments folder=tmp")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/Lift.txt")[-1]
-    distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
-    distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
+    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
+    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
+    distance_x = np.loadtxt("tmp/1/dis_x.txt")[-1]
+    distance_y = np.loadtxt("tmp/1/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
     distance_y_reference = -2.6594621765280973e-08
     drag_reference = 2.472928697982334
@@ -72,10 +70,10 @@ def test_laplace(extrapolation_sub_type):
            " --new-arguments folder=tmp")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/Lift.txt")[-1]
-    distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
-    distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
+    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
+    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
+    distance_x = np.loadtxt("tmp/1/dis_x.txt")[-1]
+    distance_y = np.loadtxt("tmp/1/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
     distance_y_reference = -2.6594621765280973e-08
     drag_reference = 2.472928697982334
@@ -93,10 +91,10 @@ def test_biharmonic(extrapolation_sub_type):
            " --extrapolation biharmonic --new-arguments folder=tmp")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/Lift.txt")[-1]
-    distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
-    distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
+    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
+    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
+    distance_x = np.loadtxt("tmp/1/dis_x.txt")[-1]
+    distance_y = np.loadtxt("tmp/1/dis_y.txt")[-1]
     distance_x_reference = -3.0193475393178104e-06
     distance_y_reference = -2.6594621765280973e-08
     drag_reference = 2.472928697982334
@@ -113,10 +111,10 @@ def test_elastic():
            " -e elastic -et constant --new-arguments folder=tmp")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/Lift.txt")[-1]
-    distance_x = np.loadtxt("tmp/dis_x.txt")[-1]
-    distance_y = np.loadtxt("tmp/dis_y.txt")[-1]
+    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
+    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
+    distance_x = np.loadtxt("tmp/1/dis_x.txt")[-1]
+    distance_y = np.loadtxt("tmp/1/dis_y.txt")[-1]
     distance_x_reference = -3.019356900018008e-06
     distance_y_reference = -2.659921700576888e-08
     drag_reference = 2.472926160030297
