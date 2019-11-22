@@ -10,8 +10,9 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters
+from dolfin import parameters, XDMFFile, MPI
 import pickle
+from pathlib import Path
 
 _compiler_parameters = dict(parameters["form_compiler"])
 _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
@@ -69,73 +70,92 @@ default_variables = dict(
     loglevel=20,          # Log level from FEniCS
     verbose=True,         # Turn on/off verbose printing
     save_step=1,          # Save file frequency
-    checkpoint_step=500   # Checkpoint frequency
+    checkpoint_step=500,  # Checkpoint frequency
     folder="results",     # Folder to store results and checkpoint files
-    sub_folder=None)      # The unique name of the sub directory under folder where the results are stored
+    sub_folder=None,      # The unique name of the sub directory under folder where the results are stored
+    restart_folder=None)       # Path to a potential restart folder
 
 
-def create_folders(folder, sub_folder, **namespace):
+def create_folders(folder, sub_folder, restart_folder, **namespace):
     """Manage paths for where to store the checkpoint and visualizations"""
-    # Get path to sub folder for this simulation
-    path = Path.cwd() / folder
-    if sub_folder is not None:
-        path.joinpath(sub_folder)
-    else:
-        if path.glob(*) == []:
-            path.joinpath("1")
+    if restart_folder is None:
+        # Get path to sub folder for this simulation
+        path = Path.cwd() / folder
+        if sub_folder is not None:
+            path.joinpath(sub_folder)
         else:
-            number = max([int(i) for i in path.glob(*) if i.isdigit()])
-            path.joinpath(str(number))
+            if [int(str(i.name)) for i in path.glob("*") if str(i.name).isdigit()] == []:
+                path = path.joinpath("1")
+            else:
+                number = max([int(str(i.name)) for i in path.glob("*") if str(i.name).isdigit()])
+                path = path.joinpath(str(number + 1))
+    else:
+        path = restart_folder
 
     # Folders for visualization and checkpointing
     checkpoint_folder = path.joinpath("Checkpoint")
-    visualization_folder = path.joinpoint("Visualization")
-    checkpoint_folder.mkdir(parents=True, exists_ok=True)
-    visualization_folder.mkdir(parents=True, exists_ok=True)
+    visualization_folder = path.joinpath("Visualization")
+    checkpoint_folder.mkdir(parents=True, exist_ok=True)
+    visualization_folder.mkdir(parents=True, exist_ok=True)
 
     return dict(checkpoint_folder=checkpoint_folder,
-                visualization_folder=visualization_folder)
+                visualization_folder=visualization_folder,
+                results_folder=path)
 
 
-def checkpoint(dvp_, default_variables, checkpoint_folder, **namespace):
+def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
     """Utility function for storing the current parameters and the last two timesteps to
     restart from later"""
     # Only update variables that exists in default_variables
     default_variables.update((k, namespace[k]) for k in (default_variables.keys() & namespace.keys()))
 
     # Dump default parameters
-    pickle.dump(default_variables, checkpoint_folder.joinpath("default_parameters.pickle"))
+    with open(str(checkpoint_folder.joinpath("default_variables.pickle")), "bw") as f:
+        pickle.dump(default_variables, f)
 
     # Dump physical fields
     d1 = dvp_["n-1"].sub(0, deepcopy=True)
-    v1 = dvp_["n-1"].sub(1, deepcopy=True)
-    p1 = dvp_["n-1"].sub(2, deepcopy=True)
     d2 = dvp_["n-2"].sub(0, deepcopy=True)
+    v1 = dvp_["n-1"].sub(1, deepcopy=True)
     v2 = dvp_["n-2"].sub(1, deepcopy=True)
+    p1 = dvp_["n-1"].sub(2, deepcopy=True)
     p2 = dvp_["n-2"].sub(2, deepcopy=True)
+    fields = [('d1', d1), ('d2', d2), ('v1', v1), ('v2', v2), ('p1', p1), ('p2', p2)]
 
-    # Create temporary checkpoint files
-    for name, field in [('d1', d1), ('d2', d2), ('v1', v1), ('v2', v2), ('p1', p1), ('p2', p2)]:
-        checkpoint = XDMFFile(MPI.comm_world, checkpoint_folder.joinpath("tmp_" + name + ".xdmf"))
-        checkpoint.write_checkpoint(field)
-        checkpoint.close()
+    if len(dvp_["n-1"]) == mesh.geometric_dimension() * 3 + 1:
+        w1 = dvp_["n-1"].sub(3, deepcopy=True)
+        w2 = dvp_["n-2"].sub(3, deepcopy=True)
+        fields += [('w1', w1), ('w2', w2)]
+
+    # Write fields to temporary file to avoid corruption of existing checkpoint
+    for name, field in fields:
+        checkpoint_path = str(checkpoint_folder.joinpath("tmp_" + name + ".xdmf"))
+        with XDMFFile(MPI.comm_world, checkpoint_path) as f:
+            f.write_checkpoint(field, name)
 
     # Move to correct checkpoint name
-    MPI.barrier()
-    if MPI.rank == 0:
-        for name in ['d1', 'd2', 'v1', 'v2', 'p1', 'p2']:
-            new_name = checkpoint_folder.joinpath("checkpoint_" + name + ".xdmf")
-            if new_name.exists():
-                checkpoint_folder.joinpath("tmp_" + name + ".xdmf").replace(new_name)
-            else:
-                checkpoint_folder.joinpath("tmp_" + name + ".xdmf").rename(new_name)
+    MPI.barrier(MPI.comm_world)
+    if MPI.rank(MPI.comm_world) == 0:
+        for name, _ in fields:
+            for suffix in [".h5", ".xdmf"]:
+                new_name = checkpoint_folder.joinpath("checkpoint_" + name + suffix)
+                if new_name.exists():
+                    checkpoint_folder.joinpath("tmp_" + name + suffix).replace(new_name)
+                else:
+                    checkpoint_folder.joinpath("tmp_" + name + suffix).rename(new_name)
+
+            with open(new_name, "r") as f:
+                text = f.read().replace("tmp_", "checkpoint_")
+
+            with open(new_name, "w") as f:
+                f.write(text)
 
 
 def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     # Files for storing results
-    u_file = XDMFFile(MPI.comm_world, visualization_folder.joinpath("velocity.xdmf"))
-    d_file = XDMFFile(MPI.comm_world, visualization_folder.joinpath("d.xdmf"))
-    p_file = XDMFFile(MPI.comm_world, visualization_folder.joinpath("pressure.xdmf"))
+    u_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity.xdmf")))
+    d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
+    p_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("pressure.xdmf")))
     for tmp_t in [u_file, d_file, p_file]:
         tmp_t.parameters["flush_output"] = True
         tmp_t.parameters["rewrite_function_mesh"] = False
@@ -146,7 +166,7 @@ def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     p = dvp_["n"].sub(2, deepcopy=True)
 
     # Name function
-    d.rename("Deformation", "d")
+    d.rename("Displacement", "d")
     v.rename("Velocity", "v")
     p.rename("Pressure", "p")
 
@@ -155,20 +175,31 @@ def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     u_file.write(v, t)
     p_file.write(p, t)
 
+    # Close files
+    d_file.close()
+    u_file.close()
+    p_file.close()
 
-def start_from_checkpoint(dvp_, restart_folder, **namespace):
+
+def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
+    # Dump physical fields
     d1 = dvp_["n-1"].sub(0, deepcopy=True)
     d2 = dvp_["n-2"].sub(0, deepcopy=True)
     v1 = dvp_["n-1"].sub(1, deepcopy=True)
     v2 = dvp_["n-2"].sub(1, deepcopy=True)
     p1 = dvp_["n-1"].sub(2, deepcopy=True)
     p2 = dvp_["n-2"].sub(2, deepcopy=True)
+    fields = [('d1', d1), ('d2', d2), ('v1', v1), ('v2', v2), ('p1', p1), ('p2', p2)]
 
-    restart_folder = Path(restart_folder).joinpath("Checkpoint")
-    for name, field in [('d1', d1), ('d2', d2), ('v1', v1), ('v2', v2), ('p1', p1), ('p2', p2)]:
-        f = XDMFFile((MPI.comm_world, restart_folder.joinpath("checkpoint_" + name + ".xdmf")))
-        f.read_checkpoint(d1)
-        f.close()
+    if len(dvp_["n-1"]) == mesh.geometric_dimension() * 3 + 1:
+        w1 = dvp_["n-1"].sub(3, deepcopy=True)
+        w2 = dvp_["n-2"].sub(3, deepcopy=True)
+        fields += [('w1', w1), ('w2', w2)]
+
+    for name, field in fields:
+        checkpoint_path = str(restart_folder.joinpath("Checkpoint", "checkpoint_" + name + ".xdmf"))
+        with XDMFFile(MPI.comm_world, checkpoint_path) as f:
+            f.read_checkpoint(d1, name)
 
 
 def set_problem_parameters(**namespace):
@@ -178,7 +209,7 @@ def set_problem_parameters(**namespace):
     the command line.
     """
 
-    return default_variables
+    return {}
 
 
 def get_mesh_domain_and_boundaries(**namespace):

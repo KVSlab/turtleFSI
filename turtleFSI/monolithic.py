@@ -9,28 +9,28 @@ used in the turtleFSI package.
 """
 
 from dolfin import *
+from pathlib import Path
+import pickle
+
 from turtleFSI.utils import *
-import os
-import sys
+from turtleFSI.problems import *
 
 # Get user input
 args = parse()
 
 # Import the problem
-if os.path.isfile(os.path.abspath(args.problem+'.py')):
+if Path.cwd().joinpath(args.problem+'.py').is_file():
     exec("from {} import *".format(args.problem))
 else:
     try:
         exec("from turtleFSI.problems.{} import *".format(args.problem))
-    except ImportError:
+    except:
         raise ImportError("""Can not find the problem file. Make sure that the
         problem file is specified in the current directory or in the solver
         turtleFSI/problems/... directory.""")
-    finally:
-        raise RuntimeError("An unexpected error occured when trying to load {}".format(args.problem))
 
 # Get problem specific parameters
-default_parameters = vars().update(set_problem_parameters(**vars()))
+default_variables.update(set_problem_parameters(**vars()))
 
 # Update variables from commandline
 for key, value in list(args.__dict__.items()):
@@ -38,18 +38,19 @@ for key, value in list(args.__dict__.items()):
         args.__dict__.pop(key)
 
 # If restart folder is given, read previous settings
-default_parameters.update(args.__dict__)
-if default_parameters["restart_folder"] is not None:
-    restart_folder = default_parameters["restart_folder"]
-    restart_dict = pickle.load(default_parameters["restart_folder"])
-    default_parameters.update(restart_dict)
-    default_parameters["restart_folder"] = restart_folder
+default_variables.update(args.__dict__)
+if default_variables["restart_folder"] is not None:
+    restart_folder = Path(default_variables["restart_folder"])
+    with open(restart_folder.joinpath("Checkpoint", "default_variables.pickle"), "rb") as f:
+        restart_dict = pickle.load(f)
+    default_variables.update(restart_dict)
+    default_variables["restart_folder"] = restart_folder
 
 # Set variables in global namespace
-vars().update(default_parameters)
+vars().update(default_variables)
 
 # Create folders
-create_folders(**vars)
+vars().update(create_folders(**vars()))
 
 # Get mesh information
 mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
@@ -170,11 +171,11 @@ while t <= T + dt / 10:
         vars().update(tmp_dict)
 
     # Checkpoint
-    if tstep % checkpoint_step == 0:
+    if counter % checkpoint_step == 0:
         checkpoint(**vars())
 
     # Store results
-    if tstep % save_step == 0:
+    if counter % save_step == 0:
         save_files_visualization(**vars())
 
     # Print time per time step

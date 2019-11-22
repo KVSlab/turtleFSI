@@ -93,22 +93,6 @@ def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
 
 
 def initiate(dvp_, mesh, folder, c_x, c_y, R, f_L, **namespace):
-    # Files for storing results
-    u_file = XDMFFile(MPI.comm_world, path.join(folder, "velocity.xdmf"))
-    d_file = XDMFFile(MPI.comm_world, path.join(folder, "d.xdmf"))
-    p_file = XDMFFile(MPI.comm_world, path.join(folder, "pressure.xdmf"))
-    for tmp_t in [u_file, d_file, p_file]:
-        tmp_t.parameters["flush_output"] = True
-        tmp_t.parameters["rewrite_function_mesh"] = False
-
-    # Store initial condition
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    p = dvp_["n"].sub(2, deepcopy=True)
-    d_file.write(d)
-    u_file.write(v)
-    p_file.write(p)
-
     # Coord to sample
     for coord in mesh.coordinates():
         if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
@@ -121,8 +105,7 @@ def initiate(dvp_, mesh, folder, c_x, c_y, R, f_L, **namespace):
     Lift_list = []
     Time_list = []
 
-    return dict(u_file=u_file, d_file=d_file, p_file=p_file, dis_x=dis_x,
-                dis_y=dis_y, Drag_list=Drag_list, Lift_list=Lift_list,
+    return dict(dis_x=dis_x, dis_y=dis_y, Drag_list=Drag_list, Lift_list=Lift_list,
                 Time_list=Time_list, coord=coord)
 
 
@@ -198,8 +181,7 @@ def pre_solve(t, inlet, **namespace):
 
 
 def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
-               counter, u_file, p_file, d_file, verbose, save_step, Time_list, ds, dS,
-               **namespace):
+               counter, verbose, save_step, Time_list, ds, dS, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)

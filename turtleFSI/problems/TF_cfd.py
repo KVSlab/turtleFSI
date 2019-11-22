@@ -63,29 +63,12 @@ def get_mesh_domain_and_boundaries(L, H, **namespace):
 
 
 def initiate(dvp_, folder, **namespace):
-    # Create files for storing results
-    u_file = XDMFFile(MPI.comm_world, path.join(folder, "velocity.xdmf"))
-    d_file = XDMFFile(MPI.comm_world, path.join(folder, "d.xdmf"))
-    p_file = XDMFFile(MPI.comm_world, path.join(folder, "pressure.xdmf"))
-    for tmp_t in [u_file, d_file, p_file]:
-        tmp_t.parameters["flush_output"] = True
-        tmp_t.parameters["rewrite_function_mesh"] = False
-
-    # Store initial conditions
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    p = dvp_["n"].sub(2, deepcopy=True)
-    d_file.write(d)
-    u_file.write(v)
-    p_file.write(p)
-
     # Lists to hold displacement, forces, and time
     Drag_list = []
     Lift_list = []
     Time_list = []
 
-    return dict(u_file=u_file, d_file=d_file, p_file=p_file, Drag_list=Drag_list,
-                Lift_list=Lift_list, Time_list=Time_list)
+    return dict(Drag_list=Drag_list, Lift_list=Lift_list, Time_list=Time_list)
 
 
 class Inlet(UserExpression):
@@ -127,20 +110,10 @@ def create_bcs(DVP, dvp_, Um, H, v_deg, boundaries, extrapolation_sub_type, **na
 def pre_solve(t, inlet, **namespace):
     """Update boundary conditions"""
     inlet.update(t)
-    return {}
 
 
-def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, u_file,
-                p_file, d_file, mu_f, verbose, ds, **namespace):
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    p = dvp_["n"].sub(2, deepcopy=True)
-
-    if counter % save_step == 0:
-        p_file.write(p, t)
-        d_file.write(d, t)
-        u_file.write(v, t)
-
+def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, mu_f,
+               verbose, ds, **namespace):
     force = dot(sigma(v, p, d, mu_f), n)
     Drag_list.append(-assemble(force[0]*ds(4)))
     Lift_list.append(-assemble(force[1]*ds(4)))
@@ -149,8 +122,6 @@ def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, save_step, counter, 
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Drag:", Drag_list[-1])
         print("Lift:", Lift_list[-1])
-
-    return {}
 
 
 def finished(Drag_list, Lift_list, Time_list, folder, **namespace):

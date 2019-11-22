@@ -55,7 +55,6 @@ def set_problem_parameters(default_variables, **namespace):
 
 
 def get_mesh_domain_and_boundaries(args, **namespace):
-
     mesh_folder = path.join(path.dirname(path.abspath(__file__)), "..", "mesh", "turtle_demo")
 
     # In this example, the mesh and markers are stored in the 3 following files
@@ -150,40 +149,6 @@ def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, **namespace):
     return dict(bcs=bcs, inlet=inlet)
 
 
-def initiate(dvp_, folder, **namespace):
-    # Files for storing results
-    u_file = XDMFFile(MPI.comm_world, path.join(folder, "velocity.xdmf"))
-    d_file = XDMFFile(MPI.comm_world, path.join(folder, "d.xdmf"))
-    p_file = XDMFFile(MPI.comm_world, path.join(folder, "pressure.xdmf"))
-    for tmp_t in [u_file, d_file, p_file]:
-        tmp_t.parameters["flush_output"] = True
-        tmp_t.parameters["rewrite_function_mesh"] = False
-
-    # Extract the variables to save
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    p = dvp_["n"].sub(2, deepcopy=True)
-
-    # Save the data to the simulation time=0.0
-    d_file.write(d, 0.0)
-    u_file.write(v, 0.0)
-    p_file.write(p, 0.0)
-
-    return dict(u_file=u_file, d_file=d_file, p_file=p_file)
-
-
 def pre_solve(t, inlet, **namespace):
     # Update the time variable used for the inlet boundary condition
     inlet.update(t)
-    return {}
-
-
-def post_solve(t, dvp_, counter, u_file, p_file, d_file, save_step, **namespace):
-    if counter % save_step == 0:
-        d = dvp_["n"].sub(0, deepcopy=True)
-        v = dvp_["n"].sub(1, deepcopy=True)
-        p = dvp_["n"].sub(2, deepcopy=True)
-        p_file.write(p, t)
-        d_file.write(d, t)
-        u_file.write(v, t)
-    return {}

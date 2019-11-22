@@ -63,19 +63,6 @@ def get_mesh_domain_and_boundaries(mesh, c_x, c_y, R, **namespace):
 
 
 def initiate(folder, mesh, dvp_, f_L, R, c_x, **namespace):
-    # Files for storeing results
-    u_file = XDMFFile(MPI.comm_world, path.join(folder, "velocity.xdmf"))
-    d_file = XDMFFile(MPI.comm_world, path.join(folder, "d.xdmf"))
-    for tmp_t in [u_file, d_file]:
-        tmp_t.parameters["flush_output"] = True
-        tmp_t.parameters["rewrite_function_mesh"] = False
-
-    # Store initial condition
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-    d_file.write(d)
-    u_file.write(v)
-
     # Coord to sample
     for coord in mesh.coordinates():
         if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
@@ -86,8 +73,7 @@ def initiate(folder, mesh, dvp_, f_L, R, c_x, **namespace):
     dis_y = []
     Time_list = []
 
-    return dict(u_file=u_file, d_file=d_file, dis_x=dis_x, dis_y=dis_y,
-                Time_list=Time_list, coord=coord)
+    return dict(dis_x=dis_x, dis_y=dis_y, Time_list=Time_list, coord=coord)
 
 
 def create_bcs(DVP, boundaries, **namespace):
@@ -99,15 +85,6 @@ def create_bcs(DVP, boundaries, **namespace):
 
 def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
                Time_list, verbose, **namespace):
-    d = dvp_["n"].sub(0, deepcopy=True)
-    v = dvp_["n"].sub(1, deepcopy=True)
-
-    if counter % save_step == 0:
-        d = dvp_["n"].sub(0, deepcopy=True)
-        v = dvp_["n"].sub(1, deepcopy=True)
-        d_file.write(d, t)
-        u_file.write(v, t)
-
     Time_list.append(t)
     dsx = d(coord)[0]
     dsy = d(coord)[1]
@@ -117,8 +94,6 @@ def post_solve(t, dvp_, coord, dis_x, dis_y, counter, u_file, d_file, save_step,
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Distance x: {:e}".format(dsx))
         print("Distance y: {:e}".format(dsy))
-
-    return {}
 
 
 def finished(folder, dis_x, dis_y, Time_list, **namespace):

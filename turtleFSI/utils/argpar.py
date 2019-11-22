@@ -24,31 +24,31 @@ class StoreDictKeyPair(argparse.Action):
         self._nargs = nargs
         super(StoreDictKeyPair, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
 
-    @static
+    @staticmethod
     def is_int(string):
         return set(string).issubset(set(string.digits+"-"))
 
-    @static
+    @staticmethod
     def is_float(string):
         return set(v).issubset(set(string.digits+".eE+-"))
 
-    @static
+    @staticmethod
     def is_boolean(string):
         return string.lower() in ["true", "false"]
 
-    @static
+    @staticmethod
     def is_list(string):
         return True if string.startswith("[") and string.endswith("]") else False
 
-    @static
+    @staticmethod
     def is_tuple(string):
         return True if string.startswith("(") and string.endswith(")") else False
 
-    @static
+    @staticmethod
     def is_dictionary(string):
         return True if string.startswith("{") and string.endswith("}") else False
 
-    @static
+    @staticmethod
     def return_typed(string):
         if self.is_int(string):
             return int(string)
@@ -85,8 +85,8 @@ class StoreDictKeyPair(argparse.Action):
                 my_dict[k] = self.return_typed(v)
             except ValueError:
                 my_dict[k] = v
-            finally:
-                raise RuntimeError("Failed to convert {}={}".format(k, v)
+            else:
+                raise RuntimeError("Failed to convert {}={}".format(k, v))
 
         setattr(namespace, self.dest, my_dict)
 
@@ -161,24 +161,24 @@ def parse():
                         choices=["constant", "small_constant", "volume", "volume_change",
                                  "constrained_disp", "constrained_disp_vel"],
                         help="Set the sub type of the extrapolation method")
-    parser.add_argument("--bc_ids", nargs="+", type=int, default=None, metavar="ID list",
+    parser.add_argument("--bc-ids", nargs="+", type=int, default=None, metavar="ID list",
                         help="List of boundary ids for the weak formulation of the" +
                         " biharmonic mesh lifting operator with 'constrained_disp_vel'")
 
     # Meterial settings / physical constants
     parser.add_argument("--Um", type=float, default=None,
                         help="Maximum velocity at inlet")
-    parser.add_argument("--rho_f", type=float, default=None,
+    parser.add_argument("--rho-f", type=float, default=None,
                         help="Density of the fluid")
-    parser.add_argument("--mu_f", type=float, default=None,
+    parser.add_argument("--mu-f", type=float, default=None,
                         help="Fluid dynamic viscosity")
-    parser.add_argument("--rho_s", type=float, default=None,
+    parser.add_argument("--rho-s", type=float, default=None,
                         help="Density of the solid")
-    parser.add_argument("--mu_s", type=float, default=None,
+    parser.add_argument("--mu-s", type=float, default=None,
                         help="Shear modulus or 2nd Lame Coef. for the solid")
-    parser.add_argument("--nu_s", type=float, default=None,
+    parser.add_argument("--nu-s", type=float, default=None,
                         help="Poisson ratio in the solid")
-    parser.add_argument("--lambda_s", type=float, default=None,
+    parser.add_argument("--lambda-s", type=float, default=None,
                         help="1st Lame Coef. for the solid")
     parser.add_argument("--gravity", type=float, default=None,
                         help="Gravitational force on the solid")
@@ -199,7 +199,7 @@ def parse():
     parser.add_argument("--rtol", type=float, default=None,
                         metavar="Relative tolerance",
                         help="The relative error tolerance for the Newton iterations")
-    parser.add_argument("--max_it", type=int, default=None,
+    parser.add_argument("--max-it", type=int, default=None,
                         metavar="Maximum iterations",
                         help="Maximum number of iterations in the Newton solver")
     parser.add_argument("--lmbda", type=restricted_float, default=None,
@@ -225,24 +225,27 @@ def parse():
                         help="Set FEniCS loglevel")
     parser.add_argument("--save-step", type=int, default=None,
                         help="Saving frequency of the files defined in the problem file")
-    parser.add_arguments("--chechpoint-step", type=int, default=None,
+    parser.add_argument("--checkpoint-step", type=int, default=None,
                          help="How often to store a checkpoint to restart the simulation from")
     parser.add_argument("--folder", type=str, default=None,
                         help="Path to store the results. You can store multiple" +
                         " simulations in one folder")
-    parser.add_arguments("--sub-folder", type=str, default=None,
+    parser.add_argument("--sub-folder", type=str, default=None,
                          help="Over write the standard 1, 2, 3 name of the sub folders")
+    parser.add_argument("--restart-folder", type=str, default=None,
+                         help="Path to subfolder to restart from.")
+
 
     # Set spatial and temporal resolution
     parser.add_argument("-dt", metavar="Time step", type=float,
                         help="Set timestep, dt", default=None)
     parser.add_argument("-T", type=float, metavar="End time",
                         help="Set end time", default=None)
-    parser.add_argument("--p_deg", metavar="Pressure degree", type=int,
+    parser.add_argument("--p-deg", metavar="Pressure degree", type=int,
                         help="Set degree of pressure", default=None)
-    parser.add_argument("--v_deg", metavar="Velocity degree", type=int,
+    parser.add_argument("--v-deg", metavar="Velocity degree", type=int,
                         help="Set degree of velocity", default=None)
-    parser.add_argument("--d_deg", metavar="Deformation degree", type=int,
+    parser.add_argument("--d-deg", metavar="Deformation degree", type=int,
                         help="Set degree of deformation", default=None)
 
     # Add the posibility pass unspecificed arguments
