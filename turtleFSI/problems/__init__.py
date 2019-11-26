@@ -49,9 +49,9 @@ default_variables = dict(
     Um=0.8,          # Maximum velocity at inlet
 
     # Variational formulations
-    fluid="fluid",                      # ["fluid", "no-fluid"] Turn off fluid and only solve the solid problem
-    solid="solid",                      # ["solid", "no-solid"] Turn off solid and only solve the fluid problem
-    extrapolation="laplace",            # laplace, elastic, biharmonic, no-extrapolation
+    fluid="fluid",                      # ["fluid", "no_fluid"] Turn off fluid and only solve the solid problem
+    solid="solid",                      # ["solid", "no_solid"] Turn off solid and only solve the fluid problem
+    extrapolation="laplace",            # laplace, elastic, biharmonic, no_extrapolation
     extrapolation_sub_type="constant",  # small_constant, volume, constant, constrained_disp, constrained_disp_vel
     bc_ids=[],                          # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'
 
@@ -104,8 +104,7 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
 
 
 def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
-    """Utility function for storing the current parameters and the last two timesteps to
-    restart from later"""
+    """Utility function for storing the current parameters and the last two timesteps"""
     # Only update variables that exists in default_variables
     default_variables.update((k, namespace[k]) for k in (default_variables.keys() & namespace.keys()))
 

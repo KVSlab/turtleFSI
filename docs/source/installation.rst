@@ -29,7 +29,7 @@ through the terminal by typing::
     $ turtleFSI
 
 followed by any additional options, for instance, which problem to run and the time step size.
-Use ``-h`` to see all availeble options. A detailed explanation for usage of turtleFSI can be found
+Use ``-h`` to see all available options. A detailed explanation for usage of turtleFSI can be found
 `here <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>`.
 
 

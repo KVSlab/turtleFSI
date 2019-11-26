@@ -73,7 +73,7 @@ class StoreDictKeyPair(argparse.Action):
                 tmp_dict[k] = return_types(v)
             return tmp_dict
 
-        else: # A string
+        else:  # A string
             return s
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -146,11 +146,11 @@ def parse():
                         choices=["fluid", "no_fluid"], metavar="Fluid",
                         help="Turn off fluid and only solve the solid problem")
     parser.add_argument("-s", "--solid", type=str, default=None, metavar="Solid",
-                        choices=["solid", "no-solid"],
+                        choices=["solid", "no_solid"],
                         help="Turn off solid and only solve the fluid problem")
     parser.add_argument("-e", "--extrapolation", type=str, default=None,
                         metavar="Extrapolation method",
-                        choices=["laplace", "elastic", "biharmonic", "no-extrapolation"],
+                        choices=["laplace", "elastic", "biharmonic", "no_extrapolation"],
                         help="Set approach for extrapolating the deformation into the fluid" +
                         "domain")
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,
@@ -223,15 +223,14 @@ def parse():
     parser.add_argument("--save-step", type=int, default=None,
                         help="Saving frequency of the files defined in the problem file")
     parser.add_argument("--checkpoint-step", type=int, default=None,
-                         help="How often to store a checkpoint to restart the simulation from")
+                        help="How often to store a checkpoint (use to later restart a simulation)")
     parser.add_argument("--folder", type=str, default=None,
                         help="Path to store the results. You can store multiple" +
                         " simulations in one folder")
     parser.add_argument("--sub-folder", type=str, default=None,
-                         help="Over write the standard 1, 2, 3 name of the sub folders")
+                        help="Over write the standard 1, 2, 3 name of the sub folders")
     parser.add_argument("--restart-folder", type=str, default=None,
-                         help="Path to subfolder to restart from.")
-
+                        help="Path to subfolder to restart from")
 
     # Set spatial and temporal resolution
     parser.add_argument("-dt", metavar="Time step", type=float,

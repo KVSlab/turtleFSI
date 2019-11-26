@@ -26,35 +26,32 @@ To get an overview of all parameters, please run::
 
 Built-in functionality
 ======================
-We have designed turtleFSI to be lightweight and focus around solving the equiations, not additional 
-functionality. However, we have added two functions: checkpointing/restart, and storing files for visualization.
+Two important functions are available in the current version of turtleFSI: checkpointing/restart, and storing files for visualization.
 
 For checkpointing you can set the variable ``--checkpoint-step`` to set how often a checkpoint should
-be stored. To restart the from a previous run set ``--restart-folder [folder/sub-folder]``. Note that 
+be stored. To restart from a previous checkpoint step use the command ``--restart-folder [folder/sub-folder]``. Note that
 the variables from the previous simulation will overwrite any parameters set in the ``set_problem_parameters``
-or on the commandline. To overwrite any parameters from the previous run, for instance, end time ``T``, you can
-use the ``initiate`` function.
+or on the commandline. If you need to change a parameter from the previous checkpoint file (for instance, end time ``T``), you can
+still do it by explicitly redefining it within the ``initiate`` function.
 
 To set how often you save files for visualization you can set ``--save-step``. Note that the default is ``1``.
 
 
 Setting parameters
 ==================
-All the the default parameters are set in the ``problem/__init__.py`` file. Problem specific parameters
-are then overwritten in the problem file under ``set_problem_parameters``. Then any parameters given on the
-command line overwrites those given in the problem file. In summary; we have that defualt parameters <
-problem file < command line.
+All the default parameters are set in the ``problem/__init__.py`` file. Problem specific parameters
+are then overwritten in the problem file under ``set_problem_parameters`` or by defining them in the command line. In summary;
+the priority is as follow: default parameters < problem file < command line < (checkpointing).
 
 
 Create your own problem file
 ============================
 
-The number of problem files in turtleFSI is somewhat limited. We have, therefore, created a step-by-step
-explanation, see the below, on how you can create your own problem file.
+We have created a step-by-step explanation, see the below, on how you can create your own problem file.
 
 For all numerical problems we have to specify a set parameters, provide a mesh and boundary conditions,
 how to solve the equations, and finally specify which metric we are interested in measuring.
-In turtleFSI problem file you can define upto seven functions which provides the solver with
+In turtleFSI problem file you can define up to seven functions which provides the solver with
 the above mentioned information. Listed in the order they are first executed:
 
 - ``set_problem_parameters``
