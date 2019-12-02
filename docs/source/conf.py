@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'turtleFSI'
-copyright = '2019, XXX'
-author = 'XXX'
+copyright = '2019, A. Sylngstad, S. Gjertsen, A. Bergersen, A. Souche, and K. Valen-Sendstad'
+author = 'A. Sylngstad, S. Gjertsen, A. Bergersen, A. Souche, and K. Valen-Sendstad'
 
 # The short X.Y version
-version = ''
+version = 'v1.1'
 # The full version, including alpha/beta/rc tags
-release = 'XXX'
+release = 'v1.1.0'
 
 
 # -- General configuration ---------------------------------------------------
