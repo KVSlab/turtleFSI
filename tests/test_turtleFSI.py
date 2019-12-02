@@ -6,6 +6,7 @@
 import pytest
 import numpy as np
 from os import system
+from pathlib import Path
 
 
 def compare(one, two):
@@ -20,8 +21,8 @@ def test_cfd():
            " --folder tmp --sub-folder 1")
     d = system(cmd)
 
-    drag = np.loadtxt("tmp/1/Drag.txt")[-1]
-    lift = np.loadtxt("tmp/1/Lift.txt")[-1]
+    drag = np.loadtxt(Path.cwd().joinpath("tmp/1/Drag.txt"))[-1]
+    lift = np.loadtxt(Path.cwd().joinpath("tmp/1/Lift.txt"))[-1]
     drag_reference = 2.5637554331614054
     lift_reference = -0.02078995609237899
 
