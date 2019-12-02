@@ -41,7 +41,7 @@ For an introduction to turtleFSI, and tutorials, please refer to the [documentat
 
 If you wish to use turtleFSI for journal publications, please refer the two master thesis's for citation:
 
-  * Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting operators. MS thesis. 2017.
+  * Slyngstad, Andreas. Verification and Validation of a Monolithic Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting operators. MS thesis. 2017.
 
   * Gjertsen, Sebastian. Development of a Verified and Validated Computational Framework for Fluid-Structure Interaction: Investigating Lifting Operators and Numerical Stability. MS thesis. 2017.
 
