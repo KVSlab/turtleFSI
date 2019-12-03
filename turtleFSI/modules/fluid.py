@@ -33,8 +33,8 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace
     F_fluid_linear = rho_f/k * inner(J_(d_["n-1"]) * theta1 * (v_["n"] - v_["n-1"]), psi) * dx_f
 
     # Convection
-    F_fluid_nonlinear = theta0 * rho_f * inner(J_(d_["n"]) * grad(v_["n"]) *
-                                               inv(F_(d_["n"])) * v_["n"], psi) * dx_f
+    F_fluid_nonlinear += theta0 * rho_f * inner(J_(d_["n"]) * grad(v_["n"]) *
+                                                inv(F_(d_["n"])) * v_["n"], psi) * dx_f
     F_fluid_linear += theta1 * rho_f * inner(J_(d_["n-1"]) * grad(v_["n-1"]) *
                                              inv(F_(d_["n-1"])) * v_["n-1"], psi) * dx_f
 
