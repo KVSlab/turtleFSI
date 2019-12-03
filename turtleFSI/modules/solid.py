@@ -36,6 +36,6 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
 
     # Stress
     F_solid_nonlinear = theta0 * inner(Piola1(d_["n"], lambda_s, mu_s), grad(psi)) * dx_s
-    F_solid_linear += theta1 * inner(Piola1(["n-1"], lambda_s, mu_s), grad(psi)) * dx_s
+    F_solid_linear += theta1 * inner(Piola1(d_["n-1"], lambda_s, mu_s), grad(psi)) * dx_s
 
     return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)
