@@ -3,6 +3,12 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
+"""Problem file for running the "CSM" benchmarks in [1]. The problem is beam under load.
+
+[1] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction
+between an elastic object and laminar incompressible flow." Fluid-structure interaction.
+Springer, Berlin, Heidelberg, 2006. 371-385."""
+
 from dolfin import *
 import numpy as np
 from os import path
@@ -10,7 +16,7 @@ from os import path
 from turtleFSI.problems import *
 
 
-def set_problem_parameters(args, default_variables, **namespace):
+def set_problem_parameters(default_variables, **namespace):
     # Parameters
     default_variables.update(dict(
         # Temporal variables
@@ -43,14 +49,13 @@ def set_problem_parameters(args, default_variables, **namespace):
     return default_variables
 
 
-def get_mesh_domain_and_boundaries(mesh, c_x, c_y, R, **namespace):
+def get_mesh_domain_and_boundaries(c_x, c_y, R, **namespace):
     # Read mesh
     mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh", "TF_csm.xml.gz"))
     mesh = refine(mesh)
 
     # Mark boundaries
-    Barwall = AutoSubDomain(lambda x: ((x[0] - c_x)**2 + (x[1] - c_y)**2
-                                       < R**2 + DOLFIN_EPS*1e5))
+    Barwall = AutoSubDomain(lambda x: ((x[0] - c_x)**2 + (x[1] - c_y)**2 < R**2 + DOLFIN_EPS * 1e5))
     boundaries = MeshFunction("size_t", mesh, mesh.geometry().dim() - 1)
     boundaries.set_all(0)
     Barwall.mark(boundaries, 1)
@@ -62,18 +67,17 @@ def get_mesh_domain_and_boundaries(mesh, c_x, c_y, R, **namespace):
     return mesh, domains, boundaries
 
 
-def initiate(mesh, f_L, R, c_x, **namespace):
-    # Coord to sample
-    for coord in mesh.coordinates():
-        if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
-            break
+def initiate(f_L, R, c_x, c_y, **namespace):
+    # Coordinate for sampling statistics
+    coord = [c_x + R + f_L, c_y]
 
     # Lists to hold results
-    dis_x = []
-    dis_y = []
-    Time_list = []
+    displacement_x_list = []
+    displacement_y_list = []
+    time_list = []
 
-    return dict(dis_x=dis_x, dis_y=dis_y, Time_list=Time_list, coord=coord)
+    return dict(displacement_x_list=displacement_x_list, displacement_y_list=displacement_y_list,
+                time_list=time_list, coord=coord)
 
 
 def create_bcs(DVP, boundaries, **namespace):
@@ -83,24 +87,25 @@ def create_bcs(DVP, boundaries, **namespace):
     return dict(bcs=[u_barwall])
 
 
-def post_solve(t, dvp_, coord, dis_x, dis_y, counter, Time_list, verbose, **namespace):
+def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, time_list, verbose, **namespace):
     # Add time
-    Time_list.append(t)
+    time_list.append(t)
 
     # Add displacement
     d = dvp_["n"].sub(0, deepcopy=True)
     dsx = d(coord)[0]
     dsy = d(coord)[1]
-    dis_x.append(dsx)
-    dis_y.append(dsy)
+    displacement_x_list .append(dsx)
+    displacement_y_list.append(dsy)
 
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Distance x: {:e}".format(dsx))
         print("Distance y: {:e}".format(dsy))
 
 
-def finished(results_folder, dis_x, dis_y, Time_list, **namespace):
+def finished(results_folder, displacement_x_list, displacement_y_list, time_list, **namespace):
+    # Store results when the computation is finished
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'dis_x.txt'), dis_x, delimiter=',')
-        np.savetxt(path.join(results_folder, 'dis_y.txt'), dis_y, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_x.txt'), displacement_x_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_y.txt'), displacement_y_list, delimiter=',')

@@ -14,22 +14,12 @@ def extrapolate_setup(F_fluid_linear, mesh, d_, phi, gamma, dx_f, **namespace):
     div(sigma(d)) = 0   in the fluid domain
     d = 0               on the fluid boundaries other than FSI interface
     d = solid_d         on the FSI interface
-
-    References:
-
-    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
-        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
-        operators. MS thesis. 2017.
-
-    Gjertsen, Sebastian. Development of a Verified and Validated Computational
-        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
-        and Numerical Stability. MS thesis. 2017.
     """
-    E_y = 1./CellVolume(mesh)
+    E_y = 1.0 / CellVolume(mesh)
     nu = 0.25
-    alfa_lam = nu*E_y / ((1. + nu)*(1. - 2.*nu))
-    alfa_mu = E_y/(2.*(1. + nu))
-    F_extrapolate = inner(J_(d_["n"]) * S_linear(d_["n"], alfa_mu, alfa_lam) *
+    alpha_lam = nu * E_y / ((1.0 + nu) * (1.0 - 2.0 * nu))
+    alpha_mu = E_y / (2.0 * (1.0 + nu))
+    F_extrapolate = inner(J_(d_["n"]) * S_linear(d_["n"], alpha_mu, alpha_lam) *
                           inv(F_(d_["n"])).T, grad(phi))*dx_f
 
     F_fluid_linear += F_extrapolate

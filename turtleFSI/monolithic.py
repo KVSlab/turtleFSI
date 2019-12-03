@@ -24,7 +24,7 @@ if Path.cwd().joinpath(args.problem+'.py').is_file():
 else:
     try:
         exec("from turtleFSI.problems.{} import *".format(args.problem))
-    except:
+    except ImportError:
         raise ImportError("""Can not find the problem file. Make sure that the
         problem file is specified in the current directory or in the solver
         turtleFSI/problems/... directory.""")

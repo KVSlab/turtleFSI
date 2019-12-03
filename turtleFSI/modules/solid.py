@@ -13,16 +13,6 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
     ALE formulation (theta-scheme) of the non-linear elastic problem:
 
     dv/dt - f + div(sigma) = 0   with v = d(d)/dt
-
-    References:
-
-    Slyngstad, Andreas Strøm. Verification and Validation of a Monolithic
-        Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting
-        operators. MS thesis. 2017.
-
-    Gjertsen, Sebastian. Development of a Verified and Validated Computational
-        Framework for Fluid-Structure Interaction: Investigating Lifting Operators
-        and Numerical Stability. MS thesis. 2017.
     """
 
     delta = 1E7

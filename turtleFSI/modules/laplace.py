@@ -31,17 +31,17 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
     """
 
     if extrapolation_sub_type == "volume_change":
-        alfa = 1./(J_(d_["n"]))
+        alfa = 1.0 / (J_(d_["n"]))
     elif extrapolation_sub_type == "volume":
-        alfa = 1./CellVolume(mesh)
+        alfa = 1.0 / CellVolume(mesh)
     elif extrapolation_sub_type == "small_constant":
-        alfa = 0.01*(mesh.hmin())**2
+        alfa = 0.01 * (mesh.hmin())**2
     elif extrapolation_sub_type == "constant":
         alfa = 1.0
     else:
-        raise RuntimeError("Could not find extrapolation method {}".format(extype))
+        raise RuntimeError("Could not find extrapolation method {}".format(extrapolation_sub_type))
 
-    F_extrapolate = alfa*inner(grad(d_["n"]), grad(phi))*dx_f
+    F_extrapolate = alfa * inner(grad(d_["n"]), grad(phi)) * dx_f
     F_fluid_linear += F_extrapolate
 
     return dict(F_fluid_linear=F_fluid_linear)
