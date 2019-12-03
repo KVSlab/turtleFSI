@@ -15,12 +15,15 @@ In this page, we provide an example on how to create your own problem file. Firs
 execute turtleFSI.
 
 To run turtleFSI with all the default parameters you can execute::
+
  turtleFSI
 
 or, to run a specific problem file, run::
+
  turtleFSI --problem [path_to_problem]
 
 To get an overview of all parameters, please run::
+
  turtleFSI -h
 
 
