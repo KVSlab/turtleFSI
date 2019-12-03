@@ -40,10 +40,10 @@ def set_problem_parameters(default_variables, **namespace):
         folder="TF_fsi_results",      # Name of the results folder
         extrapolation="biharmonic",   # No displacement to extrapolate
         extrapolation_sub_type="constrained_disp_vel",  # Biharmonic type
-        bc_ids=[2, 3, 4, 6],          # Ids for extrapolation weak form
+        bc_ids=[2, 3, 4, 6],          # Ids of makers for the mesh extrapolation
 
         # Solver settings
-        recompute=1,
+        recompute=1,                  # Compute the Jacobian matrix every iteration
 
         # Geometric variables
         R=0.05,                       # Radius of the circle

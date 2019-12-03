@@ -58,7 +58,7 @@ mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 # Control FEniCS output
 set_log_level(loglevel)
 
-# Finite Elements
+# Finite Elements for deformation (de), velocity (ve), and pressure (pe)
 de = VectorElement('CG', mesh.ufl_cell(), d_deg)
 ve = VectorElement('CG', mesh.ufl_cell(), v_deg)
 pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
@@ -68,6 +68,7 @@ k = Constant(dt)
 n = FacetNormal(mesh)
 
 # Define function space
+# When using a biharmonic mesh lifting operator, we have to add a fourth function space.
 if extrapolation == "biharmonic":
     Elem = MixedElement([de, ve, pe, de])
 else:
@@ -75,7 +76,7 @@ else:
 
 DVP = FunctionSpace(mesh, Elem)
 
-# Create functions
+# Create one function for time step n, n-1, and n-2
 dvp_ = {}
 d_ = {}
 v_ = {}
@@ -120,7 +121,7 @@ vars().update(solid_setup(**vars()))
 exec("from turtleFSI.modules.{} import extrapolate_setup".format(extrapolation))
 vars().update(extrapolate_setup(**vars()))
 
-# Any pre-processing before the simulation
+# Any action before the simulation starts, e.g., initial conditions or overwriting parameters from restart
 vars().update(initiate(**vars()))
 
 # Create boundary conditions
@@ -140,8 +141,8 @@ if restart_folder is not None:
 
 timer = Timer("Total simulation time")
 timer.start()
-last_t = 0.0
-while t <= T + dt / 10:
+previous_t = 0.0
+while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final time step t == T
     counter += 1
     t += dt
 
@@ -180,8 +181,8 @@ while t <= T + dt / 10:
 
     # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:
-        txt = "Elapsed time: {0:f}".format(timer.elapsed()[0] - last_t)
-        last_t = timer.elapsed()[0]
+        txt = "Elapsed time: {0:f}".format(timer.elapsed()[0] - previous_t)
+        previous_t = timer.elapsed()[0]
         if verbose:
             print(txt)
         else:

@@ -9,7 +9,7 @@ from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI
 def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonlinear,
                  DVP, dvp_, up_sol, compiler_parameters, **namespace):
     """
-    Pre-assemble the system of equations for the Jacobian matrix for the newton solver
+    Pre-assemble the system of equations for the Jacobian matrix for the Newton solver
     """
     F_lin = F_fluid_linear + F_solid_linear
     F_nonlin = F_solid_nonlinear + F_fluid_nonlinear
@@ -33,13 +33,14 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
                  dvp_, up_sol, dvp_res, rtol, atol, max_it, counter, verbose, **namespace):
     """
-    Solve the non-linear system of equations with Newton iterations scheme.
-    There are two ways to control the reuse do the Jacobian matrix:
-        - reused over iteration steps and re-evaluated at every "recompute" iteration steps. (faster, but may impact the rate of convergence)
-        - reused over time steps and re-evaluated at every "recompute_tstep" time steps. (advanced option, "recompute_tstep=1" is preferred)
+    Solve the non-linear system of equations with Newton scheme. The standard is to compute the Jacobian
+    every time step, however this is computationally costly. We have therefore added two parameters for
+    re-computing only every 'recompute' iteration, or for every 'recompute_tstep' time step. Setting 'recompute'
+    to != 1 is faster, but can impact the convergence rate. Altering 'recompute_tstep' is considered an advanced option,
+    and should be used with care.
     """
     # Initial values
-    Iter = 0
+    iter = 0
     residual = 10**8
     rel_res = 10**8
 
@@ -47,15 +48,15 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
     last_rel_res = residual
     last_residual = rel_res
 
-    while rel_res > rtol and residual > atol and Iter < max_it:
+    while rel_res > rtol and residual > atol and iter < max_it:
         # Check if recompute Jacobian from 'recompute_tstep' (time step)
-        recompute_for_timestep = Iter == 0 and ((counter-1) % recompute_tstep == 0)
+        recompute_for_timestep = iter == 0 and ((counter-1) % recompute_tstep == 0)
 
         # Check if recompute Jacobian from 'recompute' (iteration)
-        recompute_frequency = Iter > 0 and Iter % recompute == 0
+        recompute_frequency = iter > 0 and iter % recompute == 0
 
         # Recompute Jacobian due to increased residual
-        recompute_residual = Iter > 0 and  (last_rel_res < rel_res or last_residual < residual)
+        recompute_residual = iter > 0 and  (last_rel_res < rel_res or last_residual < residual)
 
         if recompute_for_timestep or recompute_frequency or recompute_residual:
             if MPI.rank(MPI.comm_world) == 0 and verbose:
@@ -71,25 +72,25 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Compute right hand side
         b = assemble(-F, tensor=b)
 
-        # Reset residuals
-        last_rel_res = rel_res
-        last_residual = residual
-
         # Apply boundary conditions and solve
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
         up_sol.solve(dvp_res.vector(), b)
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
+        # Reset residuals
+        last_residual = residual
+        last_rel_res = rel_res
+
         # Check residual
-        rel_res = norm(dvp_res, 'l2')
         residual = b.norm('l2')
+        rel_res = norm(dvp_res, 'l2')
         if rel_res > 1E20 or residual > 1E20:
             raise RuntimeError("Error: The simulation has diverged during the Newton solve.")
 
         if MPI.rank(MPI.comm_world) == 0 and verbose:
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
-                  % (Iter, residual, atol, rel_res, rtol))
-        Iter += 1
+                  % (iter, residual, atol, rel_res, rtol))
+        iter += 1
 
     return dict(up_sol=up_sol, A=A)

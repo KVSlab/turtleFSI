@@ -15,7 +15,13 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
     dv/dt - f + div(sigma) = 0   with v = d(d)/dt
     """
 
+    # From the equation defined above we have to include the equation v - d(d)/dt = 0. This
+    # ensures both that the variable d and v is well defined in the solid equation, but also
+    # that there is continuity of the velocity at the boundary. Since this is imposed weakly
+    # we 'make this extra important' by multiplying with a large number delta.
     delta = 1E7
+
+    # Theta scheme constants
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
 

@@ -30,8 +30,15 @@ through the terminal by typing::
 
 followed by any additional options, for instance, which problem to run and the time step size.
 Use ``-h`` to see all available options. A detailed explanation for usage of turtleFSI can be found
-`here <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>`.
+here_.
 
+If you are using turtleFSI on a high performance computing (HPC) cluster we always recommend that you
+build from source. In the 2019.1 version of FEniCS the conda version does not have HDF5 support
+in parallel. The FEniCS project also recommends_ users to install FEniCS from source when on a
+HPC cluster.
+
+.. _here: <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>.
+.. _recommends: <https:www/test.no>
 
 Development version
 ===================
@@ -40,7 +47,7 @@ Downloading
 ~~~~~~~~~~~
 The latest development version of turtleFSI can be found on the official
 `turtleFSI git repository <https://github.com/KVSlab/turtleFSI>`_ on Github.
-To clone the turtleFSI repository, navigate to the directory where you wish
+To clone the turtleFSI repository, open a terminal, navigate to the directory where you wish
 turtleFSI to be stored, type the following command, and press Enter::
 
     $ git clone https://github.com/KVSlab/turtleFSI
@@ -55,3 +62,7 @@ file will be located. First, make sure that all dependencies are installed.
 Then, you can install turtleFSI be executing the following::
 
     $ python setup.py install
+
+
+If you are on a cluster or server where you do not have root access, you can add ``--user`` to install
+turtleFSI locally.

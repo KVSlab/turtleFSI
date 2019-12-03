@@ -26,13 +26,14 @@ To get an overview of all parameters, please run::
 
 Built-in functionality
 ======================
-Two important functions are available in the current version of turtleFSI: checkpointing/restart, and storing files for visualization.
+Two important functions are available in the current version of turtleFSI: checkpointing/restart, and
+storing files for visualization.
 
 For checkpointing you can set the variable ``--checkpoint-step`` to set how often a checkpoint should
 be stored. To restart from a previous checkpoint step use the command ``--restart-folder [folder/sub-folder]``. Note that
-the variables from the previous simulation will overwrite any parameters set in the ``set_problem_parameters``
-or on the commandline. If you need to change a parameter from the previous checkpoint file (for instance, end time ``T``), you can
-still do it by explicitly redefining it within the ``initiate`` function.
+the variables from the previous simulation will overwrite any parameters in the ``set_problem_parameters``
+or on the commandline. If you need to change a parameter from the previous checkpoint file
+(for instance, end time ``T``), you can still do it by explicitly redefining the variable in the ``initiate`` function.
 
 To set how often you save files for visualization you can set ``--save-step``. Note that the default is ``1``.
 
@@ -40,8 +41,8 @@ To set how often you save files for visualization you can set ``--save-step``. N
 Setting parameters
 ==================
 All the default parameters are set in the ``problem/__init__.py`` file. Problem specific parameters
-are then overwritten in the problem file under ``set_problem_parameters`` or by defining them in the command line. In summary;
-the priority is as follow: default parameters < problem file < command line < (checkpointing).
+are then overwritten in the problem file under ``set_problem_parameters`` or by defining them on the command line.
+In summary; the priority is as follow: default parameters < problem file < command line (< checkpointing).
 
 
 Create your own problem file
