@@ -146,13 +146,6 @@ while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final 
     counter += 1
     t += dt
 
-    if MPI.rank(MPI.comm_world) == 0:
-        txt = "Solving for timestep {:d}, time {:2.04f}".format(counter, t)
-        if verbose:
-            print(txt)
-        else:
-            print(txt, end="\r")
-
     # Pre solve hook
     tmp_dict = pre_solve(**vars())
     if tmp_dict is not None:
@@ -181,17 +174,25 @@ while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final 
 
     # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:
-        txt = "Elapsed time: {0:f}".format(timer.elapsed()[0] - previous_t)
+        elapsed_time = timer.elapsed()[0] - previous_t
         previous_t = timer.elapsed()[0]
         if verbose:
+            txt = "Solved for timestep {:d}, t = {:2.04f} in {0:f} s".format(counter, t, elapsed_time)
             print(txt)
         else:
+            j = counter / int(T/dt + 1)
+            txt = "Progress: [{:<20s}] {:2.1f}%, last solve took {:3.1f} s"
+            txt = txt.format('='*int(20*j-1)+">", 100*j, elapsed_time)
             print(txt, end="\r")
 
 # Print total time
 timer.stop()
 if MPI.rank(MPI.comm_world) == 0:
-    print("Total simulation time {0:f}".format(timer.elapsed()[0]))
+    if verbose:
+        print("Total simulation time {0:f}".format(timer.elapsed()[0]))
+    else:
+        print("\nTotal simulation time {0:f}".format(timer.elapsed()[0]))
+
 
 # Post-processing of simulation
 finished(**vars())

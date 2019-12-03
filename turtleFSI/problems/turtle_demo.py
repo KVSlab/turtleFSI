@@ -97,11 +97,9 @@ class Inlet(UserExpression):
         self.t = t
         if self.t < self.t_ramp:
             self.value = self.Um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
-            # print(self.value)
         else:
             Um_min = self.Um/6  # lower velocity during oscillations
             self.value = (self.Um-Um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + Um_min
-            # print(self.value)
 
     def eval(self, value, x):
         value[0] = self.value
@@ -111,8 +109,8 @@ class Inlet(UserExpression):
         return (2,)
 
 
-def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, **namespace):
-    if MPI.rank(MPI.comm_world) == 0:
+def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, verbose, **namespace):
+    if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Create bcs")
 
     inlet = Inlet(Um, degree=v_deg)
