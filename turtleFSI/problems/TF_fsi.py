@@ -111,8 +111,8 @@ def initiate(c_x, c_y, R, f_L, **namespace):
     lift_list = []
     time_list = []
 
-    return dict(dis_x=displacement_x_list, dis_y=displacement_y_list, drag_list=drag_list, lift_list=lift_list,
-                time_list=time_list, coord=coord)
+    return dict(displacement_x_list=displacement_x_list, displacement_y_list=displacement_y_list,
+                drag_list=drag_list, lift_list=lift_list, time_list=time_list, coord=coord)
 
 
 class Inlet(UserExpression):
@@ -187,7 +187,7 @@ def pre_solve(t, inlet, **namespace):
 
 
 def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, drag_list, lift_list, mu_f, n,
-               counter, verbose, time_list, ds, dS, **namespace):
+               verbose, time_list, ds, dS, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
@@ -209,8 +209,8 @@ def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, drag_li
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Distance x: {:e}".format(displacement_x_list[-1]))
         print("Distance y: {:e}".format(displacement_y_list[-1]))
-        print("Drag: {:e}", drag_list[-1])
-        print("Lift: {:e}", lift_list[-1])
+        print("Drag: {:e}".format(drag_list[-1]))
+        print("Lift: {:e}".format(lift_list[-1]))
 
 
 def finished(results_folder, displacement_x_list, displacement_y_list, drag_list, lift_list, time_list, **namespace):

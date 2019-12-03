@@ -133,8 +133,8 @@ def post_solve(t, dvp_, n, drag_list, lift_list, time_list, mu_f, verbose, ds, *
 
     # Print results
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("Drag:", drag_list[-1])
-        print("Lift:", lift_list[-1])
+        print("Drag: {:e}".format(drag_list[-1]))
+        print("Lift: {:e}".format(lift_list[-1]))
 
 
 def finished(drag_list, lift_list, time_list, results_folder, **namespace):
