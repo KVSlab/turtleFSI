@@ -49,11 +49,11 @@ default_variables = dict(
     Um=0.8,          # Maximum velocity at inlet
 
     # Variational formulations
-    fluid="fluid",                      # ["fluid", "no_fluid"] Turn off fluid and only solve the solid problem
-    solid="solid",                      # ["solid", "no_solid"] Turn off solid and only solve the fluid problem
-    extrapolation="laplace",            # laplace, elastic, biharmonic, no_extrapolation
-    extrapolation_sub_type="constant",  # small_constant, volume, constant, constrained_disp, constrained_disp_vel
-    bc_ids=[],                          # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'
+    fluid="fluid",                             # ["fluid", "no_fluid"] Turn off fluid and only solve the solid problem
+    solid="solid",                             # ["solid", "no_solid"] Turn off solid and only solve the fluid problem
+    extrapolation="laplace",                   # laplace, elastic, biharmonic, no_extrapolation
+    extrapolation_sub_type="constant",         # small_constant, volume, constant, constrained_disp, constrained_disp_vel
+    bc_ids=[],                                 # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'
 
     # Solver settings
     linear_solver="mumps",                     # use list_linear_solvers() to check alternatives
@@ -67,13 +67,13 @@ default_variables = dict(
     compiler_parameters=_compiler_parameters,  # Update the default values of the compiler arguments (FEniCS)
 
     # Output settings
-    loglevel=20,          # Log level from FEniCS
-    verbose=True,         # Turn on/off verbose printing
-    save_step=1,          # Save file frequency
-    checkpoint_step=500,  # Checkpoint frequency
-    folder="results",     # Folder to store results and checkpoint files
-    sub_folder=None,      # The unique name of the sub directory under folder where the results are stored
-    restart_folder=None)  # Path to a potential restart folder
+    loglevel=20,                               # Log level from FEniCS
+    verbose=True,                              # Turn on/off verbose printing
+    save_step=1,                               # Save file frequency
+    checkpoint_step=500,                       # Checkpoint frequency
+    folder="results",                          # Folder to store results and checkpoint files
+    sub_folder=None,                           # The unique name of the sub directory under folder where the results are stored
+    restart_folder=None)                       # Path to a potential restart folder
 
 
 def create_folders(folder, sub_folder, restart_folder, **namespace):
@@ -92,7 +92,7 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
     else:
         path = restart_folder
 
-    if not path.joinpath("Checkpoint").exists():
+    if not path.joinpath("Checkpoint").exists() and restart_folder is not None:
         raise NotADirectoryError(("The restart folder: {} does not have a sub folder 'Checkpoint' where we can"
                                   " restart the simulation from.").format(restart_folder))
 
