@@ -143,7 +143,6 @@ timer = Timer("Total simulation time")
 timer.start()
 previous_t = 0.0
 while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final time step t == T
-    counter += 1
     t += dt
 
     # Pre solve hook
@@ -170,7 +169,10 @@ while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final 
 
     # Store results
     if counter % save_step == 0:
-        save_files_visualization(**vars())
+        vars().update(save_files_visualization(**vars()))
+
+    # Update the time step counter
+    counter += 1
 
     # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:

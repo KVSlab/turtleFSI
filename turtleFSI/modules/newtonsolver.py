@@ -50,13 +50,13 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
 
     while rel_res > rtol and residual > atol and iter < max_it:
         # Check if recompute Jacobian from 'recompute_tstep' (time step)
-        recompute_for_timestep = iter == 0 and ((counter-1) % recompute_tstep == 0)
+        recompute_for_timestep = iter == 0 and (counter % recompute_tstep == 0)
 
         # Check if recompute Jacobian from 'recompute' (iteration)
         recompute_frequency = iter > 0 and iter % recompute == 0
 
         # Recompute Jacobian due to increased residual
-        recompute_residual = iter > 0 and  (last_rel_res < rel_res or last_residual < residual)
+        recompute_residual = iter > 0 and (last_rel_res < rel_res or last_residual < residual)
 
         if recompute_for_timestep or recompute_frequency or recompute_residual:
             if MPI.rank(MPI.comm_world) == 0 and verbose:

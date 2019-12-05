@@ -78,6 +78,7 @@ default_variables = dict(
 
 def create_folders(folder, sub_folder, restart_folder, **namespace):
     """Manage paths for where to store the checkpoint and visualizations"""
+
     if restart_folder is None:
         # Get path to sub folder for this simulation
         path = Path.cwd() / folder
@@ -92,6 +93,8 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
     else:
         path = restart_folder
 
+    MPI.barrier(MPI.comm_world)
+
     if not path.joinpath("Checkpoint").exists() and restart_folder is not None:
         raise NotADirectoryError(("The restart folder: {} does not have a sub folder 'Checkpoint' where we can"
                                   " restart the simulation from.").format(restart_folder))
@@ -99,8 +102,10 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
     # Folders for visualization and checkpointing
     checkpoint_folder = path.joinpath("Checkpoint")
     visualization_folder = path.joinpath("Visualization")
-    checkpoint_folder.mkdir(parents=True, exist_ok=True)
-    visualization_folder.mkdir(parents=True, exist_ok=True)
+
+    if MPI.rank(MPI.comm_world) == 0:
+        checkpoint_folder.mkdir(parents=True, exist_ok=True)
+        visualization_folder.mkdir(parents=True, exist_ok=True)
 
     return dict(checkpoint_folder=checkpoint_folder,
                 visualization_folder=visualization_folder,
@@ -113,8 +118,9 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
     default_variables.update((k, namespace[k]) for k in (default_variables.keys() & namespace.keys()))
 
     # Dump default parameters
-    with open(str(checkpoint_folder.joinpath("default_variables.pickle")), "bw") as f:
-        pickle.dump(default_variables, f)
+    if MPI.rank(MPI.comm_world) == 0:
+        with open(str(checkpoint_folder.joinpath("default_variables.pickle")), "bw") as f:
+            pickle.dump(default_variables, f)
 
     # Dump physical fields
     fields = _get_fields(dvp_, mesh)
@@ -146,12 +152,17 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
 
 def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     # Files for storing results
-    u_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity.xdmf")))
-    d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
-    p_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("pressure.xdmf")))
-    for tmp_t in [u_file, d_file, p_file]:
-        tmp_t.parameters["flush_output"] = True
-        tmp_t.parameters["rewrite_function_mesh"] = False
+    if not "d_file" in namespace.keys():
+        d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
+        v_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity.xdmf")))
+        p_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("pressure.xdmf")))
+        for tmp_t in [d_file, v_file, p_file]:
+            tmp_t.parameters["flush_output"] = True
+            tmp_t.parameters["rewrite_function_mesh"] = False
+        return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
+        namespace.update(return_dict)
+    else:
+        return_dict = {}
 
     # Split function
     d = dvp_["n"].sub(0, deepcopy=True)
@@ -164,14 +175,11 @@ def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     p.rename("Pressure", "p")
 
     # Write results
-    d_file.write(d, t)
-    u_file.write(v, t)
-    p_file.write(p, t)
+    namespace["d_file"].write(d, t)
+    namespace["v_file"].write(v, t)
+    namespace["p_file"].write(p, t)
 
-    # Close files
-    d_file.close()
-    u_file.close()
-    p_file.close()
+    return return_dict
 
 
 def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
