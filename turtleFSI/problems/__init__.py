@@ -1,6 +1,3 @@
-# Co (c) XXXX, XXXX.
-# See LICENSE file for details.
-
 # This software is distributed WITHOUT ANY WARRANTY; without even
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
@@ -19,7 +16,7 @@ _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
 
 default_variables = dict(
     # Temporal settings
-    dt=0.001,        # timestep
+    dt=0.001,        # time step
     theta=0.501,     # temporal integration
                      # (theta=0 : first order explicit forward Euler scheme)
                      # (theta=1 : first order implicit backward Euler scheme)
@@ -27,7 +24,7 @@ default_variables = dict(
                      # (theta=0.5+dt : gives a better long-term numerical stability)
     T=1,             # end time
     t=0,             # start at time t
-    counter=0,       # timestep (should be 0 unless restart_path is not None)
+    counter=0,       # time step (should be 0 unless restart_path is not None)
 
     # Spatial settings
     v_deg=2,         # velocity degree
@@ -69,7 +66,7 @@ default_variables = dict(
     # Output settings
     loglevel=20,                               # Log level from FEniCS
     verbose=True,                              # Turn on/off verbose printing
-    save_step=1,                               # Save file frequency
+    save_step=10,                              # Save file frequency
     checkpoint_step=500,                       # Checkpoint frequency
     folder="results",                          # Folder to store results and checkpoint files
     sub_folder=None,                           # The unique name of the sub directory under folder where the results are stored
