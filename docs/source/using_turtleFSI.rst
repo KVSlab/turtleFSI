@@ -36,7 +36,7 @@ Built-in functionality
 TurtleFSI is designed to be lightweight and generic, but we have added to features generally of interest: checkpointing/restart, and
 storing files for visualization.
 
-For checkpointing you can set the variable -checkpoint-step`` to set the checkpoint frequency, i.e., how often a
+For checkpointing you can set the variable ``--checkpoint-step`` to set the checkpoint frequency, i.e., how often a
 checkpoint should be stored. To restart from a previous checkpoint, use the command
 ``--restart-folder [folder]/[sub-folder]``. Note that the variables from the previous simulation will overwrite any
 parameters defined in ``set_problem_parameters`` or on the commandline. If you need to change a parameter from the
@@ -49,8 +49,8 @@ To set how often you save files for visualization you can set ``--save-step``. N
 Setting parameters
 ==================
 All the default parameters are set in the ``problem/__init__.py`` file. Problem specific parameters
-are then overwritten in the problem file under ``set_problem_parameters`` or by defining them on the command line.
-In summary; the parameters will be updated in the follow order: default parameters < ``set_problem_parameters`` <
+are then overwritten in the problem file under ``set_problem_parameters`` or from the command line.
+In summary; the parameters will be updated in the following order: default parameters < ``set_problem_parameters`` <
 command line (< checkpointing) < other problem specific functions.
 
 
@@ -66,11 +66,11 @@ the above mentioned information. Listed in the order they are first executed:
 
 - ``set_problem_parameters``
 - ``get_mesh_domain_and_boundaries``
-- ``initiate``
+- ``initiate`` (optional)
 - ``create_bcs``
-- ``pre_solve``
-- ``post_solve``
-- ``finished``
+- ``pre_solve`` (optional)
+- ``post_solve`` (optional)
+- ``finished`` (optional)
 
 
 set_problem_parameters
@@ -81,14 +81,8 @@ physical parameters of the problem. To see a full list of the default parameters
 define other problem specific variables in ``default_variables``, for instance, geometry information like hight
 and length of the problem is of interest to the problem you are solving.
 
-In ``set_problem_parameters`` function, ``default_variables`` should be an input, and should be updated
-with your own values. Please use the default physical valus with care, they will most likely not be aproporiate
-for the problem you are trying to solve for.
-
-If you provide any command line arguments these will overwrite both those you have defined in your
-problem file, and the ``default_variables``. In theory, you do not have to specify the ``set_problem_parameters``
-if you just want to use the values defined in ``default_variables``, however in practice you have to
-include this function in all your problem files.
+In the ``set_problem_parameters`` function, you have the possibility to set your problem parameters within the
+``default_variables`` dictionary. However, keep in mind that any command line arguments will overwrite the ``default_variables``.
 
 A simple example of this function can look like this::
 
@@ -119,19 +113,18 @@ A simple example of this function can look like this::
 .. note::
     The parameter extrapolation here refers to mesh lifting operator, i.e., how to de extrapolate the deformation of
     the solid into the fluid to create an ALE frame of reference. Laplace is the cheapest in terms of computational
-    cost, but is less robust for large deformations and sharpe edges. In contrast, biharmonic is very robust, but
-    at the cost of computational efficiency and increased memory load. Please confer the literature to find a
-    suitable choice for your problem.
+    cost, but is less robust for large deformations and sharp edges. In contrast, biharmonic is very robust, but
+    at the cost of computational efficiency and increased memory load.
 
 get_mesh_domain_and_boundaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The function is essential end unique for every problem, and has to be provided for the problem file to run.
+The function is essential and unique for every problem, and has to be provided for the problem file to run.
 Here you read or define your mesh, domain markers, and boundary markers. In ``turtle_demo.py`` we
-reade the mesh data from pre-existing ".xdmf" mesh files. In contrast to defining the domain and
- boundary markers using FEniCS functions, like in the the 'Turek flag'-example (``TF_fsi.py``).
+read the mesh data from pre-existing ".xdmf" mesh files. In contrast to defining the domain and
+boundary markers using FEniCS functions, like in the the 'Turek flag'-example (``TF_fsi.py``).
 
-Any questions regarding how to best create a mesh, we refer to the FEniCS documentation and discourse group, but
-``pygmsh`` in combination with ``meshio`` can be relevant tools to create a lot of geometries.
+``pygmsh`` and ``meshio`` are relevant tools to create geometries. For any question regarding meshing,
+we refer to the FEniCS documentation and `discourse group <https://fenicsproject.discourse.group/>`_.
 
 
 In ``turtle_demo.py``, the function looks like this::
@@ -232,8 +225,8 @@ be consistent with the markers provided in ``get_mesh_domain_and_boundaries``::
 
         # Fluid velocity boundary conditions
         u_inlet = DirichletBC(DVP.sub(1), inlet, boundaries, inlet_id)
-        u_bot = DirichletBC(DVP.sub(1).sub(1), (0.0) boundaries, bottom_id)  # slip in x-direction
-        u_top = DirichletBC(DVP.sub(1).sub(1), (0.0), boundaries, top_id)    # slip in x-direction
+        u_bot = DirichletBC(DVP.sub(1).sub(1), (0.0), boundaries, bottom_id)  # slip in x-direction
+        u_top = DirichletBC(DVP.sub(1).sub(1), (0.0), boundaries, top_id)     # slip in x-direction
         u_head_tail = DirichletBC(DVP.sub(1), noslip, boundaries, turtle_head_tail_id)
 
         # Pressure boundary conditions
