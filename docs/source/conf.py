@@ -24,9 +24,9 @@ copyright = '2019, A. Sylngstad, S. Gjertsen, A. Bergersen, A. Souche, and K. Va
 author = 'A. Sylngstad, S. Gjertsen, A. Bergersen, A. Souche, and K. Valen-Sendstad'
 
 # The short X.Y version
-version = 'v1.1'
+version = 'v1.2'
 # The full version, including alpha/beta/rc tags
-release = 'v1.1.0'
+release = 'v1.2.0'
 
 
 # -- General configuration ---------------------------------------------------

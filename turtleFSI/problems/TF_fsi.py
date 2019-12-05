@@ -3,6 +3,14 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
+"""Problem file for running the "FSI" benchmarks in [1]. The problem is a channel flow
+with a circle and a flag attached to it. For the FSI problem the circle is rigid, but
+flag is not.
+
+[1] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction
+between an elastic object and laminar incompressible flow." Fluid-structure interaction.
+Springer, Berlin, Heidelberg, 2006. 371-385."""
+
 from dolfin import *
 import numpy as np
 from os import path
@@ -26,16 +34,16 @@ def set_problem_parameters(default_variables, **namespace):
         rho_s=1.0e3,                  # Solid density[kg/m3]
         nu_s=0.4,                     # Solid Poisson ratio [-]
         mu_s=2.0e6,                   # Shear modulus, CSM3: 0.5E6 [Pa]
-        lambda_s=4e6,                 # Solid 1st Lame Coef. [Pa]
+        lambda_s=4e6,                 # Solid 1st Lame Coefficient [Pa]
 
         # Problem specific
         folder="TF_fsi_results",      # Name of the results folder
         extrapolation="biharmonic",   # No displacement to extrapolate
         extrapolation_sub_type="constrained_disp_vel",  # Biharmonic type
-        bc_ids=[2, 3, 4, 6],          # Ids for extrapolation weak form
+        bc_ids=[2, 3, 4, 6],          # Ids of makers for the mesh extrapolation
 
         # Solver settings
-        recompute=1,
+        recompute=1,                  # Compute the Jacobian matrix every iteration
 
         # Geometric variables
         R=0.05,                       # Radius of the circle
@@ -53,8 +61,7 @@ def set_problem_parameters(default_variables, **namespace):
 
 def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
     # Read mesh
-    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh",
-                          "TF_fsi.xml.gz"))
+    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh", "TF_fsi.xml.gz"))
 
     # Define boundaries
     Inlet = AutoSubDomain(lambda x: near(x[0], 0))
@@ -64,11 +71,12 @@ def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
                                    near(x[1], c_y - f_H / 2) or
                                    near(x[0], c_x + R + f_L)))
 
-    def circle(x): return (x[0] - c_x)**2 + (x[1] - c_y)**2 < R**2 + DOLFIN_EPS*1e5
+    def circle(x):
+        return (x[0] - c_x)**2 + (x[1] - c_y)**2 < R**2 + DOLFIN_EPS * 1e5
     Circle = AutoSubDomain(circle)
     Barwall = AutoSubDomain(lambda x: circle(x) and
-                            x[1] >= c_y - f_H / 2 and
-                            x[1] <= c_y + f_H / 2 and x[0] > c_x)
+                            c_y - f_H / 2 <= x[1] <= c_y + f_H / 2 and
+                            x[0] > c_x)
 
     # Mark boundaries
     Allboundaries = DomainBoundary()
@@ -92,21 +100,19 @@ def get_mesh_domain_and_boundaries(R, H, L, f_L, f_H, c_x, c_y, **namespace):
     return mesh, domains, boundaries
 
 
-def initiate(mesh, c_x, c_y, R, f_L, **namespace):
-    # Coord to sample
-    for coord in mesh.coordinates():
-        if coord[0] == c_x + R + f_L and (c_y - 0.001 <= coord[1] <= c_y + 0.001):
-            break
+def initiate(c_x, c_y, R, f_L, **namespace):
+    # Coordinate for sampling statistics
+    coord = [c_x + R + f_L, c_y]
 
     # Lists to hold results
-    dis_x = []
-    dis_y = []
-    Drag_list = []
-    Lift_list = []
-    Time_list = []
+    displacement_x_list = []
+    displacement_y_list = []
+    drag_list = []
+    lift_list = []
+    time_list = []
 
-    return dict(dis_x=dis_x, dis_y=dis_y, Drag_list=Drag_list, Lift_list=Lift_list,
-                Time_list=Time_list, coord=coord)
+    return dict(displacement_x_list=displacement_x_list, displacement_y_list=displacement_y_list,
+                drag_list=drag_list, lift_list=lift_list, time_list=time_list, coord=coord)
 
 
 class Inlet(UserExpression):
@@ -180,8 +186,8 @@ def pre_solve(t, inlet, **namespace):
     inlet.update(t)
 
 
-def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
-               counter, verbose, Time_list, ds, dS, **namespace):
+def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, drag_list, lift_list, mu_f, n,
+               verbose, time_list, ds, dS, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
@@ -193,24 +199,24 @@ def post_solve(t, DVP, dvp_, coord, dis_x, dis_y, Drag_list, Lift_list, mu_f, n,
     Li += -assemble((sigma(v("+"), p("+"), d("+"), mu_f)*n("+"))[1]*dS(5))
 
     # Append results
-    Drag_list.append(Dr)
-    Lift_list.append(Li)
-    Time_list.append(t)
-    dis_x.append(d(coord)[0])
-    dis_y.append(d(coord)[1])
+    drag_list.append(Dr)
+    lift_list.append(Li)
+    time_list.append(t)
+    displacement_x_list.append(d(coord)[0])
+    displacement_y_list.append(d(coord)[1])
 
     # Print
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("Distance x: {:e}".format(dis_x[-1]))
-        print("Distance y: {:e}".format(dis_y[-1]))
-        print("Drag: {:e}", Drag_list[-1])
-        print("Lift: {:e}", Lift_list[-1])
+        print("Distance x: {:e}".format(displacement_x_list[-1]))
+        print("Distance y: {:e}".format(displacement_y_list[-1]))
+        print("Drag: {:e}".format(drag_list[-1]))
+        print("Lift: {:e}".format(lift_list[-1]))
 
 
-def finished(results_folder, dis_x, dis_y, Drag_list, Lift_list, Time_list, **namespace):
+def finished(results_folder, displacement_x_list, displacement_y_list, drag_list, lift_list, time_list, **namespace):
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(results_folder, 'Lift.txt'), Lift_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'Drag.txt'), Drag_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'dis_x.txt'), dis_x, delimiter=',')
-        np.savetxt(path.join(results_folder, 'dis_y.txt'), dis_y, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Lift.txt'), lift_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Drag.txt'), drag_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_x.txt'), displacement_x_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'dis_y.txt'), displacement_y_list, delimiter=',')

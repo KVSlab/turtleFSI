@@ -23,8 +23,8 @@ def test_cfd():
 
     drag = np.loadtxt(Path.cwd().joinpath("tmp/1/Drag.txt"))[-1]
     lift = np.loadtxt(Path.cwd().joinpath("tmp/1/Lift.txt"))[-1]
-    drag_reference = 2.5637554331614054
-    lift_reference = -0.02078995609237899
+    drag_reference = 4.503203576965564
+    lift_reference = -0.03790359084395478
 
     assert compare(drag, drag_reference)
     assert compare(lift, lift_reference)
@@ -37,8 +37,8 @@ def test_csm():
 
     distance_x = np.loadtxt("tmp/2/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/2/dis_y.txt")[-1]
-    distance_x_reference = -6.13487990897633e-06
-    distance_y_reference = -3.9398599897576816e-05
+    distance_x_reference = -3.312418050495862e-05
+    distance_y_reference = -0.003738529237136441
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -53,10 +53,10 @@ def test_fsi():
     lift = np.loadtxt("tmp/3/Lift.txt")[-1]
     distance_x = np.loadtxt("tmp/3/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/3/dis_y.txt")[-1]
-    distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6594621765280973e-08
-    drag_reference = 2.472928697982334
-    lift_reference = -0.003950732063025264
+    distance_x_reference = -6.896013956339182e-06
+    distance_y_reference = 1.876355330341896e-09
+    drag_reference = 4.407481239804155
+    lift_reference = -0.005404703556977697
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -75,10 +75,10 @@ def test_laplace(extrapolation_sub_type):
     lift = np.loadtxt("tmp/4/Lift.txt")[-1]
     distance_x = np.loadtxt("tmp/4/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/4/dis_y.txt")[-1]
-    distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6594621765280973e-08
-    drag_reference = 2.472928697982334
-    lift_reference = -0.003950732063025264
+    distance_x_reference = -6.896013956339182e-06
+    distance_y_reference = 1.876355330341896e-09
+    drag_reference = 4.407481239804155
+    lift_reference = -0.005404703556977697
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -96,10 +96,10 @@ def test_biharmonic(extrapolation_sub_type):
     lift = np.loadtxt("tmp/5/Lift.txt")[-1]
     distance_x = np.loadtxt("tmp/5/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/5/dis_y.txt")[-1]
-    distance_x_reference = -3.0193475393178104e-06
-    distance_y_reference = -2.6594621765280973e-08
-    drag_reference = 2.472928697982334
-    lift_reference = -0.003950732063025264
+    distance_x_reference = -6.896013956339182e-06
+    distance_y_reference = 1.876355330341896e-09
+    drag_reference = 4.407481239804155
+    lift_reference = -0.005404703556977697
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)
@@ -116,10 +116,10 @@ def test_elastic():
     lift = np.loadtxt("tmp/6/Lift.txt")[-1]
     distance_x = np.loadtxt("tmp/6/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/6/dis_y.txt")[-1]
-    distance_x_reference = -3.019356900018008e-06
-    distance_y_reference = -2.659921700576888e-08
-    drag_reference = 2.472926160030297
-    lift_reference = -0.0039508769183140835
+    distance_x_reference = -6.896144755254494e-06
+    distance_y_reference = 1.868651990487361e-09
+    drag_reference = 4.407488867909029
+    lift_reference = -0.005404616050528832
 
     assert compare(distance_x, distance_x_reference)
     assert compare(distance_y, distance_y_reference)

@@ -3,6 +3,13 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
+"""Problem file for running the "CFD" benchmarks in [1]. The problem is a channel flow
+with a circle and a flag attached to it. For the CFD problem both the circle and flag is rigid.
+
+[1] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction
+between an elastic object and laminar incompressible flow." Fluid-structure interaction.
+Springer, Berlin, Heidelberg, 2006. 371-385."""
+
 from dolfin import *
 import numpy as np
 from os import path
@@ -11,7 +18,7 @@ from turtleFSI.problems import *
 from turtleFSI.modules import *
 
 
-def set_problem_parameters(args, default_variables, **namespace):
+def set_problem_parameters(default_variables, **namespace):
     # Overwrite or add new variables to 'default_variables'
     default_variables.update(dict(
         # Temporal variables
@@ -25,7 +32,7 @@ def set_problem_parameters(args, default_variables, **namespace):
         Um=2.0,                   # Max. velocity inlet (CDF3: 2.0) [m/s]
 
         # Problem specific
-        folder="TF_cfd_results",  # Name of the results fulter
+        folder="TF_cfd_results",  # Name of the results folder
         solid="no_solid",         # Do not solve for the solid
         extrapolation="no_extrapolation",  # No displacement to extrapolate
 
@@ -37,8 +44,8 @@ def set_problem_parameters(args, default_variables, **namespace):
 
 
 def get_mesh_domain_and_boundaries(L, H, **namespace):
-    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh",
-                          "TF_cfd.xml.gz"))
+    # Load and refine mesh
+    mesh = Mesh(path.join(path.dirname(path.abspath(__file__)), "..", "mesh", "TF_cfd.xml.gz"))
     mesh = refine(mesh)
 
     # Define the boundaries
@@ -64,11 +71,11 @@ def get_mesh_domain_and_boundaries(L, H, **namespace):
 
 def initiate(**namespace):
     # Lists to hold displacement, forces, and time
-    Drag_list = []
-    Lift_list = []
-    Time_list = []
+    drag_list = []
+    lift_list = []
+    time_list = []
 
-    return dict(Drag_list=Drag_list, Lift_list=Lift_list, Time_list=Time_list)
+    return dict(drag_list=drag_list, lift_list=lift_list, time_list=time_list)
 
 
 class Inlet(UserExpression):
@@ -92,7 +99,7 @@ class Inlet(UserExpression):
         return (2,)
 
 
-def create_bcs(DVP, dvp_, Um, H, v_deg, boundaries, extrapolation_sub_type, **namespace):
+def create_bcs(DVP, Um, H, v_deg, boundaries, **namespace):
     # Create inlet expression
     inlet = Inlet(Um, H, degree=v_deg)
 
@@ -112,24 +119,27 @@ def pre_solve(t, inlet, **namespace):
     inlet.update(t)
 
 
-def post_solve(t, dvp_, n, Drag_list, Lift_list, Time_list, counter, mu_f, verbose, ds,
-               **namespace):
+def post_solve(t, dvp_, n, drag_list, lift_list, time_list, mu_f, verbose, ds, **namespace):
+    # Get deformation, velocity, and pressure
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
 
+    # Compute forces
     force = dot(sigma(v, p, d, mu_f), n)
-    Drag_list.append(-assemble(force[0]*ds(4)))
-    Lift_list.append(-assemble(force[1]*ds(4)))
-    Time_list.append(t)
+    drag_list.append(-assemble(force[0]*ds(4)))
+    lift_list.append(-assemble(force[1]*ds(4)))
+    time_list.append(t)
 
+    # Print results
     if MPI.rank(MPI.comm_world) == 0 and verbose:
-        print("Drag:", Drag_list[-1])
-        print("Lift:", Lift_list[-1])
+        print("Drag: {:e}".format(drag_list[-1]))
+        print("Lift: {:e}".format(lift_list[-1]))
 
 
-def finished(Drag_list, Lift_list, Time_list, results_folder, **namespace):
+def finished(drag_list, lift_list, time_list, results_folder, **namespace):
+    # Store results when the computation is finished
     if MPI.rank(MPI.comm_world) == 0:
-        np.savetxt(path.join(results_folder, 'Lift.txt'), Lift_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'Drag.txt'), Drag_list, delimiter=',')
-        np.savetxt(path.join(results_folder, 'Time.txt'), Time_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Lift.txt'), lift_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Drag.txt'), drag_list, delimiter=',')
+        np.savetxt(path.join(results_folder, 'Time.txt'), time_list, delimiter=',')

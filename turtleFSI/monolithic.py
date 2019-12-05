@@ -24,7 +24,7 @@ if Path.cwd().joinpath(args.problem+'.py').is_file():
 else:
     try:
         exec("from turtleFSI.problems.{} import *".format(args.problem))
-    except:
+    except ImportError:
         raise ImportError("""Can not find the problem file. Make sure that the
         problem file is specified in the current directory or in the solver
         turtleFSI/problems/... directory.""")
@@ -58,7 +58,7 @@ mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 # Control FEniCS output
 set_log_level(loglevel)
 
-# Finite Elements
+# Finite Elements for deformation (de), velocity (ve), and pressure (pe)
 de = VectorElement('CG', mesh.ufl_cell(), d_deg)
 ve = VectorElement('CG', mesh.ufl_cell(), v_deg)
 pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
@@ -68,6 +68,7 @@ k = Constant(dt)
 n = FacetNormal(mesh)
 
 # Define function space
+# When using a biharmonic mesh lifting operator, we have to add a fourth function space.
 if extrapolation == "biharmonic":
     Elem = MixedElement([de, ve, pe, de])
 else:
@@ -75,7 +76,7 @@ else:
 
 DVP = FunctionSpace(mesh, Elem)
 
-# Create functions
+# Create one function for time step n, n-1, and n-2
 dvp_ = {}
 d_ = {}
 v_ = {}
@@ -120,7 +121,7 @@ vars().update(solid_setup(**vars()))
 exec("from turtleFSI.modules.{} import extrapolate_setup".format(extrapolation))
 vars().update(extrapolate_setup(**vars()))
 
-# Any pre-processing before the simulation
+# Any action before the simulation starts, e.g., initial conditions or overwriting parameters from restart
 vars().update(initiate(**vars()))
 
 # Create boundary conditions
@@ -140,17 +141,9 @@ if restart_folder is not None:
 
 timer = Timer("Total simulation time")
 timer.start()
-last_t = 0.0
-while t <= T + dt / 10:
-    counter += 1
+previous_t = 0.0
+while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final time step t == T
     t += dt
-
-    if MPI.rank(MPI.comm_world) == 0:
-        txt = "Solving for timestep {:d}, time {:2.04f}".format(counter, t)
-        if verbose:
-            print(txt)
-        else:
-            print(txt, end="\r")
 
     # Pre solve hook
     tmp_dict = pre_solve(**vars())
@@ -176,21 +169,22 @@ while t <= T + dt / 10:
 
     # Store results
     if counter % save_step == 0:
-        save_files_visualization(**vars())
+        vars().update(save_files_visualization(**vars()))
+
+    # Update the time step counter
+    counter += 1
 
     # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:
-        txt = "Elapsed time: {0:f}".format(timer.elapsed()[0] - last_t)
-        last_t = timer.elapsed()[0]
-        if verbose:
-            print(txt)
-        else:
-            print(txt, end="\r")
+        previous_t = print_information(**vars())
 
 # Print total time
 timer.stop()
 if MPI.rank(MPI.comm_world) == 0:
-    print("Total simulation time {0:f}".format(timer.elapsed()[0]))
+    if verbose:
+        print("Total simulation time {0:f}".format(timer.elapsed()[0]))
+    else:
+        print("\nTotal simulation time {0:f}".format(timer.elapsed()[0]))
 
 # Post-processing of simulation
 finished(**vars())
