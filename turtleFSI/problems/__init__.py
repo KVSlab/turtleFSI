@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI
+from dolfin import parameters, XDMFFile, MPI, assign
 import pickle
 from pathlib import Path
 
@@ -188,6 +188,16 @@ def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
         checkpoint_path = str(restart_folder.joinpath("Checkpoint", "checkpoint_" + name + ".xdmf"))
         with XDMFFile(MPI.comm_world, checkpoint_path) as f:
             f.read_checkpoint(field, name)
+
+    assign(dvp_["n"].sub(0), fields[0][1])  # update d_["n"] to ckeckpoint d_["n-1"]
+    assign(dvp_["n"].sub(1), fields[2][1])  # update v_["n"] to ckeckpoint v_["n-1"]
+    assign(dvp_["n"].sub(2), fields[4][1])  # update p_["n"] to ckeckpoint p_["n-1"]
+    assign(dvp_["n-1"].sub(0), fields[0][1])  # update d_["n-1"] to ckeckpoint d_["n-1"]
+    assign(dvp_["n-1"].sub(1), fields[2][1])  # update v_["n-1"] to ckeckpoint v_["n-1"]
+    assign(dvp_["n-1"].sub(2), fields[4][1])  # update p_["n-1"] to ckeckpoint p_["n-1"]
+    assign(dvp_["n-2"].sub(0), fields[1][1])  # update d_["n-2"] to ckeckpoint d_["n-2"]
+    assign(dvp_["n-2"].sub(1), fields[3][1])  # update v_["n-2"] to ckeckpoint v_["n-2"]
+    assign(dvp_["n-2"].sub(2), fields[5][1])  # update p_["n-2"] to ckeckpoint p_["n-2"]
 
 
 def _get_fields(dvp_, mesh):
