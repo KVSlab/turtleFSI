@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI, assign
+from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement, FunctionSpace
 import pickle
 from pathlib import Path
 
@@ -67,6 +67,7 @@ default_variables = dict(
     loglevel=20,                               # Log level from FEniCS
     verbose=True,                              # Turn on/off verbose printing
     save_step=10,                              # Save file frequency
+    save_deg=2,                                # Degree of the functions saved for visualisation '1' '2' '3' etc... (high value can slow down simulation significantly!)
     checkpoint_step=500,                       # Checkpoint frequency
     folder="results",                          # Folder to store results and checkpoint files
     sub_folder=None,                           # The unique name of the sub directory under folder where the results are stored
@@ -147,7 +148,7 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
                 f.write(text)
 
 
-def save_files_visualization(visualization_folder, dvp_, t, **namespace):
+def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **namespace):
     # Files for storing results
     if not "d_file" in namespace.keys():
         d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
@@ -156,8 +157,25 @@ def save_files_visualization(visualization_folder, dvp_, t, **namespace):
         for tmp_t in [d_file, v_file, p_file]:
             tmp_t.parameters["flush_output"] = True
             tmp_t.parameters["rewrite_function_mesh"] = False
-        return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
+
+        if save_deg > 1:
+            mesh_viz = Mesh(mesh)  # copy the mesh
+
+            for i in range(save_deg-1):
+                mesh_viz = refine(mesh_viz)  # refine the mesh
+
+            dve_viz = VectorElement('CG', mesh_viz.ufl_cell(), 1)
+            pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
+            FSdv_viz = FunctionSpace(mesh_viz, dve_viz)  # Visualisation FunctionSpace for d and v
+            FSp_viz = FunctionSpace(mesh_viz, pe_viz)  # Visualisation FunctionSpace for p
+
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz)
+
+        else:
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
+
         namespace.update(return_dict)
+
     else:
         return_dict = {}
 
@@ -165,6 +183,11 @@ def save_files_visualization(visualization_folder, dvp_, t, **namespace):
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
+
+    if save_deg > 1:
+        d = project(d, namespace["FSdv_viz"])
+        v = project(v, namespace["FSdv_viz"])
+        p = project(p, namespace["FSp_viz"])
 
     # Name function
     d.rename("Displacement", "d")

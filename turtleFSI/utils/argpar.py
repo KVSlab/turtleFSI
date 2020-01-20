@@ -222,6 +222,8 @@ def parse():
                         help="Set FEniCS loglevel")
     parser.add_argument("--save-step", type=int, default=None,
                         help="Saving frequency of the files defined in the problem file")
+    parser.add_argument("--save-deg", type=int, default=None,
+                        help="Degree of the functions saved for visualisation. '1':P1, '2':P2, etc...")
     parser.add_argument("--checkpoint-step", type=int, default=None,
                         help="How often to store a checkpoint (use to later restart a simulation)")
     parser.add_argument("--folder", type=str, default=None,
