@@ -14,5 +14,6 @@ Welcome to turtleFSI's documentation!
 
    installation
    using_turtleFSI
+   verif_perf
    new_features
    acknow_ref
