@@ -7,7 +7,7 @@ Solver performance
 ==================
 
 turtleFSI benefits from the high performance computing (HPC) functionability
-of FEniCS and the solver can be executed with MPI parallel tasks as follow:
+of FEniCS and the solver can be executed with MPI parallel tasks as follow::
 
  mpirun -np 4 turtleFSI
 
