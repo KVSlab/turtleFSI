@@ -144,20 +144,22 @@ def parse():
     # Set fluid, solid, and extrapolation
     parser.add_argument("-f", "--fluid", type=str, default=None,
                         choices=["fluid", "no_fluid"], metavar="Fluid",
-                        help="Turn off fluid and only solve the solid problem")
+                        help="Turn on/off solving of the fluid problem ('fluid', 'no_fluid')")
     parser.add_argument("-s", "--solid", type=str, default=None, metavar="Solid",
                         choices=["solid", "no_solid"],
-                        help="Turn off solid and only solve the fluid problem")
+                        help="Turn on/off solving of the solid problem ('solid', 'no_solid')")
     parser.add_argument("-e", "--extrapolation", type=str, default=None,
                         metavar="Extrapolation method",
                         choices=["laplace", "elastic", "biharmonic", "no_extrapolation"],
                         help="Set approach for extrapolating the deformation into the fluid" +
-                        "domain")
+                        " domain ('laplace', 'elastic', 'biharmonic', 'no_extrapolation')")
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,
                         metavar="Extrapolation sub type", default=None,
                         choices=["constant", "small_constant", "volume", "volume_change",
                                  "constrained_disp", "constrained_disp_vel"],
-                        help="Set the sub type of the extrapolation method")
+                        help="Set the sub type of the extrapolation method ('constant'," +
+                        "'small_constant', 'volume', 'volume_change', 'constrained_disp', " +
+                        "'constrained_disp_vel')")
     parser.add_argument("--bc-ids", nargs="+", type=int, default=None, metavar="ID list",
                         help="List of boundary ids for the weak formulation of the" +
                         " biharmonic mesh lifting operator with 'constrained_disp_vel'")
@@ -188,14 +190,14 @@ def parse():
 
     # Solver settings
     parser.add_argument("--linear-solver", type=str, default=None,
-                        help="Choose the linear solver for each Newton iteration," +
+                        help="Selected linear solver for each Newton iteration," +
                         " to see a complete list run list_linear_solvers()")
     parser.add_argument("--atol", type=float, default=None,
                         metavar="Absolute tolerance",
-                        help="The absolute error tolerance for the Newton iterations")
+                        help="Absolute error tolerance for the Newton iterations")
     parser.add_argument("--rtol", type=float, default=None,
                         metavar="Relative tolerance",
-                        help="The relative error tolerance for the Newton iterations")
+                        help="Relative error tolerance for the Newton iterations")
     parser.add_argument("--max-it", type=int, default=None,
                         metavar="Maximum iterations",
                         help="Maximum number of iterations in the Newton solver")
