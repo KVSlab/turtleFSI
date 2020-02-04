@@ -10,6 +10,8 @@ commandline.
 from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement, FunctionSpace
 import pickle
 from pathlib import Path
+from xml.etree import ElementTree as ET
+
 
 _compiler_parameters = dict(parameters["form_compiler"])
 _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
@@ -101,13 +103,35 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
     checkpoint_folder = path.joinpath("Checkpoint")
     visualization_folder = path.joinpath("Visualization")
 
+    # Check if there exists previous visualization files, if so move and change name
+    if list(visualization_folder.glob("*")) != []:
+        # Get number of run
+        a = list(visualization_folder.glob("velocity*.h5"))
+        b = [int(i.__str__().split("_")[-1].split(".")[0]) for i in a if "_" in i.name.__str__()]
+        run_number = 1 if len(b) == 0 else max(b) + 1
+
+        for name in ["displacement", "velocity", "pressure"]:
+            for suffix in [".h5", ".xdmf"]:
+                new_name = visualization_folder.joinpath(name + "_run_" + str(run_number) + suffix)
+                tmp_path = visualization_folder.joinpath(name + suffix)
+                tmp_path.rename(new_name)
+
+            # Rename link in xdmf file
+            with open(new_name) as f:
+                text = f.read().replace(name + ".h5", new_name.__str__().replace(".xdmf", ".h5"))
+
+            with open(new_name, "w") as f:
+                f.write(text)
+    else:
+        run_number = 0
+
     if MPI.rank(MPI.comm_world) == 0:
         checkpoint_folder.mkdir(parents=True, exist_ok=True)
         visualization_folder.mkdir(parents=True, exist_ok=True)
 
     return dict(checkpoint_folder=checkpoint_folder,
                 visualization_folder=visualization_folder,
-                results_folder=path)
+                results_folder=path, run_number=run_number)
 
 
 def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
@@ -166,8 +190,8 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
 
             dve_viz = VectorElement('CG', mesh_viz.ufl_cell(), 1)
             pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
-            FSdv_viz = FunctionSpace(mesh_viz, dve_viz)  # Visualisation FunctionSpace for d and v
-            FSp_viz = FunctionSpace(mesh_viz, pe_viz)  # Visualisation FunctionSpace for p
+            FSdv_viz = FunctionSpace(mesh_viz, dve_viz)   # Visualisation FunctionSpace for d and v
+            FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
 
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz)
 
@@ -212,30 +236,23 @@ def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
         with XDMFFile(MPI.comm_world, checkpoint_path) as f:
             f.read_checkpoint(field, name)
 
-    assign(dvp_["n"].sub(0), fields[0][1])  # update d_["n"] to ckeckpoint d_["n-1"]
-    assign(dvp_["n"].sub(1), fields[2][1])  # update v_["n"] to ckeckpoint v_["n-1"]
-    assign(dvp_["n"].sub(2), fields[4][1])  # update p_["n"] to ckeckpoint p_["n-1"]
-    assign(dvp_["n-1"].sub(0), fields[0][1])  # update d_["n-1"] to ckeckpoint d_["n-1"]
-    assign(dvp_["n-1"].sub(1), fields[2][1])  # update v_["n-1"] to ckeckpoint v_["n-1"]
-    assign(dvp_["n-1"].sub(2), fields[4][1])  # update p_["n-1"] to ckeckpoint p_["n-1"]
-    assign(dvp_["n-2"].sub(0), fields[1][1])  # update d_["n-2"] to ckeckpoint d_["n-2"]
-    assign(dvp_["n-2"].sub(1), fields[3][1])  # update v_["n-2"] to ckeckpoint v_["n-2"]
-    assign(dvp_["n-2"].sub(2), fields[5][1])  # update p_["n-2"] to ckeckpoint p_["n-2"]
+    assign(dvp_["n-1"].sub(0), fields[0][1])  # update d_["n-1"] to checkpoint d_["n-1"]
+    assign(dvp_["n-1"].sub(1), fields[1][1])  # update v_["n-1"] to checkpoint v_["n-1"]
+    assign(dvp_["n-1"].sub(2), fields[2][1])  # update p_["n-1"] to checkpoint p_["n-1"]
+    assign(dvp_["n"].sub(0), fields[0][1])    # update d_["n-1"] to checkpoint d_["n-1"]
+    assign(dvp_["n"].sub(1), fields[1][1])    # update v_["n-1"] to checkpoint v_["n-1"]
+    assign(dvp_["n"].sub(2), fields[2][1])    # update p_["n-1"] to checkpoint p_["n-1"]
 
 
 def _get_fields(dvp_, mesh):
     d1 = dvp_["n-1"].sub(0, deepcopy=True)
-    d2 = dvp_["n-2"].sub(0, deepcopy=True)
     v1 = dvp_["n-1"].sub(1, deepcopy=True)
-    v2 = dvp_["n-2"].sub(1, deepcopy=True)
     p1 = dvp_["n-1"].sub(2, deepcopy=True)
-    p2 = dvp_["n-2"].sub(2, deepcopy=True)
-    fields = [('d1', d1), ('d2', d2), ('v1', v1), ('v2', v2), ('p1', p1), ('p2', p2)]
+    fields = [('d1', d1), ('v1', v1), ('p1', p1)]
 
     if len(dvp_["n-1"]) == mesh.geometric_dimension() * 3 + 1:
         w1 = dvp_["n-1"].sub(3, deepcopy=True)
-        w2 = dvp_["n-2"].sub(3, deepcopy=True)
-        fields += [('w1', w1), ('w2', w2)]
+        fields += [('w1', w1)]
 
     return fields
 
@@ -250,10 +267,62 @@ def print_information(counter, t, T, dt, timer, previous_t, verbose, **namespace
     else:
         j = counter / int(T/dt + 1)
         txt = "Progress: [{:<20s}] {:2.1f}%, last solve took {:3.1f} s"
-        txt = txt.format('='*int(20*j-1)+">", 100*j, elapsed_time)
-        print(txt, end="\r")
+        txt = txt.format('=' * int(20*j-1) + ">", 100 * j, elapsed_time)
+        print(txt, end='\r')
 
     return timer.elapsed()[0]
+
+
+def merge_visualization_files(visualization_folder, **namesapce):
+    # Gather files
+    xdmf_files = list(visualization_folder.glob("*.xdmf"))
+    xdmf_displacement = [f for f in xdmf_files if "displacement" in f.__str__()]
+    xdmf_velocity = [f for f in xdmf_files if "velocity" in f.__str__()]
+    xdmf_pressure = [f for f in xdmf_files if "pressure" in f.__str__()]
+
+    # Merge files
+    for files in [xdmf_displacement, xdmf_velocity, xdmf_pressure]:
+        if len(files) > 1:
+            merge_xml_files(files)
+
+
+def merge_xml_files(files):
+    # Get first timestep and trees
+    first_timesteps = []
+    trees = []
+    for f in files:
+        trees.append(ET.parse(f))
+        root = trees[-1].getroot()
+        first_timesteps.append(float(root[0][0][0][2].attrib["Value"]))
+
+    # Index valued sort (bypass numpy dependency)
+    first_timestep_sorted = sorted(first_timesteps)
+    indexes = [first_timesteps.index(i) for i in first_timestep_sorted]
+
+    # Get last timestep of first tree
+    base_tree = trees[indexes[0]]
+    last_node = base_tree.getroot()[0][0][-1]
+    ind = 1 if len(last_node.getchildren()) == 3 else 2
+    last_timestep = float(last_node[ind].attrib["Value"])
+
+    # Append
+    for index in indexes[1:]:
+        tree = trees[index]
+        for node in tree.getroot()[0][0].getchildren():
+            ind = 1 if len(node.getchildren()) == 3 else 2
+            if last_timestep < float(node[ind].attrib["Value"]):
+                base_tree.getroot()[0][0].append(node)
+                last_timestep = float(node[ind].attrib["Value"])
+
+    # Seperate xdmf files
+    new_file = [f for f in files if "_" not in f.name.__str__()]
+    old_files = [f for f in files if "_" in f.name.__str__()]
+
+    # Write new xdmf file
+    base_tree.write(new_file[0])
+
+    # Delete xdmf file
+    [f.unlink() for f in old_files]
 
 
 def set_problem_parameters(**namespace):
