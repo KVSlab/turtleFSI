@@ -118,7 +118,7 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
 
             # Rename link in xdmf file
             with open(new_name) as f:
-                text = f.read().replace(name + ".h5", new_name.__str__().replace(".xdmf", ".h5"))
+                text = f.read().replace(name + ".h5", new_name.name.__str__().replace(".xdmf", ".h5"))
 
             with open(new_name, "w") as f:
                 f.write(text)
@@ -319,7 +319,7 @@ def merge_xml_files(files):
     old_files = [f for f in files if "_" in f.name.__str__()]
 
     # Write new xdmf file
-    base_tree.write(new_file[0])
+    base_tree.write(new_file[0], xml_declaration=True)
 
     # Delete xdmf file
     [f.unlink() for f in old_files]
