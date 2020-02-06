@@ -16,7 +16,7 @@ the solver using a relatively large number of parallel MPI tasks. The simulation
 a constant Dirichlet plug flow at one end of the fluid domain and compute the resulting structure
 deformation and fluid flow along the pipe. We present the results obtained at the second time step
 of the simulation starting from initial rest.
-We demonstrate an adequate scaling up to more than 100 cores, both executing
+We demonstrate an adequate scaling using up to 64 cores of one cluster node, both executing
 turtleFSI from a module installation or within a docker container (Figure c).
 A direct consequence of splitting the geometry in several MPI domains (Figure b) is an increase of
 the system size associated with the handling of the degree of freedoms along the
