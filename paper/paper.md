@@ -85,6 +85,6 @@ turtleFSI comes with several problem files, found under /turtleFSI/problems/, to
   ```
 
 # Acknowledgements
-The study was supported by The Research Council of Norway through the Center for Biomedical Computing (grant number 179578), the Centre for Cardiological Innovation (grant number 203489), and the SIMMIS project (grant number 262827). Simulations were performed on the Abel Cluster, owned and operated by the University of Oslo and the Norwegian metacenter for High Performance Computing (NOTUR), project nn9316k.
+The study was supported by The Research Council of Norway through the Center for Biomedical Computing (grant 179578), the Centre for Cardiological Innovation (grant number 203489), and the SIMMIS project (grant number 262827). Simulations were performed on the Abel Cluster (University of Oslo and the Norwegian metacenter for High Performance Computing (NOTUR), project nn9316k), and the Experimental Infrastructure for Exploration of Exascale Computing (eX3) (Norwegian Research Council grant 270053).
 
 # References
