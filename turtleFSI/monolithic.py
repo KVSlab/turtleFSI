@@ -142,7 +142,7 @@ if restart_folder is not None:
 timer = Timer("Total simulation time")
 timer.start()
 previous_t = 0.0
-while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final time step t == T
+while t < T:
     t += dt
 
     # Pre solve hook
