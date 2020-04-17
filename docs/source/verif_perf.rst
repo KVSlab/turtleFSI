@@ -30,7 +30,7 @@ As shown in Figure c, the total time in computing once the Jacobian matrix and
 the factorisation of the system is about 2 orders of magnitude larger than solving 5 iteration steps by reusing the factorisation.
 
 
-.. figure:: ../../figs/figure_HPC.png
+.. figure:: ../../figs/figure_hpc2.png
     :width: 600px
     :align: center
 
