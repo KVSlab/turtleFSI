@@ -70,8 +70,7 @@ matrix and the factorization of the direct solver over five Newton’s iteration
 the total execution time for computing the Jacobian matrix once and factorization of the system is about
 two orders of magnitude larger than solving five iteration steps by reusing the factorization.
 
-
-.. figure:: ../../figs/figure_HPC.png
+.. figure:: ../../figs/figure_hpc2.png
     :width: 600px
     :align: center
 

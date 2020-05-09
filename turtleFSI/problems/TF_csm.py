@@ -12,6 +12,7 @@ Springer, Berlin, Heidelberg, 2006. 371-385."""
 from dolfin import *
 import numpy as np
 from os import path
+from mpi4py import MPI as pyMPI
 
 from turtleFSI.problems import *
 
@@ -86,6 +87,35 @@ def create_bcs(DVP, boundaries, **namespace):
 
     return dict(bcs=[u_barwall])
 
+################################################################################
+# the function mpi4py_comm and peval are used to overcome FEniCS limitation of
+# evaluating functions at a given mesh point in parallel.
+# https://fenicsproject.discourse.group/t/problem-with-evaluation-at-a-point-in
+# -parallel/1188
+
+
+def mpi4py_comm(comm):
+    '''Get mpi4py communicator'''
+    try:
+        return comm.tompi4py()
+    except AttributeError:
+        return comm
+
+
+def peval(f, x):
+    '''Parallel synced eval'''
+    try:
+        yloc = f(x)
+    except RuntimeError:
+        yloc = np.inf*np.ones(f.value_shape())
+
+    comm = mpi4py_comm(f.function_space().mesh().mpi_comm())
+    yglob = np.zeros_like(yloc)
+    comm.Allreduce(yloc, yglob, op=pyMPI.MIN)
+
+    return yglob
+################################################################################
+
 
 def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, time_list, verbose, **namespace):
     # Add time
@@ -93,9 +123,10 @@ def post_solve(t, dvp_, coord, displacement_x_list, displacement_y_list, time_li
 
     # Add displacement
     d = dvp_["n"].sub(0, deepcopy=True)
-    dsx = d(coord)[0]
-    dsy = d(coord)[1]
-    displacement_x_list .append(dsx)
+    d_eval = peval(d, coord)
+    dsx = d_eval[0]
+    dsy = d_eval[1]
+    displacement_x_list.append(dsx)
     displacement_y_list.append(dsy)
 
     if MPI.rank(MPI.comm_world) == 0 and verbose:
