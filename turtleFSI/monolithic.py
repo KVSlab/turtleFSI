@@ -74,7 +74,7 @@ if extrapolation == "biharmonic":
 else:
     Elem = MixedElement([de, ve, pe])
 
-DVP = FunctionSpace(mesh, Elem, constrained_domain=constrained_domain)
+DVP = FunctionSpace(mesh, Elem)
 
 # Create one function for time step n, n-1, and n-2
 dvp_ = {}
