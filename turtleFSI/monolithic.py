@@ -53,7 +53,7 @@ vars().update(default_variables)
 vars().update(create_folders(**vars()))
 
 # Get mesh information
-mesh, domains, boundaries, constrained_domain = get_mesh_domain_and_boundaries(**vars())
+mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 
 # Control FEniCS output
 set_log_level(loglevel)
