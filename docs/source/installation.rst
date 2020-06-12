@@ -17,7 +17,8 @@ The dependencies of turtleFSI are:
 Basic Installation
 ==================
 If you have a MacOX or Linux operating system we recommend that you
-install turtleFSI through Anaconda. First, install Anaconda or Miniconda.
+install turtleFSI through Anaconda. First, install `Anaconda or Miniconda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_,
+depending on your need. For just installing turtleFSI we recommend Miniconda.
 Then execute the following command in a terminal window::
 
     $ conda create -n your_environment -c conda-forge turtleFSI
