@@ -24,14 +24,12 @@ Then execute the following command in a terminal window::
 
 You can then activate your environment by running ``source activate your_environment``.
 Now you are all set, and can start using turtleFSI. A detailed explanation for usage of
-turtleFSI can be found here_.
+turtleFSI can be found `here <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>`_.
 
 If you are using turtleFSI on a high performance computing (HPC) cluster we always
 recommend that you build from source, as described below. This is in accordance
 with the guidelines provided by the `FEniCS project <https://fenicsproject.org/download/>`_
 users to install FEniCS from source when on a HPC cluster.
-
-.. _here: <https://turtlefsi2.readthedocs.io/en/latest/using_turtleFSI.html>.
 
 
 Development version
