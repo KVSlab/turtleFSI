@@ -22,6 +22,12 @@ which will execute the default problem file ``turtle_demo.py`` with all the defa
 you executed the command there will be a folder ``turtle_demo_results/1`` where you can find ``Visualization`` files,
 and under ``Checkpoint`` you can find a list of all parameters used in ``default_variables.pickle``.
 
+.. note::
+   The default number of time steps is set to 30, which takes a couple of minutes to execute on a normal desktop.
+   To re-create the video shown in readme set the end time (T) to 15 seconds. This will take some time to run,
+   but you can look at the intermediate results in ``turtle_demo_results/1`` in paraview while running the simulation.
+
+
 To run a specific problem file, run::
 
  turtleFSI --problem [path_to_problem]
