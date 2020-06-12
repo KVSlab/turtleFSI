@@ -32,7 +32,7 @@ def set_problem_parameters(default_variables, **namespace):
     lambda_s_val = nu_s_val*2.*mu_s_val/(1. - 2.*nu_s_val)
 
     default_variables.update(dict(
-        T=15,                          # End time [s]
+        T=0.2,                         # End time [s] (set T to several seconds to simulate several swimming cycles)
         dt=0.005,                      # Time step [s]
         theta=0.505,                   # Theta value (0.5 + dt), shifted Crank-Nicolson scheme
         Um=1.0,                        # Max. velocity inlet [m/s]
