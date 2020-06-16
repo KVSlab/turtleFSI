@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 DEPENDENCIES = []
 TEST_DEPENDENCIES = ['pytest']
 
-VERSION = "0.1"
+VERSION = "1.4"
 URL = "https://github.com/KVSlab/turtleFSI.git"
 
 setuptools.setup(
