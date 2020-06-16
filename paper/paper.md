@@ -22,7 +22,7 @@ authors:
 affiliations:
   - name: Department of Computational Physiology, Simula Research Laboratory, Fornebu, Norway
     index: 1
-date: 06 February 2020
+date: 15 June 2020
 bibliography: paper.bib
 ---
 
@@ -32,42 +32,16 @@ It is often sufficient to study fluids [@Moin:1998] and solids [@Holzapfel:2002]
 
 FEniCS [@Logg:2012] has emerged as one of the leading platforms for development of scientific software due to the close connection between mathematical notation and compact computer implementation, where highly efficient C++ code is compiled during execution of a program. Combined with the out-of-the-box entry-level high-performance computing capabilities, FEniCS was a natural choice of computing environment. Compared to other open-source FSI solvers [@Malinen:2013; @Heil:2006; @Jasak:2007], turtleFSI is written in only a couple of hundred lines of high-level Python code, in contrast to tens of thousands of lines of low-level C++ code. This provides full transparency and a unique opportunity for researchers and educators to modify and experiment with the code, while still providing out of the box entry-level high-performance computing capabilities. Furthermore, because of the close resemblance between mathematics and code in FEniCS, users can make additions or modifications with ease.
 
-The turtleFSI solver rely on a fully monolithic approach in the classical arbitrary Lagrangian-Eulerian formulation, and we used the generalized theta scheme for temporal discretization and P2P1P2 elements for velocity, pressure, and displacement, respectively. We implemented and evaluated four different mesh lifting operators, ranging from simple and efficient 2nd order Laplace equation, most suitable for small deformations, to more sophisticated and computationally expensive 4th order bi-harmonic equation that can handle larger mesh deformations. We used The Method of Manufactured Solutions to verify the implementation. The obtained results are formally second order accurate (L2) in space and time [@Wick:2011], respectively, and we demonstrate that all building blocks of code exhibit desired properties. The validity of the solver was confirmed using the classical Turek Flag benchmark case [@Turek:2006] with good agreement – including a diverged numerical solution for long term evolution under certain conditions, as expected. For a complete justification of computational approaches and further details, we refer to [@Slyngstad:2017; @Gjertsen:2017]. We demonstrate adequate strong scaling up to 64 cores (from one cluster node), although the later is problem size dependent. In the online documentation we provide benchmarks, tutorials, and simple demos. The naive FEniCS implementation provides full transparency with compact code, which can easily be adapted to other 2D or 3D FSI problems.
+The turtleFSI solver relies on a fully monolithic approach in the classical arbitrary Lagrangian-Eulerian formulation, and we used the generalized theta scheme for temporal discretization and P2P1P2 elements for velocity, pressure, and displacement, respectively. We implemented and evaluated four different mesh lifting operators, ranging from a simple and efficient 2nd order Laplace equation, most suitable for small deformations, to more sophisticated and computationally expensive 4th order bi-harmonic equations that can handle larger mesh deformations. We used The Method of Manufactured Solutions to verify the implementation. The obtained results are formally second order accurate (L2) in space and time [@Wick:2011], respectively, and we demonstrate that all building blocks of code exhibit desired properties. The validity of the solver was confirmed using the classical Turek Flag benchmark case [@Turek:2006] with good agreement – including a diverged numerical solution for long term evolution under certain conditions, as expected. For a complete justification of computational approaches and further details, we refer to [@Slyngstad:2017; @Gjertsen:2017]. We demonstrate adequate strong scaling up to 64 cores (from one cluster node), although the latter is problem size dependent. In the online documentation we provide benchmarks, tutorials, and simple demos. The naive FEniCS implementation provides full transparency with compact code, which can easily be adapted to other 2D or 3D FSI problems.
 
 In conclusion, turtleFSI is not a superior FSI solver in terms of speed, but it is a robust entry-level FSI solver and performs exactly as designed and intended; ‘slow and steady wins the race’.
 
-# Installation and Use
-
-turtleFSI can be installed as a module on any operating system running FEniCS 2018.1.0 or above. First download the github repository and proceed to the installation as follow:
-```console
-  git clone https://github.com/KVSlab/turtleFSI.git
-  cd turtleFSI
-  python3 setup.py install
-```
-
-Note that you might need to run "python" or "python3" depending on your FEniCS version.
-Linux or MacOs users can install turtleFSI within a conda environment with the simple command:
-```console
-  conda create -n your_environment -c conda-forge turtleFSI
-```
-Once turtleFSI is installed on your machine and the conda environment activated, you can run the turtleFSI demo simulation with all the default parameters by simply typing:
-```console
-  turtleFSI
-```
-To see all the command line parameters available:
-```console
-  turtleFSI -h
-```
-To run a specific problem file:
-```console
-  turtleFSI --problem [path_to_problem]
-```
 
 # turtleFSI in Action
 
-turtleFSI comes with several problem files, found under /turtleFSI/problems/, to illustrate the usage and document the Turek flag benchmarks used to validate the implementation of the solver. Here are some illustration of the execution and outputs expected from the solver.
+turtleFSI comes with several problem files, found under /turtleFSI/problems/, to illustrate the usage and document the Turek flag benchmarks used to validate the implementation of the solver. Here are some illustrations of the execution and outputs expected from the solver.
 
-![Fluid_Turek*='#center'](./cfd_illu.png)\
+![Fluid_Turek*='#center'](./cfd_illu.png){ width=100% }\
 **Figure 1:**
   Fluid dynamics benchmark snapshot. Simulation executed with the command:
   ```
@@ -81,7 +55,7 @@ turtleFSI comes with several problem files, found under /turtleFSI/problems/, to
   turtleFSI --problem TF_csm
   ```
 
-![FSI_Turek*='#center'](./fsi_illu.png)\
+![FSI_Turek*='#center'](./fsi_illu.png){ width100% }\
 **Figure 3:**
   Full fluid-structure interaction benchmark snapshot. Simulation executed with the command:
   ```
