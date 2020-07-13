@@ -39,12 +39,9 @@ Documentation
 -------------
 For an introduction to turtleFSI, and tutorials, please refer to the [documentation](https://turtlefsi2.readthedocs.io/en/latest/).
 
-If you wish to use turtleFSI for journal publications, please refer the two master thesis's for citation:
+If you wish to use turtleFSI for journal publications, please refer to the [JOSS publication](https://joss.theoj.org/papers/10.21105/joss.02089#):
 
-  * Slyngstad, Andreas. Verification and Validation of a Monolithic Fluid-Structure Interaction Solver in FEniCS. A comparison of mesh lifting operators. MS thesis. 2017.
-
-  * Gjertsen, Sebastian. Development of a Verified and Validated Computational Framework for Fluid-Structure Interaction: Investigating Lifting Operators and Numerical Stability. MS thesis. 2017.
-
+Bergersen et al., (2020). turtleFSI: A Robust and Monolithic FEniCS-based Fluid-Structure Interaction Solver. Journal of Open Source Software, 5(50), 2089, https://doi.org/10.21105/joss.02089
 
 Installation
 ------------
