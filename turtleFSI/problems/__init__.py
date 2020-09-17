@@ -12,7 +12,6 @@ import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-
 _compiler_parameters = dict(parameters["form_compiler"])
 _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
 
@@ -207,11 +206,14 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
-
+    for function in [d, v, p]:
+        function.set_allow_extrapolation(True)
     if save_deg > 1:
         d = project(d, namespace["FSdv_viz"])
         v = project(v, namespace["FSdv_viz"])
         p = project(p, namespace["FSp_viz"])
+    else:
+        raise ValueError("Invalid choise for save_deg = {}, choose an integer [1, 10]".format(save_deg))
 
     # Name function
     d.rename("Displacement", "d")
