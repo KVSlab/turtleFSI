@@ -77,7 +77,6 @@ default_variables = dict(
 
 def create_folders(folder, sub_folder, restart_folder, **namespace):
     """Manage paths for where to store the checkpoint and visualizations"""
-
     if restart_folder is None:
         # Get path to sub folder for this simulation
         path = Path.cwd() / folder
@@ -93,6 +92,9 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
         path = restart_folder
 
     MPI.barrier(MPI.comm_world)
+
+    if "Checkpoint" in path.__str__():
+        path = path.parent
 
     if not path.joinpath("Checkpoint").exists() and restart_folder is not None:
         raise NotADirectoryError(("The restart folder: {} does not have a sub folder 'Checkpoint' where we can"
@@ -206,14 +208,17 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
     d = dvp_["n"].sub(0, deepcopy=True)
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
-    for function in [d, v, p]:
-        function.set_allow_extrapolation(True)
+
+    # Allow extrapolation when running mpirun with more than one core
+    if MPI.max(MPI.comm_world, MPI.rank(MPI.comm_world)):
+        for function in [d, v, p]:
+            function.set_allow_extrapolation(True)
+
+    # New functions mimicing higher-order visualization fies
     if save_deg > 1:
         d = project(d, namespace["FSdv_viz"])
         v = project(v, namespace["FSdv_viz"])
         p = project(p, namespace["FSp_viz"])
-    else:
-        raise ValueError("Invalid choise for save_deg = {}, choose an integer [1, 10]".format(save_deg))
 
     # Name function
     d.rename("Displacement", "d")
@@ -234,7 +239,7 @@ def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
     fields = _get_fields(dvp_, mesh)
 
     for name, field in fields:
-        checkpoint_path = str(restart_folder.joinpath("Checkpoint", "checkpoint_" + name + ".xdmf"))
+        checkpoint_path = str(restart_folder.joinpath("checkpoint_" + name + ".xdmf"))
         with XDMFFile(MPI.comm_world, checkpoint_path) as f:
             f.read_checkpoint(field, name)
 

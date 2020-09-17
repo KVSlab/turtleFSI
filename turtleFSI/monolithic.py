@@ -41,7 +41,8 @@ for key, value in list(args.__dict__.items()):
 default_variables.update(args.__dict__)
 if default_variables["restart_folder"] is not None:
     restart_folder = Path(default_variables["restart_folder"])
-    with open(restart_folder.joinpath("Checkpoint", "default_variables.pickle"), "rb") as f:
+    restart_folder = restart_folder if "Checkpoint" in restart_folder.__str__() else restart_folder.joinpath("Checkpoint")
+    with open(restart_folder.joinpath("default_variables.pickle"), "rb") as f:
         restart_dict = pickle.load(f)
     default_variables.update(restart_dict)
     default_variables["restart_folder"] = restart_folder
