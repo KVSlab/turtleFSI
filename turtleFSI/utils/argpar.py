@@ -207,7 +207,7 @@ def parse():
     parser.add_argument("--recompute", type=int, default=None,
                         metavar="Recompute Jacobian over Newton iterations",
                         help="How often to recompute the Jacobian over Newton iterations.")
-    parser.add_argument("--recompute_tstep", type=int, default=None,
+    parser.add_argument("--recompute-tstep", type=int, default=None,
                         metavar="Recompute Jacobian over time steps",
                         help="How often to recompute the Jacobian over time steps.")
     parser.add_argument("--compiler-parameters", dest="compiler_parameters",

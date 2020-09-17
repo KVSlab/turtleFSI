@@ -106,7 +106,7 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
 
     # Check if there exists previous visualization files, if so move and change name
     if list(visualization_folder.glob("*")) != []:
-        # Get number of run
+        # Get number of run(s)
         a = list(visualization_folder.glob("velocity*.h5"))
         b = [int(i.__str__().split("_")[-1].split(".")[0]) for i in a if "_" in i.name.__str__()]
         run_number = 1 if len(b) == 0 else max(b) + 1
