@@ -126,18 +126,6 @@ def create_folders(folder, sub_folder, restart_folder, **namespace):
 
                 with open(new_name, "w") as f:
                     f.write(text)
-        for name in ["displacement", "velocity", "pressure"]:
-            for suffix in [".h5", ".xdmf"]:
-                new_name = visualization_folder.joinpath(name + "_run_" + str(run_number) + suffix)
-                tmp_path = visualization_folder.joinpath(name + suffix)
-                tmp_path.rename(new_name)
-
-            # Rename link in xdmf file
-            with open(new_name) as f:
-                text = f.read().replace(name + ".h5", new_name.name.__str__().replace(".xdmf", ".h5"))
-
-            with open(new_name, "w") as f:
-                f.write(text)
     else:
         run_number = 0
 
