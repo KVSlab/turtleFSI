@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 DEPENDENCIES = []
 TEST_DEPENDENCIES = ['pytest']
 
-VERSION = "1.4"
+VERSION = "1.5"
 URL = "https://github.com/KVSlab/turtleFSI.git"
 
 setuptools.setup(
@@ -39,6 +39,5 @@ setuptools.setup(
               "turtleFSI.utils"],
     package_dir={"turtleFSI": "turtleFSI"},
     include_package_data = True,
-    #package_data = {'mesh': ['turtleFSI/mesh/*']},
     entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']}
 )

@@ -13,6 +13,7 @@ The dependencies of turtleFSI are:
 * FEniCS 2019.1.0
 * Numpy >1.1X
 * Python >=3.5
+* FEniCStools 2019.1.0 (optional)
 
 Basic Installation
 ==================
@@ -30,7 +31,10 @@ turtleFSI can be found `here <https://turtlefsi2.readthedocs.io/en/latest/using_
 If you are using turtleFSI on a high performance computing (HPC) cluster we always
 recommend that you build from source, as described below. This is in accordance
 with the guidelines provided by the `FEniCS project <https://fenicsproject.org/download/>`_
-users to install FEniCS from source when on a HPC cluster.
+users to install FEniCS from source when on a HPC cluster. To have a fully featured version
+of turtleFSI you would also need to install fenicstools manually with::
+
+     $ pip install git+https://github.com/mikaem/fenicstools
 
 
 Development version
@@ -56,6 +60,6 @@ Then, you can install turtleFSI be executing the following::
 
     $ python setup.py install
 
-
 If you are installing turtleFSI somewhere you do not have root access, typically on a cluster, you can add
-``--user`` to install locally.
+``--user`` to install locally. If you are using fenicstools to use the ``save_deg`` functionality, follow the
+same procedure, but clone the `fenicstools git repository <https://github.com/mikaem/fenicstools>`_ instead.

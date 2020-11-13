@@ -187,7 +187,17 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
             tmp_t.parameters["rewrite_function_mesh"] = False
 
         if save_deg > 1:
-            mesh_viz = Mesh(mesh)  # copy the mesh
+            # Import fenicstools
+            import warnings
+            try:
+                with warnings.catch_warnings(record=True) as w:
+                        from fenicstools import interpolate_nonmatching_mesh_any
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError("For save_deg > 1 to work please install fenics tools with:\n" + \
+                                          "pip install git+https://github.com/mikaem/fenicstools")
+
+            # Copy mesh
+            mesh_viz = Mesh(mesh)
 
             for i in range(save_deg-1):
                 mesh_viz = refine(mesh_viz)  # refine the mesh
@@ -197,8 +207,8 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
             FSdv_viz = FunctionSpace(mesh_viz, dve_viz)   # Visualisation FunctionSpace for d and v
             FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
 
-            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz)
-
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz,
+                               save_deg_interpolator=interpolate_nonmatching_mesh_any)
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
 
@@ -219,9 +229,9 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
 
     # New functions mimicing higher-order visualization fies
     if save_deg > 1:
-        d = project(d, namespace["FSdv_viz"])
-        v = project(v, namespace["FSdv_viz"])
-        p = project(p, namespace["FSp_viz"])
+        d = namespace["save_deg_interpolator"](d, namespace["FSdv_viz"])
+        v = namespace["save_deg_interpolator"](v, namespace["FSdv_viz"])
+        p = namespace["save_deg_interpolator"](p, namespace["FSp_viz"])
 
     # Name function
     d.rename("Displacement", "d")
