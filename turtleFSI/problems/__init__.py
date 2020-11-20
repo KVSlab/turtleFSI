@@ -222,11 +222,6 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
 
-    # Allow extrapolation when running mpirun with more than one core
-    if MPI.max(MPI.comm_world, MPI.rank(MPI.comm_world)):
-        for function in [d, v, p]:
-            function.set_allow_extrapolation(True)
-
     # New functions mimicing higher-order visualization fies
     if save_deg > 1:
         d = namespace["save_deg_interpolator"](d, namespace["FSdv_viz"])
