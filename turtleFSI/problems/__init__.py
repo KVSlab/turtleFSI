@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement, FunctionSpace
+from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement,PETScDMCollection, FunctionSpace, Function
 import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -176,7 +176,7 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
                 f.write(text)
 
 
-def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **namespace):
+def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh, **namespace):
     # Files for storing results
     if not "d_file" in namespace.keys():
         d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
@@ -187,14 +187,12 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
             tmp_t.parameters["rewrite_function_mesh"] = False
 
         if save_deg > 1:
-            # Import fenicstools
-            import warnings
-            try:
-                with warnings.catch_warnings(record=True) as w:
-                        from fenicstools import interpolate_nonmatching_mesh_any
-            except ModuleNotFoundError:
-                raise ModuleNotFoundError("For save_deg > 1 to work please install fenics tools with:\n" + \
-                                          "pip install git+https://github.com/mikaem/fenicstools")
+            
+            # Create function space for d, v and p
+            dve = VectorElement('CG', mesh.ufl_cell(), v_deg)
+            pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
+            FSdv = FunctionSpace(mesh, dve)   # Higher degree FunctionSpace for d and v
+            FSp= FunctionSpace(mesh, pe)     # Higher degree FunctionSpace for p
 
             # Copy mesh
             mesh_viz = Mesh(mesh)
@@ -202,13 +200,13 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
             for i in range(save_deg-1):
                 mesh_viz = refine(mesh_viz)  # refine the mesh
 
+            # Create visualization function space for d, v and p
             dve_viz = VectorElement('CG', mesh_viz.ufl_cell(), 1)
             pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
             FSdv_viz = FunctionSpace(mesh_viz, dve_viz)   # Visualisation FunctionSpace for d and v
             FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
 
-            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz,
-                               save_deg_interpolator=interpolate_nonmatching_mesh_any)
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv=FSdv,FSp=FSp, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz)
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
 
@@ -222,21 +220,40 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, mesh, **na
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
 
-    # New functions mimicing higher-order visualization fies
-    if save_deg > 1:
-        d = namespace["save_deg_interpolator"](d, namespace["FSdv_viz"])
-        v = namespace["save_deg_interpolator"](v, namespace["FSdv_viz"])
-        p = namespace["save_deg_interpolator"](p, namespace["FSp_viz"])
+    if save_deg > 1: # To save higher-order nodes:
 
-    # Name function
-    d.rename("Displacement", "d")
-    v.rename("Velocity", "v")
-    p.rename("Pressure", "p")
+        # Create lower-order function for visualization on refined mesh
+        d_viz = Function(namespace["FSdv_viz"])
+        v_viz = Function(namespace["FSdv_viz"])
+        p_viz = Function(namespace["FSp_viz"])
 
-    # Write results
-    namespace["d_file"].write(d, t)
-    namespace["v_file"].write(v, t)
-    namespace["p_file"].write(p, t)
+        # Interpolate by creating a transfer matrix between higher degree and lower degree visualization function spaces
+        dv_trans = PETScDMCollection.create_transfer_matrix(namespace["FSdv"],namespace["FSdv_viz"])
+        p_trans = PETScDMCollection.create_transfer_matrix(namespace["FSp"],namespace["FSp_viz"])
+
+        d_viz.vector()[:] = dv_trans*d.vector()
+        v_viz.vector()[:] = dv_trans*v.vector()
+        p_viz.vector()[:] = p_trans*p.vector()
+
+        # Name function
+        d_viz.rename("Displacement", "d_viz")
+        v_viz.rename("Velocity", "v_viz")
+        p_viz.rename("Pressure", "p_viz")    
+        # Write results
+        namespace["d_file"].write(d_viz, t)
+        namespace["v_file"].write(v_viz, t)
+        namespace["p_file"].write(p_viz, t)
+
+    else: # To save only the corner nodes
+        # Name function
+        d.rename("Displacement", "d")
+        v.rename("Velocity", "v")
+        p.rename("Pressure", "p")
+    
+        # Write results
+        namespace["d_file"].write(d, t)
+        namespace["v_file"].write(v, t)
+        namespace["p_file"].write(p, t)
 
     return return_dict
 
