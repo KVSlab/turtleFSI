@@ -187,8 +187,6 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             tmp_t.parameters["rewrite_function_mesh"] = False
 
         if save_deg > 1:
-            print('save deg > 1 selected...')
-            print('save deg > 1 selected...')
             
             # Create function space for d, v and p
             dve = VectorElement('CG', mesh.ufl_cell(), v_deg)
@@ -208,16 +206,7 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             FSdv_viz = FunctionSpace(mesh_viz, dve_viz)   # Visualisation FunctionSpace for d and v
             FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
 
-            # Create lower-order function for visualization on refined mesh
-            d_viz = Function(FSdv_viz)
-            v_viz = Function(FSdv_viz)
-            p_viz = Function(FSp_viz)
-    
-            # Create a transfer matrix between higher degree and lower degree (visualization) function spaces
-            dv_trans = PETScDMCollection.create_transfer_matrix(FSdv,FSdv_viz)
-            p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
-
-            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, p_viz=p_viz, dv_trans=dv_trans, p_trans=p_trans)
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, FSdv=FSdv,FSp=FSp, FSdv_viz=FSdv_viz, FSp_viz=FSp_viz)
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
 
@@ -231,22 +220,30 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
 
-    if save_deg > 1: # To save higher-order nodes
+    if save_deg > 1: # To save higher-order nodes:
 
-        # Interpolate by using the transfer matrix between higher degree and lower degree (visualization) function spaces
-        namespace["d_viz"].vector()[:] = namespace["dv_trans"]*d.vector()
-        namespace["v_viz"].vector()[:] = namespace["dv_trans"]*v.vector()
-        namespace["p_viz"].vector()[:] = namespace["p_trans"]*p.vector()
+        # Create lower-order function for visualization on refined mesh
+        d_viz = Function(namespace["FSdv_viz"])
+        v_viz = Function(namespace["FSdv_viz"])
+        p_viz = Function(namespace["FSp_viz"])
 
-        write_solution(namespace["d_viz"], namespace["v_viz"], namespace["p_viz"], namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
+        # Interpolate by creating a transfer matrix between higher degree and lower degree visualization function spaces
+        dv_trans = PETScDMCollection.create_transfer_matrix(namespace["FSdv"],namespace["FSdv_viz"])
+        p_trans = PETScDMCollection.create_transfer_matrix(namespace["FSp"],namespace["FSp_viz"])
+
+        d_viz.vector()[:] = dv_trans*d.vector()
+        v_viz.vector()[:] = dv_trans*v.vector()
+        p_viz.vector()[:] = p_trans*p.vector()
+        print(d_file)
+        write_solution(d_viz, v_viz, p_viz, d_file, v_file, p_file, t) # Write results
 
     else: # To save only the corner nodes
 
-        write_solution(d, v, p, namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
+        write_solution(d, v, p, d_file, v_file, p_file, t) # Write results
 
     return return_dict
 
-def write_solution(d, v, p, d_file, v_file, p_file, t):
+def write_solution(d, v, p, d_file, v_file, p_file, t, **namespace):
     # Name functions
     d.rename("Displacement", "d")
     v.rename("Velocity", "v")
