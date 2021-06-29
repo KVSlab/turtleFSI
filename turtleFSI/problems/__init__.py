@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement,PETScDMCollection, FunctionSpace, Function
+from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, adapt, project, VectorElement, FiniteElement,PETScDMCollection, FunctionSpace, Function
 import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
