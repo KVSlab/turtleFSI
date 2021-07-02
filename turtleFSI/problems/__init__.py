@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, adapt, project, VectorElement, FiniteElement,PETScDMCollection, FunctionSpace, Function
+from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, adapt, project, VectorElement, FiniteElement, PETScDMCollection, FunctionSpace, Function
 import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -187,9 +187,7 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             tmp_t.parameters["rewrite_function_mesh"] = False
 
         if save_deg > 1:
-            print('save deg > 1 selected...')
-            print('save deg > 1 selected...')
-            
+          
             # Create function space for d, v and p
             dve = VectorElement('CG', mesh.ufl_cell(), v_deg)
             pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
@@ -218,7 +216,8 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             dv_trans = PETScDMCollection.create_transfer_matrix(FSdv,FSdv_viz)
             p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
 
-            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, p_viz=p_viz, dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz, domains_viz=domains_viz)
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, p_viz=p_viz, 
+                dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz, domains_viz=domains_viz)
 
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
@@ -240,7 +239,8 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
         namespace["v_viz"].vector()[:] = namespace["dv_trans"]*v.vector()
         namespace["p_viz"].vector()[:] = namespace["p_trans"]*p.vector()
 
-        write_solution(namespace["d_viz"], namespace["v_viz"], namespace["p_viz"], namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
+        write_solution(namespace["d_viz"], namespace["v_viz"], namespace["p_viz"], 
+            namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
 
     else: # To save only the corner nodes
 
@@ -248,7 +248,9 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
 
     return return_dict
 
+
 def write_solution(d, v, p, d_file, v_file, p_file, t):
+    """Write solution to xdmf file"""
     # Name functions
     d.rename("Displacement", "d")
     v.rename("Velocity", "v")
@@ -258,6 +260,7 @@ def write_solution(d, v, p, d_file, v_file, p_file, t):
     d_file.write(d, t)
     v_file.write(v, t)
     p_file.write(p, t)
+
 
 def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
     """Restart simulation from a previous simulation by by setting restart_folder"""
