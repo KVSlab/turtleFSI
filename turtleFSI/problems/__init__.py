@@ -7,7 +7,7 @@ Define all common variables. Can be overwritten by defining in problem file or o
 commandline.
 """
 
-from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, adapt, project, VectorElement, FiniteElement, PETScDMCollection, FunctionSpace, Function
+from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement, PETScDMCollection, FunctionSpace, Function
 import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -199,7 +199,6 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
 
             for i in range(save_deg-1):
                 mesh_viz = refine(mesh_viz)  # refine the mesh
-                domains_viz = adapt(domains,mesh_viz)  # refine the domains (so we can output domain IDs of refined mesh)
 
             # Create visualization function space for d, v and p
             dve_viz = VectorElement('CG', mesh_viz.ufl_cell(), 1)
@@ -217,7 +216,7 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
 
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, p_viz=p_viz, 
-                dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz, domains_viz=domains_viz)
+                dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz)
 
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
