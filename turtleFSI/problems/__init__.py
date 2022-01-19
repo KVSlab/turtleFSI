@@ -15,6 +15,28 @@ from xml.etree import ElementTree as ET
 _compiler_parameters = dict(parameters["form_compiler"])
 _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
 
+# The following helper functions are available in dolfin
+# They are redefined here for printing only on process 0.
+RED = "\033[1;37;31m%s\033[0m"
+BLUE = "\033[1;37;34m%s\033[0m"
+GREEN = "\033[1;37;32m%s\033[0m"
+
+
+def info_blue(s, check=True):
+    if MPI.rank(MPI.comm_world) == 0 and check:
+        print(BLUE % s)
+
+
+def info_green(s, check=True):
+    if MPI.rank(MPI.comm_world) == 0 and check:
+        print(GREEN % s)
+
+
+def info_red(s, check=True):
+    if MPI.rank(MPI.comm_world) == 0 and check:
+        print(RED % s)
+
+
 default_variables = dict(
     # Temporal settings
     dt=0.001,        # time step
@@ -72,7 +94,11 @@ default_variables = dict(
     checkpoint_step=500,                       # Checkpoint frequency
     folder="results",                          # Folder to store results and checkpoint files
     sub_folder=None,                           # The unique name of the sub directory under folder where the results are stored
-    restart_folder=None)                       # Path to a potential restart folder
+    restart_folder=None,                       # Path to a potential restart folder
+
+    # Misc settings
+    killtime=None,                             # Stop simulations cleanly after the given number of seconds
+    )
 
 
 def create_folders(folder, sub_folder, restart_folder, **namespace):
@@ -259,6 +285,41 @@ def write_solution(d, v, p, d_file, v_file, p_file, t):
     d_file.write(d, t)
     v_file.write(v, t)
     p_file.write(p, t)
+
+
+def check_if_kill(folder, killtime, total_timer):
+    """Check if user has put a file named killturtle in folder or if given killtime has been reached."""
+    found = 0
+    if 'killturtle' in [p.name for p in Path(folder).iterdir()]:
+        found = 1
+    collective = MPI.sum(MPI.comm_world, found)
+    if collective > 0:
+        if MPI.rank(MPI.comm_world) == 0:
+            Path(folder / 'killturtle').unlink()  # remove file killturtle
+            info_red('killturtle Found! Stopping simulations cleanly...')
+        return True
+    else:
+        elapsed_time = float(total_timer.elapsed()[0])
+        if killtime is not None and killtime <= elapsed_time:
+            if MPI.rank(MPI.comm_world) == 0:
+                info_red('Given killtime reached! Stopping simulations cleanly...')
+            return True
+        else:
+            return False
+
+
+def check_if_pause(folder):
+    """Check if user has put a file named pauseturtle in folder."""
+    found = 0
+    if 'pauseturtle' in [p.name for p in Path(folder).iterdir()]:
+        found = 1
+    collective = MPI.sum(MPI.comm_world, found)
+    if collective > 0:
+        if MPI.rank(MPI.comm_world) == 0:
+            info_red('pauseturtle Found! Simulations paused. Remove ' + str(Path(folder, 'pauseturtle')) + ' to resume simulations...')
+        return True
+    else:
+        return False
 
 
 def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
