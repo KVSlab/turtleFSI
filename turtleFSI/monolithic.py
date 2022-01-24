@@ -11,6 +11,7 @@ used in the turtleFSI package.
 from dolfin import *
 from pathlib import Path
 import pickle
+import time
 
 from turtleFSI.utils import *
 from turtleFSI.problems import *
@@ -85,16 +86,16 @@ p_ = {}
 w_ = {}
 
 times = ["n-2", "n-1", "n"]
-for time in times:
+for time_ in times:
     dvp = Function(DVP)
-    dvp_[time] = dvp
+    dvp_[time_] = dvp
     dvp_list = split(dvp)
 
-    d_[time] = dvp_list[0]
-    v_[time] = dvp_list[1]
-    p_[time] = dvp_list[2]
+    d_[time_] = dvp_list[0]
+    v_[time_] = dvp_list[1]
+    p_[time_] = dvp_list[2]
     if extrapolation == "biharmonic":
-        w_[time] = dvp_list[3]
+        w_[time_] = dvp_list[3]
 
 if extrapolation == "biharmonic":
     phi, psi, gamma, beta = TestFunctions(DVP)
@@ -143,7 +144,8 @@ if restart_folder is not None:
 timer = Timer("Total simulation time")
 timer.start()
 previous_t = 0.0
-while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final time step t == T
+stop = False
+while t <= T + dt / 10 and not stop:  # + dt / 10 is a hack to ensure that we take the final time step t == T
     t += dt
 
     # Pre solve hook
@@ -180,6 +182,18 @@ while t <= T + dt / 10:  # + dt / 10 is a hack to ensure that we take the final 
     # Print time per time step
     if MPI.rank(MPI.comm_world) == 0:
         previous_t = print_information(**vars())
+
+    # pause simulation if pauseturtle exists
+    pauseturtle = check_if_pause(results_folder)
+    while pauseturtle:
+        time.sleep(5)
+        pauseturtle = check_if_pause(results_folder)
+
+    # stop simulation cleanly if killturtle exists
+    killturtle = check_if_kill(results_folder, killtime, timer)
+    if killturtle:
+        checkpoint(**vars())
+        stop = True
 
 # Print total time
 timer.stop()

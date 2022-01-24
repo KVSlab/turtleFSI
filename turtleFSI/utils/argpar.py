@@ -248,6 +248,10 @@ def parse():
     parser.add_argument("--d-deg", metavar="Deformation degree", type=int,
                         help="Set degree of deformation", default=None)
 
+    # Misc settings
+    parser.add_argument("--killtime", type=int, default=None,
+                        help="Stop simulations cleanly after the given number of seconds")
+
     # Add the posibility pass unspecificed arguments
     parser.add_argument("--new-arguments", action=StoreDictKeyPair, nargs="+", metavar="KEY=VAL",
                         help="Add any non-defined argument where the value is a string," +
