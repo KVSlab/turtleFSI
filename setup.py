@@ -38,6 +38,8 @@ setuptools.setup(
               "turtleFSI.problems",
               "turtleFSI.utils"],
     package_dir={"turtleFSI": "turtleFSI"},
+    package_data = {"turtleFSI": ["utils/probe/*.h",
+                                  "utils/probe/*.cpp"]},
     include_package_data = True,
     entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']}
 )
