@@ -16,3 +16,7 @@
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+
+# Generated probe files
+turtleFSI/utils/probe/.rendered.probe11.cpp
+turtleFSI/utils/probe/*.so
