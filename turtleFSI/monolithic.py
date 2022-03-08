@@ -155,8 +155,6 @@ while t <= T + dt / 10 and not stop:  # + dt / 10 is a hack to ensure that we ta
 
     # Solve
     vars().update(newtonsolver(**vars()))
-    if restart_folder is not None:
-        restart_folder = None
 
     # Update vectors
     for i, t_tmp in enumerate(times[:-1]):
