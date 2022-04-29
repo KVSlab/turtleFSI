@@ -108,8 +108,20 @@ dS = Measure("dS", subdomain_data=boundaries)
 dx = Measure("dx", subdomain_data=domains)
 
 # Domains
-dx_f = dx(dx_f_id, subdomain_data=domains)
-dx_s = dx(dx_s_id, subdomain_data=domains)
+dx_f = {}
+if isinstance(dx_f_id, list): # If dx_f_id is a list (if there are multiple solid regions):
+    for fluid_region in range(len(dx_f_id)):
+        dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each solid region
+else:
+    dx_f[0] = dx(dx_f_id, subdomain_data=domains)
+
+dx_s = {}
+if isinstance(dx_s_id, list): # If dx_s_id is a list (if there are multiple solid regions):
+    for solid_region in range(len(dx_s_id)):
+        dx_s[solid_region] = dx(dx_s_id[solid_region], subdomain_data=domains) # Create dx_s for each solid region
+else:
+    dx_s[0] = dx(dx_s_id, subdomain_data=domains)
+
 
 # Define solver
 # Adding the Matrix() argument is a FEniCS 2018.1.0 hack
