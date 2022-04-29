@@ -109,9 +109,9 @@ dx = Measure("dx", subdomain_data=domains)
 
 # Domains
 dx_f = {}
-if isinstance(dx_f_id, list): # If dx_f_id is a list (if there are multiple solid regions):
+if isinstance(dx_f_id, list): # If dx_f_id is a list (if there are multiple fluid regions):
     for fluid_region in range(len(dx_f_id)):
-        dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each solid region
+        dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each fluid region
 else:
     dx_f[0] = dx(dx_f_id, subdomain_data=domains)
 
