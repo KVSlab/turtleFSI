@@ -8,7 +8,7 @@ from turtleFSI.modules import *
 
 
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
-                      dx_f, **namespace):
+                      dx_f,mu_f, **namespace):
     """
     Laplace lifting operator. Can be used for small to moderate deformations.
     The diffusion parameter "alfa", which is specified by "extrapolation_sub_type",
@@ -41,7 +41,8 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
     else:
         raise RuntimeError("Could not find extrapolation method {}".format(extrapolation_sub_type))
 
-    F_extrapolate = alfa * inner(grad(d_["n"]), grad(phi)) * dx_f
-    F_fluid_linear += F_extrapolate
+    for fluid_region in range(len(mu_f)):
+        F_extrapolate = alfa * inner(grad(d_["n"]), grad(phi)) * dx_f[fluid_region]
+        F_fluid_linear += F_extrapolate
 
     return dict(F_fluid_linear=F_fluid_linear)

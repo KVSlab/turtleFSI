@@ -30,8 +30,8 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace
         # computation of the Jacobian matrix.
     
         # Temporal derivative
-        F_fluid_nonlinear = rho_f / k * inner(J_(d_["n"]) * theta0 * (v_["n"] - v_["n-1"]), psi) * dx_f[fluid_region]
-        F_fluid_linear = rho_f / k * inner(J_(d_["n-1"]) * theta1 * (v_["n"] - v_["n-1"]), psi) * dx_f[fluid_region]
+        F_fluid_nonlinear += rho_f / k * inner(J_(d_["n"]) * theta0 * (v_["n"] - v_["n-1"]), psi) * dx_f[fluid_region]
+        F_fluid_linear += rho_f / k * inner(J_(d_["n-1"]) * theta1 * (v_["n"] - v_["n-1"]), psi) * dx_f[fluid_region]
     
         # Convection
         F_fluid_nonlinear += theta0 * rho_f * inner(grad(v_["n"]) * inv(F_(d_["n"])) *
