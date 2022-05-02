@@ -6,7 +6,7 @@
 from dolfin import Constant, inner
 
 
-def solid_setup(psi, phi, dx_s_id, mesh, **namespace):
+def solid_setup(psi, phi, dx_s, dx_s_id, mesh, **namespace):
     F_solid_linear = 0
     F_solid_nonlinear = 0
     for solid_region in range(len(dx_s_id)):

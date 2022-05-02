@@ -7,7 +7,7 @@ from turtleFSI.modules import *
 from dolfin import CellVolume, inner, grad, inv
 
 
-def extrapolate_setup(F_fluid_linear, mesh, d_, phi, gamma, dx_f,dx_f_id, **namespace):
+def extrapolate_setup(F_fluid_linear, mesh, d_, phi, gamma, dx_f, dx_f_id, **namespace):
     """
     Elastic lifting operator solving the equation of linear elasticity.
 

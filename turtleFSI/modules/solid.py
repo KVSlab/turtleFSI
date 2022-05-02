@@ -32,7 +32,7 @@ def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id, mu_s, rho_s, lambda_s, k, theta
 
     F_solid_linear = 0
     F_solid_nonlinear = 0
-    for solid_region in range(len(mu_s)):
+    for solid_region in range(len(dx_s_id)):
         # Temporal term and convection
         F_solid_linear += (rho_s[solid_region]/k * inner(v_["n"] - v_["n-1"], psi)*dx_s[solid_region]
                           + delta * rho_s[solid_region] * (1 / k) * inner(d_["n"] - d_["n-1"], phi) * dx_s[solid_region]

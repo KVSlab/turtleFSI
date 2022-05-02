@@ -6,7 +6,7 @@
 from dolfin import Constant, inner
 
 
-def fluid_setup(psi, phi, dx_f,dx_f_id, mesh, **namespace):
+def fluid_setup(psi, phi, dx_f, dx_f_id, mesh, **namespace):
     F_fluid_linear = 0
     F_fluid_nonlinear = 0
     for fluid_region in range(len(dx_f_id)):
