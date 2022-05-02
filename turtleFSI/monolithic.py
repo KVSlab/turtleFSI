@@ -115,6 +115,7 @@ if isinstance(dx_f_id, list): # If dx_f_id is a list (i.e, if there are multiple
 else:
     dx_f[0] = dx(dx_f_id, subdomain_data=domains)
     mu_f=[mu_f] # If there aren't multpile fluid regions, and the fluid viscosity is given as a float,convert to list.
+    dx_f_id=[dx_f_id]
 
 dx_s = {}
 if isinstance(dx_s_id, list): # If dx_s_id is a list (i.e, if there are multiple solid regions):
@@ -125,6 +126,7 @@ else:
     rho_s=[rho_s] # If there aren't multpile solid regions, and the solid parameters are given as floats, convert solid parameters to lists.
     mu_s=[mu_s]
     lambda_s=[lambda_s]
+    dx_s_id=[dx_s_id]
 
 
 # Define solver
