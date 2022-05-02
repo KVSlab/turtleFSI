@@ -109,18 +109,22 @@ dx = Measure("dx", subdomain_data=domains)
 
 # Domains
 dx_f = {}
-if isinstance(dx_f_id, list): # If dx_f_id is a list (if there are multiple fluid regions):
+if isinstance(dx_f_id, list): # If dx_f_id is a list (i.e, if there are multiple fluid regions):
     for fluid_region in range(len(dx_f_id)):
         dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each fluid region
 else:
     dx_f[0] = dx(dx_f_id, subdomain_data=domains)
+    mu_f=[mu_f] # If there aren't multpile fluid regions, and the fluid viscosity is given as a float,convert to list.
 
 dx_s = {}
-if isinstance(dx_s_id, list): # If dx_s_id is a list (if there are multiple solid regions):
+if isinstance(dx_s_id, list): # If dx_s_id is a list (i.e, if there are multiple solid regions):
     for solid_region in range(len(dx_s_id)):
         dx_s[solid_region] = dx(dx_s_id[solid_region], subdomain_data=domains) # Create dx_s for each solid region
 else:
     dx_s[0] = dx(dx_s_id, subdomain_data=domains)
+    rho_s=[rho_s] # If there aren't multpile solid regions, and the solid parameters are given as floats, convert solid parameters to lists.
+    mu_s=[mu_s]
+    lambda_s=[lambda_s]
 
 
 # Define solver

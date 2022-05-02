@@ -7,7 +7,7 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, inv, grad, div
 
 
-def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id, mu_f, rho_f, k, theta, **namespace):
     """
     ALE formulation (theta-scheme) of the incompressible Navier-Stokes flow problem:
 
@@ -18,13 +18,10 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, mu_f, rho_f, k, theta, **namespace
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
 
-    if isinstance(mu_f,list)==False: # If there aren't multpile fluid regions, convert fluid viscosity to list
-        mu_f=[mu_f]
-
     F_fluid_linear = 0
     F_fluid_nonlinear = 0
 
-    for fluid_region in range(len(mu_f)):
+    for fluid_region in range(len(dx_f_id)):
 
         # Note that we here split the equation into a linear and nonlinear part for faster
         # computation of the Jacobian matrix.

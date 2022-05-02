@@ -7,7 +7,7 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, grad
 
 
-def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
+def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id, mu_s, rho_s, lambda_s, k, theta,
                 gravity,mesh, **namespace):
 
     # DB added gravity in 3d functionality and multi material capability 16/3/21
@@ -29,11 +29,6 @@ def solid_setup(d_, v_, phi, psi, dx_s, mu_s, rho_s, lambda_s, k, theta,
     # Theta scheme constants
     theta0 = Constant(theta)
     theta1 = Constant(1 - theta)
-
-    if isinstance(mu_s,list)==False: # If there aren't multpile solid regions, convert solid variables to lists
-        rho_s=[rho_s]
-        mu_s=[mu_s]
-        lambda_s=[lambda_s]
 
     F_solid_linear = 0
     F_solid_nonlinear = 0
