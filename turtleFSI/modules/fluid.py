@@ -7,7 +7,7 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, inv, grad, div
 
 
-def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id, mu_f, rho_f, k, theta, **namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, mu_f_list, rho_f, k, theta, **namespace):
     """
     ALE formulation (theta-scheme) of the incompressible Navier-Stokes flow problem:
 
@@ -21,7 +21,7 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id, mu_f, rho_f, k, theta, **
     F_fluid_linear = 0
     F_fluid_nonlinear = 0
 
-    for fluid_region in range(len(dx_f_id)):
+    for fluid_region in range(len(dx_f_id_list)):
 
         # Note that we here split the equation into a linear and nonlinear part for faster
         # computation of the Jacobian matrix.
@@ -41,9 +41,9 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id, mu_f, rho_f, k, theta, **
                                    inv(F_(d_["n"])).T, grad(psi)) * dx_f[fluid_region]
     
         # Stress from velocity
-        F_fluid_nonlinear += theta0 * inner(J_(d_["n"]) * sigma_f_u(v_["n"], d_["n"], mu_f[fluid_region]) *
+        F_fluid_nonlinear += theta0 * inner(J_(d_["n"]) * sigma_f_u(v_["n"], d_["n"], mu_f_list[fluid_region]) *
                                             inv(F_(d_["n"])).T, grad(psi)) * dx_f[fluid_region]
-        F_fluid_linear += theta1 * inner(J_(d_["n-1"]) * sigma_f_u(v_["n-1"], d_["n-1"], mu_f[fluid_region])
+        F_fluid_linear += theta1 * inner(J_(d_["n-1"]) * sigma_f_u(v_["n-1"], d_["n-1"], mu_f_list[fluid_region])
                                          * inv(F_(d_["n-1"])).T, grad(psi)) * dx_f[fluid_region]
     
         # Divergence free term
