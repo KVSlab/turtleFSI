@@ -7,7 +7,7 @@ from dolfin import inner, grad
 
 
 def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta, dx_f,
-                      ds, n, bc_ids, **namespace):
+                      dx_f_id_list, ds, n, bc_ids, **namespace):
     """
     Biharmonic lifting operator. Should be used for large deformations.
 
@@ -29,8 +29,11 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, d_, w_, phi, beta,
     """
 
     alpha_u = 0.01
-    F_ext1 = alpha_u * inner(w_["n"], beta) * dx_f - alpha_u * inner(grad(d_["n"]), grad(beta)) * dx_f
-    F_ext2 = alpha_u * inner(grad(w_["n"]), grad(phi)) * dx_f
+    F_ext1 = 0
+    F_ext2 = 0
+    for fluid_region in range(len(dx_f_id_list)): # for all fluid regions
+        F_ext1 += alpha_u * inner(w_["n"], beta) * dx_f[fluid_region] - alpha_u * inner(grad(d_["n"]), grad(beta)) * dx_f[fluid_region]
+        F_ext2 += alpha_u * inner(grad(w_["n"]), grad(phi)) * dx_f[fluid_region]
 
     if extrapolation_sub_type == "constrained_disp_vel":
         for i in bc_ids:
