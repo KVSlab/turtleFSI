@@ -108,6 +108,7 @@ dS = Measure("dS", subdomain_data=boundaries)
 dx = Measure("dx", subdomain_data=domains)
 
 # Domains
+# DB, May 2nd, 2022: All these conversions to lists seem a bit cumbersome, but this allows the solver to be backwards compatible.
 dx_f = {}
 if isinstance(dx_f_id, list): # If dx_f_id is a list (i.e, if there are multiple fluid regions):
     for fluid_region in range(len(dx_f_id)):
