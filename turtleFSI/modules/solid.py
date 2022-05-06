@@ -7,8 +7,8 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, grad
 
 
-def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, mu_s_list, rho_s_list, lambda_s_list, k, theta,
-                gravity,mesh, **namespace):
+def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, solid_properties, k, theta,
+                gravity, mesh, **namespace):
 
     # DB added gravity in 3d functionality and multi material capability 16/3/21
     #
@@ -33,17 +33,19 @@ def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, mu_s_list, rho_s_list, lam
     F_solid_linear = 0
     F_solid_nonlinear = 0
     for solid_region in range(len(dx_s_id_list)):
+        rho_s = solid_properties[solid_region]["rho_s"]
+
         # Temporal term and convection
-        F_solid_linear += (rho_s_list[solid_region]/k * inner(v_["n"] - v_["n-1"], psi)*dx_s[solid_region]
-                          + delta * rho_s_list[solid_region] * (1 / k) * inner(d_["n"] - d_["n-1"], phi) * dx_s[solid_region]
-                          - delta * rho_s_list[solid_region] * inner(theta0 * v_["n"] + theta1 * v_["n-1"], phi) * dx_s[solid_region])
+        F_solid_linear += (rho_s/k * inner(v_["n"] - v_["n-1"], psi)*dx_s[solid_region]
+                          + delta * rho_s * (1 / k) * inner(d_["n"] - d_["n-1"], phi) * dx_s[solid_region]
+                          - delta * rho_s * inner(theta0 * v_["n"] + theta1 * v_["n-1"], phi) * dx_s[solid_region])
         # Stress
-        F_solid_nonlinear += theta0 * inner(Piola1(d_["n"], lambda_s_list[solid_region], mu_s_list[solid_region]), grad(psi)) * dx_s[solid_region]
-        F_solid_linear += theta1 * inner(Piola1(d_["n-1"], lambda_s_list[solid_region], mu_s_list[solid_region]), grad(psi)) * dx_s[solid_region]
+        F_solid_nonlinear += theta0 * inner(Piola1(d_["n"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
+        F_solid_linear += theta1 * inner(Piola1(d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
         # Gravity
         if gravity is not None and mesh.geometry().dim() == 2:
-            F_solid_linear -= inner(Constant((0, -gravity * rho_s_list[solid_region])), psi)*dx_s[solid_region] 
+            F_solid_linear -= inner(Constant((0, -gravity * rho_s)), psi)*dx_s[solid_region] 
         elif gravity is not None and mesh.geometry().dim() == 3:
-            F_solid_linear -= inner(Constant((0, -gravity * rho_s_list[solid_region],0)), psi)*dx_s[solid_region] 
+            F_solid_linear -= inner(Constant((0, -gravity * rho_s,0)), psi)*dx_s[solid_region] 
 
     return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)
