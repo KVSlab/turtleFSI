@@ -59,8 +59,19 @@ default_variables = dict(
     dx_s_id=2,       # Domain id of the solid domain
 
     # Meterial settings
+    fluid_properties=[],
     rho_f=1.0E3,     # Density of the fluid
     mu_f=1.0,        # Fluid dynamic viscosity
+    solid_properties=[], 
+    material_model="StVenantKirchoff",  # ["StVenantKirchoff",""StVenantKirchoffEnergy","NeoHookean","MooneyRivlin"*,"Gent"*] Material model for solid 
+    # *Note: For MooneyRivlin and Gent material models, you need to pass in all material properties as a dict, or a list of dicts if there are multiple solid regions.
+    # currently there are no "default" properties for the Gent or Mooney-Rivlin models; all model parameters must be defined in the probelm file, following the examples below:
+    # Gent material model example:
+    # solid_properties={"dx_s_id":2,"material_model":"Gent","rho_s":1.0E3,"mu_s":5.0E4,"Jm":10})
+    # MooneyRivlin material model example:
+    # solid_properties={"dx_s_id":2,"material_model":"MooneyRivlin","rho_s":1.0E3,"mu_s":5.0E4,"lambda_s":4.5E5,"C01":5.0E4/4,"C10":5.0E4/4,"C11":0.0}
+    # Two different material models example:
+    # solid_properties=[{"dx_s_id":2,"material_model":"Gent","rho_s":1.0E3,"mu_s":5.0E4,"Jm":10}, {"dx_s_id":3,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":5.0E4,"lambda_s":4.5E5}]
     rho_s=1.0E3,     # Density of the solid
     mu_s=5.0E4,      # Shear modulus or 2nd Lame Coef. for the solid
     nu_s=0.45,       # Poisson ratio

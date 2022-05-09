@@ -113,7 +113,7 @@ def pre_solve(t, d_t, **namespace):
     """Update boundary conditions"""
     d_t.update(t)
 
-def post_solve(t, dvp_, verbose,counter,save_step, visualization_folder,solid_properties, mesh,dx_s,  **namespace):
+def post_solve(t, dvp_, verbose,counter,save_step, visualization_folder,solid_properties, mesh, dx_s,  **namespace):
 
     if counter % save_step == 0:
 
