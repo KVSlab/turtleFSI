@@ -152,6 +152,7 @@ timer = Timer("Total simulation time")
 timer.start()
 previous_t = 0.0
 stop = False
+first_step_num = counter # This is so that the solver will recompute the jacobian on the first step of the simulation
 while t <= T + dt / 10 and not stop:  # + dt / 10 is a hack to ensure that we take the final time step t == T
     t += dt
 
