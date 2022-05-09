@@ -31,7 +31,7 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
 
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
-                 dvp_, up_sol, dvp_res, rtol, atol, max_it, counter, verbose, restart_folder, **namespace):
+                 dvp_, up_sol, dvp_res, rtol, atol, max_it, counter, first_step_num, verbose, **namespace):
     """
     Solve the non-linear system of equations with Newton scheme. The standard is to compute the Jacobian
     every time step, however this is computationally costly. We have therefore added two parameters for
@@ -58,7 +58,10 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Recompute Jacobian due to increased residual
         recompute_residual = iter > 0 and (last_rel_res < rel_res or last_residual < residual)
 
-        if recompute_for_timestep or recompute_frequency or recompute_residual or restart_folder is not None:
+        # Recompute Jacobian on first step of simulation (important if restart is used)
+        recompute_initialize = iter == 0 and counter == first_step_num
+
+        if recompute_for_timestep or recompute_frequency or recompute_residual or recompute_initialize:
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
             A = assemble(J_nonlinear, tensor=A,
