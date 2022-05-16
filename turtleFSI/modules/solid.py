@@ -35,10 +35,21 @@ def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, solid_properties, k, theta
     for solid_region in range(len(dx_s_id_list)):
         rho_s = solid_properties[solid_region]["rho_s"]
 
-        # Temporal term and convection
+        # Temporal term and convection 
         F_solid_linear += (rho_s/k * inner(v_["n"] - v_["n-1"], psi)*dx_s[solid_region]
                           + delta * rho_s * (1 / k) * inner(d_["n"] - d_["n-1"], phi) * dx_s[solid_region]
-                          - delta * rho_s * inner(theta0 * v_["n"] + theta1 * v_["n-1"], phi) * dx_s[solid_region])
+                          - delta * rho_s * inner(theta0 * v_["n"] + theta1 * v_["n-1"], phi) * dx_s[solid_region]) # Maybe we could add viscoelasticity with v["n"] term instead of (1 / k) * inner(d_["n"] - d_["n-1"], phi) 
+        
+        if solid_properties[solid_region]["viscoelasticity"] == None:
+            pass
+        elif solid_properties[solid_region]["viscoelasticity"] == "Form1":
+            F_solid_nonlinear += (1/k) * inner(F_(d_["n"])*theta0*Svisc(d_["n"] - d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
+            F_solid_linear += (1/k) * inner(F_(d_["n-1"])*theta1*Svisc(d_["n"] - d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
+        elif solid_properties[solid_region]["viscoelasticity"] == "Form2":
+            F_solid_linear += (1/k) * inner(Piola1visc(d_["n"] - d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region] # First attempt at viscoelastic term. 
+        else:
+            print("invalid entry for viscoelasticity")
+
         # Stress
         F_solid_nonlinear += theta0 * inner(Piola1(d_["n"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
         F_solid_linear += theta1 * inner(Piola1(d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]

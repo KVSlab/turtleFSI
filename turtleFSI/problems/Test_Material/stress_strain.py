@@ -33,18 +33,20 @@ def project_solid(tensorForm, fxnSpace, dx_s):
 
     return tensorProjected
 
-def calculate_stress_strain(t, dvp_, verbose, visualization_folder, material_parameters, mesh,dx_s, **namespace):
+def calculate_stress_strain(t, dvp_, verbose, visualization_folder, solid_properties, mesh,dx_s,dt, **namespace):
 
     # Files for storing extra outputs (stresses and strains)
     if not "ep_file" in namespace.keys():
         sig_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("TrueStress.xdmf")))
         pk1_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("PK1Stress.xdmf")))
         ep_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("InfinitesimalStrain.xdmf")))
-        for tmp_t in [sig_file,ep_file]:
+        d_out_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement_out.xdmf")))
+        v_out_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity_out.xdmf")))
+        for tmp_t in [sig_file,ep_file,pk1_file,d_out_file,v_out_file]:
             tmp_t.parameters["flush_output"] = True
             tmp_t.parameters["rewrite_function_mesh"] = False
 
-        return_dict = dict(ep_file=ep_file,sig_file=sig_file, pk1_file=pk1_file)
+        return_dict = dict(ep_file=ep_file,sig_file=sig_file, pk1_file=pk1_file,d_out_file=d_out_file,v_out_file=v_out_file)
     
         namespace.update(return_dict)
     
@@ -52,7 +54,19 @@ def calculate_stress_strain(t, dvp_, verbose, visualization_folder, material_par
         return_dict = {}
     
     # Split function
-    d = dvp_["n"].sub(0, deepcopy=True)
+    d = dvp_["n-1"].sub(0, deepcopy=True) #(dvp_["n"].sub(0, deepcopy=True) + dvp_["n-2"].sub(0, deepcopy=True))/2
+    v = (dvp_["n"].sub(0, deepcopy=True)-dvp_["n-2"].sub(0, deepcopy=True))/(dt) # from n-2 to n is one timestep. End velcoity has been verified for single element case
+
+    Ve = VectorElement("CG", mesh.ufl_cell(), 2) 
+    Vect = FunctionSpace(mesh, Ve)
+    d_ = project(d,Vect)
+    v_ = project(v,Vect)
+    d_.rename("Displacement", "d")
+    v_.rename("Velocity", "v")
+
+    # Write results
+    #namespace["d_out_file"].write(d_, t)
+    namespace["v_out_file"].write(v_, t)
   
     # Create tensor function space for stress and strain (this is necessary to evaluate tensor valued functions)
     '''
@@ -66,15 +80,29 @@ def calculate_stress_strain(t, dvp_, verbose, visualization_folder, material_par
 
     Te = TensorElement("DG", mesh.ufl_cell(), 1) 
     Tens = FunctionSpace(mesh, Te)
-    
+
+
+    #Ve = VectorElement("CG", mesh.ufl_cell(), 2) 
+    #Vect = FunctionSpace(mesh, Ve)
+
     # Deformation Gradient and first Piola-Kirchoff stress (PK1)
     deformationF = common.F_(d) # calculate deformation gradient from displacement
     
     # Cauchy (True) Stress and Infinitesimal Strain (Only accurate for small strains, ask DB for True strain calculation...)
     epsilon = common.eps(d) # Form for Infinitesimal strain (need polar decomposition if we want to calculate logarithmic/Hencky strain)
     ep = project_solid(epsilon,Tens,dx_s) # Calculate stress tensor
-    P_ = common.Piola1(d, material_parameters)  # Form for second PK stress (using St. Venant Kirchoff Model)
-    S_ = common.S(d, material_parameters)  # Form for second PK stress (using St. Venant Kirchoff Model)
+    #P_ = common.Piola1(d, solid_properties)  # Form for second PK stress (using St. Venant Kirchoff Model)
+    if solid_properties["viscoelasticity"] == None:
+        S_ = common.S(d, solid_properties)  # Form for second PK stress (using St. Venant Kirchoff Model)
+        P_ = common.F_(d)*S_
+    elif solid_properties["viscoelasticity"] == "Form1":
+        S_ = common.S(d, solid_properties) + common.Svisc(v, solid_properties)
+        P_ = common.F_(d)*S_
+    elif solid_properties["viscoelasticity"] == "Form2":
+        P_ = common.Piola1(d, solid_properties) + common.Piola1visc(v, solid_properties)
+    else:
+        print("invalid entry for viscoelasticity")
+    
 
     sigma = (1/common.J_(d))*deformationF*S_*deformationF.T  # Form for Cauchy (true) stress 
 

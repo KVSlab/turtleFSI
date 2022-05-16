@@ -43,15 +43,18 @@ def set_problem_parameters(default_variables, **namespace):
         lambda_s=lambda_s_val,  # Solid 1st Lame Coef. [Pa]
         gravity=None,   # Gravitational force [m/s**2]
         #solid_properties={"nu_visc_s":1e3},
-        solid_properties={"dx_s_id":1,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"nu_visc_s":1e3},
+        #solid_properties={"dx_s_id":1,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"nu_visc_s":1e5, "delta_visc_s":1e6},
+        #solid_properties={"dx_s_id":1,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"nu_visc_s":1e5, "delta_visc_s":1e6},
+        #solid_properties={"dx_s_id":1,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"viscoelasticity":"None","nu_visc_s":0.01, "delta_visc_s":0.1},
+        solid_properties={"dx_s_id":1,"material_model":"StVenantKirchoff","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"viscoelasticity":"Form1","nu_visc_s":1e4, "delta_visc_s":1e4},
 
         # Problem specific
         dx_f_id=0,     # Id of the fluid domain
         dx_s_id=1,     # Id of the solid domain
-        folder="Uniaxial_Tension_StVenantKirchoff",          # Folder to store the results
+        folder="Uniaxial_Tension_StVenantKirchoff_Relax_Visc",          # Folder to store the results
         fluid="no_fluid",                 # Do not solve for the fluid
         extrapolation="no_extrapolation",  # No displacement to extrapolate
-        solid_vel=0.1, # this is the velocity of the wall with prescribed displacement
+        solid_vel=0.5, # this is the velocity of the wall with prescribed displacement
 
         # Geometric variables
         leftEnd=0.001,
@@ -97,7 +100,10 @@ class PrescribedDisp(UserExpression):
         super().__init__(**kwargs)
 
     def update(self, t):
-        self.factor = t * self.solid_vel
+        if t<0.05:
+            self.factor = t * self.solid_vel
+        else:
+            self.factor = 0.05 * self.solid_vel
         print('displacement = ', self.factor)
 
     def eval(self, value,x):
@@ -124,10 +130,10 @@ def pre_solve(t, d_t, **namespace):
     """Update boundary conditions"""
     d_t.update(t)
 
-def post_solve(t, dvp_, verbose,counter,save_step, visualization_folder,solid_properties, mesh,dx_s,  **namespace):
+def post_solve(t, dvp_, verbose,counter,save_step, visualization_folder,solid_properties, mesh,dx_s,dt,  **namespace):
 
     if counter % save_step == 0:
 
-        return_dict=StrStr.calculate_stress_strain(t, dvp_, verbose, visualization_folder,solid_properties[0], mesh, dx_s[0], **namespace)
+        return_dict=StrStr.calculate_stress_strain(t, dvp_, verbose, visualization_folder,solid_properties[0], mesh, dx_s[0],dt, **namespace)
 
         return return_dict

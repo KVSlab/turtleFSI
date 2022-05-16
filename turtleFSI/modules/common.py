@@ -127,6 +127,25 @@ def Piola1(d, solid_properties):
     
     return P
 
+def Piola1visc(d, solid_properties):
+    """
+    First Piola-Kirchhoff Stress, viscoelastic component (d is actually velcoity)
+    """
+    S_svk = Svisc(d, solid_properties)
+    P = F_(d)*S_svk  # Convert to First Piola-Kirchoff Stress by using deformation gradient of velocity (not sure if correct)
+
+    return P
+
+def Svisc(d, solid_properties):
+    """
+    Second Piola-Kirchhoff Stress, viscoelastic component (d is actually velcoity)
+    """
+    I = Identity(get_dimension(d)) # Identity matrix
+    nu_visc_s = solid_properties["nu_visc_s"]
+    delta_visc_s = solid_properties["delta_visc_s"]
+    S_svk = nu_visc_s*tr(E(d))*I +  2*delta_visc_s*E(d) # Calculate First Piola Kirchoff Stress with Explicit form of St. Venant Kirchoff model
+
+    return S_svk
 
 def S_linear(d, alfa_mu, alfa_lam):
     """
