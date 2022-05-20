@@ -47,6 +47,17 @@ def F_(d):
     """
     return Identity(get_dimension(d)) + grad(d)
 
+def L_(v):
+    """
+    spatial velocity gradient tensor
+    """
+    return grad(v)
+
+def D_(v):
+    """
+    Rate of deformation tensor
+    """    
+    return 0.5*(L_(v) + L_(v).T)
 
 def J_(d):
     """
@@ -127,23 +138,15 @@ def Piola1(d, solid_properties):
     
     return P
 
-def Piola1visc(d, solid_properties):
+def Svisc_D(v, solid_properties):
     """
-    First Piola-Kirchhoff Stress, viscoelastic component (d is actually velcoity)
+    Second Piola-Kirchhoff Stress, viscoelastic component.
+    Assumed the same form as normal SVK model, but using the strain rate tensor (D) instead of green-lagrange strain (E)
     """
-    S_svk = Svisc(d, solid_properties)
-    P = F_(d)*S_svk  # Convert to First Piola-Kirchoff Stress by using deformation gradient of velocity (not sure if correct)
-
-    return P
-
-def Svisc(d, solid_properties):
-    """
-    Second Piola-Kirchhoff Stress, viscoelastic component (d is actually velcoity)
-    """
-    I = Identity(get_dimension(d)) # Identity matrix
-    nu_visc_s = solid_properties["nu_visc_s"]
-    delta_visc_s = solid_properties["delta_visc_s"]
-    S_svk = nu_visc_s*tr(E(d))*I +  2*delta_visc_s*E(d) # Calculate First Piola Kirchoff Stress with Explicit form of St. Venant Kirchoff model
+    I = Identity(get_dimension(v)) # Identity matrix
+    mu_visc_s = solid_properties["mu_visc_s"]  # viscoelastic material constant
+    lambda_visc_s = solid_properties["lambda_visc_s"] # viscoelastic material constant
+    S_svk = mu_visc_s*tr(D_(v))*I +  2*lambda_visc_s*D_(v) # Viscoelastic equation based on St. Venant Kirchoff model
 
     return S_svk
 

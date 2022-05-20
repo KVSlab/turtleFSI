@@ -54,8 +54,8 @@ def calculate_stress_strain(t, dvp_, verbose, visualization_folder, solid_proper
         return_dict = {}
     
     # Split function
-    d = dvp_["n-1"].sub(0, deepcopy=True) #(dvp_["n"].sub(0, deepcopy=True) + dvp_["n-2"].sub(0, deepcopy=True))/2
-    v = (dvp_["n"].sub(0, deepcopy=True)-dvp_["n-2"].sub(0, deepcopy=True))/(dt) # from n-2 to n is one timestep. End velcoity has been verified for single element case
+    d = (dvp_["n-1"].sub(0, deepcopy=True) + dvp_["n-2"].sub(0, deepcopy=True))/2
+    v = (dvp_["n-1"].sub(1, deepcopy=True) + dvp_["n-2"].sub(1, deepcopy=True) )/2# from n-2 to n is one timestep. End velcoity has been verified for single element case
 
     Ve = VectorElement("CG", mesh.ufl_cell(), 2) 
     Vect = FunctionSpace(mesh, Ve)
@@ -92,17 +92,19 @@ def calculate_stress_strain(t, dvp_, verbose, visualization_folder, solid_proper
     epsilon = common.eps(d) # Form for Infinitesimal strain (need polar decomposition if we want to calculate logarithmic/Hencky strain)
     ep = project_solid(epsilon,Tens,dx_s) # Calculate stress tensor
     #P_ = common.Piola1(d, solid_properties)  # Form for second PK stress (using St. Venant Kirchoff Model)
-    if solid_properties["viscoelasticity"] == None:
+    if "viscoelasticity" in solid_properties:
+        if solid_properties["viscoelasticity"] == "Form1" or solid_properties["viscoelasticity"] == "Form2":
+            S_ = common.S(d, solid_properties) + common.Svisc_D(v, solid_properties)
+            P_ = common.F_(d)*S_
+            print("using form 1 or 2 for viscoelasticity")
+        else:
+            S_ = common.S(d, solid_properties)  # Form for second PK stress (using St. Venant Kirchoff Model)
+            P_ = common.F_(d)*S_
+            print("invalid/no entry for viscoelasticity")
+    else:
         S_ = common.S(d, solid_properties)  # Form for second PK stress (using St. Venant Kirchoff Model)
         P_ = common.F_(d)*S_
-    elif solid_properties["viscoelasticity"] == "Form1":
-        S_ = common.S(d, solid_properties) + common.Svisc(v, solid_properties)
-        P_ = common.F_(d)*S_
-    elif solid_properties["viscoelasticity"] == "Form2":
-        P_ = common.Piola1(d, solid_properties) + common.Piola1visc(v, solid_properties)
-    else:
-        print("invalid entry for viscoelasticity")
-    
+        print("invalid/no entry for viscoelasticity")    
 
     sigma = (1/common.J_(d))*deformationF*S_*deformationF.T  # Form for Cauchy (true) stress 
 
