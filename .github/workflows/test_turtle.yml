@@ -4,11 +4,11 @@ on:
   push:
     # The CI is executed on every push on every branch
     branches:
-      - main
+      - master
   pull_request:
     # The CI is executed on every pull request to the main branch
     branches:
-      - main
+      - master
 
   schedule:
     # The CI is executed every day at 8am
