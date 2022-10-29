@@ -8,8 +8,10 @@ except ModuleNotFoundError:
     try:
         import cppimport
     except ModuleNotFoundError:
-        print(msg.format("cppimport"))
+        if MPI.rank(MPI.comm_world) == 0:
+            print(msg.format("cppimport"))
     try:
         import mpi4py
     except ModuleNotFoundError:
-        print(msg.format("mpi4py"))
+        if MPI.rank(MPI.comm_world) == 0:
+            print(msg.format("mpi4py"))

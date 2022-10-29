@@ -132,7 +132,8 @@ def Piola1(d, solid_properties):
         elif solid_properties["material_model"] == "Gent":
             W = W_Gent(F, solid_properties["mu_s"], solid_properties["Jm"])  
         else:
-            print('Invalid entry for material_model, choose from ["StVenantKirchoff",""StVenantKirchoffEnergy","NeoHookean","MooneyRivlin","Gent"]')
+            if MPI.rank(MPI.comm_world) == 0:
+                print('Invalid entry for material_model, choose from ["StVenantKirchoff",""StVenantKirchoffEnergy","NeoHookean","MooneyRivlin","Gent"]')
         
         P = ufl.diff(W, F) # First Piola-Kirchoff Stress for compressible hyperelastic material (https://en.wikipedia.org/wiki/Hyperelastic_material)
     
