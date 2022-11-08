@@ -4,10 +4,17 @@
 # PURPOSE.
 
 from turtleFSI.modules import *
-from dolfin import Constant, inner, inv, grad, div
+from dolfin import ds, MPI
 
+"""
+Author: Kei Yamamoto
+Date: 2022-11-07
+NOTE: Naming here is a bit cnfusing. For example, dx_f, ds_s are hard to understand. 
+dx refers to the area of the domain while ds refers to the area of the boundary.
+f refere to the fluid while s refers to the solid.
+"""
 
-def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id, material_model, rho_s, mu_s, lambda_s, solid_properties, domains, **namespace):
+def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id, material_model, rho_s, mu_s, lambda_s, solid_properties, domains, ds_s_id, boundaries, robin_bc, **namespace):
     """
     Assigns solid and fluid properties to each region.   
     """
@@ -48,6 +55,21 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
             solid_properties.append({"dx_s_id":dx_s_id,"material_model":material_model,"rho_s":rho_s,"mu_s":mu_s,"lambda_s":lambda_s})
     elif isinstance(solid_properties, dict): 
         solid_properties = [solid_properties]
+    
+    # NOTE: added this for Robin BC, not tested yet
+    if robin_bc==True:
+        if MPI.rank(MPI.comm_world) == 0:
+            print("Robin BC is used")
+        ds_s = {}
+        if isinstance(ds_s_id, list): # If ds_s_id is a list (i.e, if there are multiple boundary regions):
+            for solid_boundaries in range(len(ds_s_id)):
+                ds_s[solid_boundaries] = ds(ds_s_id[solid_boundaries], subdomain_data=boundaries) # Create ds_s for each boundary
+                ds_s_ext_id_list=ds_s_id
+        else:
+            ds_s[0] = ds(ds_s_id, subdomain_data=boundaries)
+            ds_s_ext_id_list=[ds_s_id] # If there aren't multpile boundary regions, and the boundary parameters are given as floats, convert solid parameters to lists.
+    else:
+        ds_s = None
+        ds_s_ext_id_list = None
 
-
-    return dict(dx_f=dx_f, dx_f_id_list=dx_f_id_list, fluid_properties=fluid_properties, dx_s=dx_s, dx_s_id_list=dx_s_id_list, solid_properties=solid_properties)
+    return dict(dx_f=dx_f, dx_f_id_list=dx_f_id_list, ds_s_ext_id_list=ds_s_ext_id_list, ds_s=ds_s, fluid_properties=fluid_properties, dx_s=dx_s, dx_s_id_list=dx_s_id_list, solid_properties=solid_properties)

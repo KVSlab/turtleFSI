@@ -4,12 +4,11 @@
 # PURPOSE.
 
 from turtleFSI.modules import *
-
+from turtleFSI.problems import info_blue
 from dolfin import Constant, inner, grad, MPI
 
-
-def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, solid_properties, k, theta,
-                gravity, mesh, **namespace):
+def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, solid_properties, k, theta,
+                gravity, mesh, robin_bc, k_s, c_s, **namespace):
 
     # DB added gravity in 3d functionality and multi material capability 16/3/21
     #
@@ -65,5 +64,18 @@ def solid_setup(d_, v_, phi, psi, dx_s, dx_s_id_list, solid_properties, k, theta
             F_solid_linear -= inner(Constant((0, -gravity * rho_s)), psi)*dx_s[solid_region] 
         elif gravity is not None and mesh.geometry().dim() == 3:
             F_solid_linear -= inner(Constant((0, -gravity * rho_s,0)), psi)*dx_s[solid_region] 
+            
+    # Robin BC
+    """
+    The derivation comes from the eq.(9) in the followling paper:
+    Moireau, P., Xiao, N., Astorino, M. et al. External tissue support and fluid–structure simulation in blood flows. 
+    Biomech Model Mechanobiol 11, 1–18 (2012). https://doi.org/10.1007/s10237-011-0289-z
+    """
+    if robin_bc==True:
+        info_blue("Robin BC is used for the solid domain.")
+        for solid_boundaries in range(len(ds_s_ext_id_list)): 
+            F_solid_linear += theta0 * inner((k_s * d_["n"] + c_s * v_["n"]), psi)*ds_s[solid_boundaries] 
+            F_solid_linear += theta1 * inner((k_s * d_["n-1"] + c_s * v_["n-1"]), psi)*ds_s[solid_boundaries] 
+            
 
     return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)
