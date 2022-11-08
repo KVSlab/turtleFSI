@@ -20,3 +20,18 @@
 # Generated probe files
 turtleFSI/utils/probe/.rendered.probe11.cpp
 turtleFSI/utils/probe/*.so
+
+#Results or mesh
+*.xdmf
+*.h5
+*.pickle
+*.vtu
+*.xml.gz
+
+# Distribution / packaging
+lib/
+build/
+bin/
+
+# OS specific files
+.DS_Store
