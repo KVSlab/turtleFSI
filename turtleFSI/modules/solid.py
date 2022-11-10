@@ -59,7 +59,7 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
         # Stress (Note that if viscoelasticity is used, Piola1() is no longer the total stress, it is the non-rate dependant (elastic) component of the stress)
         F_solid_nonlinear += theta0 * inner(Piola1(d_["n"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
         F_solid_linear += theta1 * inner(Piola1(d_["n-1"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
-        # Gravity
+        # Gravity - y direction only
         if gravity is not None and mesh.geometry().dim() == 2:
             F_solid_linear -= inner(Constant((0, -gravity * rho_s)), psi)*dx_s[solid_region] 
         elif gravity is not None and mesh.geometry().dim() == 3:

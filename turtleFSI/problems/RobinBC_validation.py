@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 
 """
 This problem is a validation of the Robin BC implementation in the solid solver.
-The solid is a cylinder
+The validation is done by using a mass-spring-damper system and comparing the results.
+We use cylinder mesh which is subjected to a constant gravity force in y-direction.
+This sciprt is meant to run with a single core, but can be easily parallelized.
 """
 
 # Set compiler arguments
@@ -28,7 +30,7 @@ def set_problem_parameters(default_variables, **namespace):
     # define and set problem variables values
     default_variables.update(dict(
         T=0.1,                              # Simulation end time
-        dt=0.001,                           # Time step size
+        dt=0.0005,                          # Time step size
         theta=0.501,                        # Theta scheme (implicit/explicit time stepping): 0.5 + dt
         atol=1e-7,                          # Absolute tolerance in the Newton solver
         rtol=1e-7,                          # Relative tolerance in the Newton solver
@@ -48,12 +50,7 @@ def set_problem_parameters(default_variables, **namespace):
         lambda_s=lambda_s_val,              # Solid 1rst Lamé coef. [Pa]
         robin_bc = True,                    # Robin BC
         k_s = 1.0E5,                        # elastic response necesary for RobinBC
-        c_s = 0,                            # viscoelastic response necesary for RobinBC 
-        u_max= 0,                           # max inlet flow velocity value [m/s]
-        p_val= 0,                           # inner pressure for initialisation [Pa]
-        vel_t_ramp= 0.2,                    # time for velocity ramp 
-        p_t_ramp_start = 0.2,               # pressure ramp start time
-        p_t_ramp_end = 0.4,                 # pressure ramp end time
+        c_s = 1.0E2,                            # viscoelastic response necesary for RobinBC 
         dx_f_id=1,                          # ID of marker in the fluid domain
         dx_s_id=1002,                       # ID of marker in the solid domain
         extrapolation="laplace",            # laplace, elastic, biharmonic, no-extrapolation
@@ -94,15 +91,14 @@ def create_bcs(**namespace):
     """
     return dict(bcs=[])
 
-# TODO: add analytical solution
 def _mass_spring_damper_system_ode(x, t, params_dict):
-
+    # Umpack parameters
     F = params_dict['F'] # Volume of the domain   
     A = params_dict['A'] # Area of the external surface (where Robin BC is applied)    
     c = params_dict['c'] # Damping constant
     k = params_dict['k'] # Stiffness of the spring 
     m = params_dict['m'] # Mass of the domain
-
+    # Solve the system of ODEs
     dx1dt = x[1]
     dx2dt = (F - c*x[1]*A - k*x[0]*A)/m
 
@@ -110,9 +106,6 @@ def _mass_spring_damper_system_ode(x, t, params_dict):
     return dxdt 
 
 def initiate(dvp_, mesh, DVP, **namespace):
-    # d = dvp_.sub(0, deepcopy=True)
-    # v = dvp_.sub(1, deepcopy=True)
-
     # Position to probe
     x_coordinate = mesh.coordinates()[:, 0]
     y_coordinate = mesh.coordinates()[:, 1]
@@ -130,25 +123,25 @@ def initiate(dvp_, mesh, DVP, **namespace):
 def post_solve(d_probe, dvp_, **namespace):
     d_probe(dvp_["n"].sub(0, deepcopy=True))
 
-def finished(T, dt, mesh, rho_s, boundaries, gravity, d_probe, **namespace):
+def finished(T, dt, mesh, rho_s, k_s, c_s, boundaries, gravity, d_probe, **namespace):
     # Define time step and initial conditions
-    t_analytical = np.linspace(0, T, int(T/dt)+1)
+    t_analytical = np.linspace(0, T, int(T/dt) + 1)
     analytical_solution_init = [0,0]
     # Define parameters for the analytical solution
     volume = assemble(1*dx(mesh))
     ds_robin = Measure("ds", domain=mesh, subdomain_data=boundaries, subdomain_id=1033)
     params_dict = dict()
     params_dict["m"] = volume*rho_s
-    params_dict["k"] = 1.0E5
-    params_dict["c"] = 0
+    params_dict["k"] = k_s
+    params_dict["c"] = c_s
     params_dict["A"] = assemble(1*ds_robin)
     params_dict["F"] = -gravity*volume*rho_s
-
+    # Solve the ode to compute the analytical solution
     analytical_solution = odeint(_mass_spring_damper_system_ode, analytical_solution_init, t_analytical, args=(params_dict,))
     analytical_displacement = analytical_solution[:,0]
-    analytical_velocity = analytical_solution[:,1]
+    # Plot both numerical and analytical solutions for a comparison
+    plt.plot(d_probe.get_probe_sub(1), label="turtleFSI")
+    plt.plot(analytical_displacement, label="analytical")
+    plt.legend()
+    plt.show()
 
-    plt.plot(d_probe.get_probe_sub(1))
-    plt.plot(analytical_displacement)
-
-    from IPython import embed; embed(); exit(1)
