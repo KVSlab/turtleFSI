@@ -7,7 +7,9 @@ parameters["ghost_mode"] = "shared_facet" #2D mesh case
 _compiler_parameters = dict(parameters["form_compiler"])
 
 """
-2D Stenosis case intended to test RobinBC 
+2D Stenosis case intended to test RobinBC
+Mesh can be found in the follwoing link:
+https://drive.google.com/drive/folders/1roV_iE_16Q847AQ_0tEsznIT-6EICX4o?usp=sharing
 """
 
 def set_problem_parameters(default_variables, **namespace):

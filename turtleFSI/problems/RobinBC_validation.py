@@ -10,6 +10,9 @@ This problem is a validation of the Robin BC implementation in the solid solver.
 The validation is done by using a mass-spring-damper system and comparing the results.
 We use cylinder mesh which is subjected to a constant gravity force in y-direction.
 This sciprt is meant to run with a single core, but can be easily parallelized.
+
+Mesh can be found in the following link:
+https://drive.google.com/drive/folders/1roV_iE_16Q847AQ_0tEsznIT-6EICX4o?usp=sharing
 """
 
 # Set compiler arguments
