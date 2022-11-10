@@ -56,10 +56,8 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     elif isinstance(solid_properties, dict): 
         solid_properties = [solid_properties]
     
-    # NOTE: added this for Robin BC, not tested yet
+    # RobinBC
     if robin_bc==True:
-        if MPI.rank(MPI.comm_world) == 0:
-            print("Robin BC is used")
         ds_s = {}
         if isinstance(ds_s_id, list): # If ds_s_id is a list (i.e, if there are multiple boundary regions):
             for solid_boundaries in range(len(ds_s_id)):
