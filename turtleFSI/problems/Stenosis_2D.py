@@ -65,7 +65,7 @@ def get_mesh_domain_and_boundaries(folder, **namespace):
     # Import mesh file
     mesh = Mesh()
     with XDMFFile("mesh/2D_stenosis/mesh_correct_id.xdmf") as infile:
-    	infile.read(mesh)
+        infile.read(mesh)
     # Rescale the mesh coordinated from [mm] to [m]
     x = mesh.coordinates()
     scaling_factor = 0.001  # from mm to m
@@ -75,14 +75,14 @@ def get_mesh_domain_and_boundaries(folder, **namespace):
     # Import mesh boundaries
     boundaries = MeshValueCollection("size_t", mesh, 1) 
     with XDMFFile("mesh/Stenosis_2D/facet_mesh_correct_id.xdmf") as infile:
-    	infile.read(boundaries, "name_to_read")
+        infile.read(boundaries, "name_to_read")
 
     boundaries = cpp.mesh.MeshFunctionSizet(mesh, boundaries)
     
     # Define mesh domains
     domains = MeshValueCollection("size_t", mesh, 2) 
     with XDMFFile("mesh/Stenosis_2D/mesh_correct_id.xdmf") as infile:
-    	infile.read(domains, "name_to_read")
+        infile.read(domains, "name_to_read")
 
     domains = cpp.mesh.MeshFunctionSizet(mesh, domains)
 
