@@ -1,13 +1,13 @@
 from dolfin import *
-import os
 from turtleFSI.problems import *
 import numpy as np
 from scipy.integrate import odeint
+from turtleFSI.utils.Probe import Probe
+import matplotlib.pyplot as plt
 
 """
 This problem is a validation of the Robin BC implementation in the solid solver.
-The solid is a cylinder with a hole in the middle. 
-The domain consits of only a solid.
+The solid is a cylinder
 """
 
 # Set compiler arguments
@@ -27,7 +27,7 @@ def set_problem_parameters(default_variables, **namespace):
 
     # define and set problem variables values
     default_variables.update(dict(
-        T=0.5,                              # Simulation end time
+        T=0.1,                              # Simulation end time
         dt=0.001,                           # Time step size
         theta=0.501,                        # Theta scheme (implicit/explicit time stepping): 0.5 + dt
         atol=1e-7,                          # Absolute tolerance in the Newton solver
@@ -84,11 +84,6 @@ def get_mesh_domain_and_boundaries(mesh_file, **namespace):
     
     #Set all solid
     domains.set_all(1002)
-    
-    #Print mesh Volume
-    V = assemble(1*dx(mesh))
-    if MPI.rank(MPI.comm_world) == 0:
-        print("Volume of the mesh: ", V)
 
     return mesh, domains, boundaries
 
@@ -100,9 +95,60 @@ def create_bcs(**namespace):
     return dict(bcs=[])
 
 # TODO: add analytical solution
+def _mass_spring_damper_system_ode(x, t, params_dict):
 
-def _mass_spring_damper_system_ode(x,t):
-    pass
+    F = params_dict['F'] # Volume of the domain   
+    A = params_dict['A'] # Area of the external surface (where Robin BC is applied)    
+    c = params_dict['c'] # Damping constant
+    k = params_dict['k'] # Stiffness of the spring 
+    m = params_dict['m'] # Mass of the domain
 
-def _analytical_solution():
-    pass
+    dx1dt = x[1]
+    dx2dt = (F - c*x[1]*A - k*x[0]*A)/m
+
+    dxdt = [dx1dt, dx2dt] 
+    return dxdt 
+
+def initiate(dvp_, mesh, DVP, **namespace):
+    # d = dvp_.sub(0, deepcopy=True)
+    # v = dvp_.sub(1, deepcopy=True)
+
+    # Position to probe
+    x_coordinate = mesh.coordinates()[:, 0]
+    y_coordinate = mesh.coordinates()[:, 1]
+    z_coordinate = mesh.coordinates()[:, 2]
+
+    x_middle = (x_coordinate.max() + x_coordinate.min())/2
+    y_middle = (y_coordinate.max() + y_coordinate.min())/2
+    z_middle = (z_coordinate.max() + z_coordinate.min())/2
+
+    middle_point = np.array([x_middle, y_middle, z_middle])
+    d_probe = Probe(middle_point, DVP.sub(0))
+    d_probe(dvp_["n"].sub(0, deepcopy=True))
+    return dict(d_probe=d_probe)
+
+def post_solve(d_probe, dvp_, **namespace):
+    d_probe(dvp_["n"].sub(0, deepcopy=True))
+
+def finished(T, dt, mesh, rho_s, boundaries, gravity, d_probe, **namespace):
+    # Define time step and initial conditions
+    t_analytical = np.linspace(0, T, int(T/dt)+1)
+    analytical_solution_init = [0,0]
+    # Define parameters for the analytical solution
+    volume = assemble(1*dx(mesh))
+    ds_robin = Measure("ds", domain=mesh, subdomain_data=boundaries, subdomain_id=1033)
+    params_dict = dict()
+    params_dict["m"] = volume*rho_s
+    params_dict["k"] = 1.0E5
+    params_dict["c"] = 0
+    params_dict["A"] = assemble(1*ds_robin)
+    params_dict["F"] = -gravity*volume*rho_s
+
+    analytical_solution = odeint(_mass_spring_damper_system_ode, analytical_solution_init, t_analytical, args=(params_dict,))
+    analytical_displacement = analytical_solution[:,0]
+    analytical_velocity = analytical_solution[:,1]
+
+    plt.plot(d_probe.get_probe_sub(1))
+    plt.plot(analytical_displacement)
+
+    from IPython import embed; embed(); exit(1)
