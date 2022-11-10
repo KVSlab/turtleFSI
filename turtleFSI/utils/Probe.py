@@ -13,6 +13,17 @@ probe11 = cppimport.imp('turtleFSI.utils.probe.probe11')
 
 
 # Give the compiled classes some additional pythonic functionality
+class Probe(probe11.Probe):
+
+    def __call__(self, *args):
+        return self.eval(*args)
+
+    def __len__(self):
+        return self.value_size()
+
+    def __getitem__(self, i):
+        return self.get_probe_at_snapshot(i)
+
 class Probes(probe11.Probes):
 
     def __call__(self, *args):
