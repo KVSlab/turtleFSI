@@ -60,9 +60,9 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     if robin_bc:
         ds_s = {}
         if isinstance(ds_s_id, list): # If ds_s_id is a list (i.e, if there are multiple boundary regions):
-            for solid_boundaries in range(len(ds_s_id)):
-                ds_s[solid_boundaries] = ds(ds_s_id[solid_boundaries], subdomain_data=boundaries) # Create ds_s for each boundary
-                ds_s_ext_id_list=ds_s_id
+            for i, solid_boundaries in enumerate(ds_s_id):
+                ds_s[i] = ds(solid_boundaries, subdomain_data=boundaries) # Create ds_s for each boundary
+            ds_s_ext_id_list=ds_s_id
         else:
             ds_s[0] = ds(ds_s_id, subdomain_data=boundaries)
             ds_s_ext_id_list=[ds_s_id] # If there aren't multpile boundary regions, and the boundary parameters are given as floats, convert solid parameters to lists.
