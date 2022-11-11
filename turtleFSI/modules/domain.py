@@ -9,7 +9,7 @@ from dolfin import ds, MPI
 """
 Author: Kei Yamamoto
 Date: 2022-11-07
-NOTE: Naming here is a bit cnfusing. For example, dx_f, ds_s are hard to understand. 
+NOTE: Naming here is a bit confusing. For example, dx_f, ds_s are hard to understand. 
 dx refers to the area of the domain while ds refers to the area of the boundary.
 f refere to the fluid while s refers to the solid.
 """
