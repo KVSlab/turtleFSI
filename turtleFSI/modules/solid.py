@@ -71,7 +71,7 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
     Moireau, P., Xiao, N., Astorino, M. et al. External tissue support and fluid–structure simulation in blood flows. 
     Biomech Model Mechanobiol 11, 1–18 (2012). https://doi.org/10.1007/s10237-011-0289-z
     """
-    if robin_bc==True:
+    if robin_bc:
         info_blue("Robin BC is used for the solid domain.")
         for solid_boundaries in range(len(ds_s_ext_id_list)): 
             F_solid_linear += theta0 * inner((k_s * d_["n"] + c_s * v_["n"]), psi)*ds_s[solid_boundaries] 
