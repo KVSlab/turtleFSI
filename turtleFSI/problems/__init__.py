@@ -57,6 +57,7 @@ default_variables = dict(
     # Domain settings
     dx_f_id=1,       # Domain id of the fluid domain
     dx_s_id=2,       # Domain id of the solid domain
+    ds_s_id=None,   # Domain id of the solid boundary necessary for 
 
     # Meterial settings
     fluid_properties=[],
