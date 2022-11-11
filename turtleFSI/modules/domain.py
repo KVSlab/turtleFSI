@@ -57,7 +57,7 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
         solid_properties = [solid_properties]
     
     # RobinBC
-    if robin_bc==True:
+    if robin_bc:
         ds_s = {}
         if isinstance(ds_s_id, list): # If ds_s_id is a list (i.e, if there are multiple boundary regions):
             for solid_boundaries in range(len(ds_s_id)):
