@@ -43,6 +43,8 @@ def set_problem_parameters(default_variables, **namespace):
         mu_s=mu_s_val,                       # Solid shear modulus or 2nd Lame Coef. [Pa]
         nu_s=nu_s_val,                       # Solid Poisson ratio [-]
         lambda_s=lambda_s_val,               # Solid 1rst Lamé coef. [Pa]
+        k_s = 1.0E8,                         # elastic response necesary for RobinBC
+        c_s = 1.0E2,                         # viscoelastic response necesary for RobinBC
         u_max= 0.75,                         # max inlet flow velocity value [m/s]
         p_val= 5000,                         # inner pressure for initialisation [Pa]
         vel_t_ramp= 0.2,                     # time for velocity ramp 
@@ -53,7 +55,7 @@ def set_problem_parameters(default_variables, **namespace):
         recompute=30,                        # Number of iterations before recompute Jacobian. 
         recompute_tstep=10,                  # Number of time steps before recompute Jacobian. 
         save_step=1,                         # Save frequency of files for visualisation
-        folder="stenosis_test",              # Folder where the results will be stored
+        folder="stenosis_2d",              # Folder where the results will be stored
         checkpoint_step=50,                  # checkpoint frequency
         kill_time=100000,                    # in seconds, after this time start dumping checkpoints every timestep
         save_deg=1                           # Default could be 1. 1 saves the nodal values only while 2 takes full advantage of the mide side nodes available in the P2 solution. P2 for nice visualisations
@@ -66,7 +68,7 @@ def set_problem_parameters(default_variables, **namespace):
 def get_mesh_domain_and_boundaries(folder, **namespace):
     # Import mesh file
     mesh = Mesh()
-    with XDMFFile("mesh/2D_stenosis/mesh_correct_id.xdmf") as infile:
+    with XDMFFile("mesh/Stenosis_2D/mesh_correct_id.xdmf") as infile:
         infile.read(mesh)
     # Rescale the mesh coordinated from [mm] to [m]
     x = mesh.coordinates()

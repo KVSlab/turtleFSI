@@ -57,7 +57,7 @@ default_variables = dict(
     # Domain settings
     dx_f_id=1,       # Domain id of the fluid domain
     dx_s_id=2,       # Domain id of the solid domain
-    ds_s_id=None,   # Domain id of the solid boundary necessary for 
+    ds_s_id=None,   # Domain id of the solid boundary necessary for RobinBC
 
     # Meterial settings
     fluid_properties=[],
@@ -77,15 +77,15 @@ default_variables = dict(
     mu_s=5.0E4,      # Shear modulus or 2nd Lame Coef. for the solid
     nu_s=0.45,       # Poisson ratio
     lambda_s=4.5E5,  # 1st Lame Coef. for the solid
-    k_s = 1.0E8,     # elastic response necesary for RobinBC
-    c_s = 1.0E2,     # viscoelastic response necesary for RobinBC 
+    k_s = 0.0,       # elastic response necesary for RobinBC
+    c_s = 0.0,       # viscoelastic response necesary for RobinBC 
     gravity=None,    # Gravitational force on the solid
     Um=0.8,          # Maximum velocity at inlet
 
     # Variational formulations
     fluid="fluid",                             # ["fluid", "no_fluid"] Turn off fluid and only solve the solid problem
     solid="solid",                             # ["solid", "no_solid"] Turn off solid and only solve the fluid problem
-    robin_bc = False,                         # [True, False] Use Robin boundary conditions for solid
+    robin_bc = False,                          # [True, False] Use Robin boundary conditions for solid
     extrapolation="laplace",                   # laplace, elastic, biharmonic, no_extrapolation
     extrapolation_sub_type="constant",         # small_constant, volume, constant, constrained_disp, constrained_disp_vel
     bc_ids=[],                                 # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'

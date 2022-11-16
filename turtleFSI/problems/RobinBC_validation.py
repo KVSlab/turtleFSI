@@ -53,7 +53,7 @@ def set_problem_parameters(default_variables, **namespace):
         lambda_s=lambda_s_val,              # Solid 1rst Lamé coef. [Pa]
         robin_bc = True,                    # Robin BC
         k_s = 1.0E5,                        # elastic response necesary for RobinBC
-        c_s = 1.0E2,                            # viscoelastic response necesary for RobinBC 
+        c_s = 1.0E2,                        # viscoelastic response necesary for RobinBC 
         dx_f_id=1,                          # ID of marker in the fluid domain
         dx_s_id=1002,                       # ID of marker in the solid domain
         extrapolation="laplace",            # laplace, elastic, biharmonic, no-extrapolation
