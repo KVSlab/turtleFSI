@@ -15,11 +15,12 @@ file "set_problem_parameters". Any variable set in the problem file "set_problem
 will overwrite the default value defined in the problems/__init__.py file.
 """
 
-import argparse
+import configargparse
 import string
+import ast
 
 
-class StoreDictKeyPair(argparse.Action):
+class StoreDictKeyPair(configargparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         self._nargs = nargs
         super(StoreDictKeyPair, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
@@ -102,7 +103,7 @@ def str2bool(boolean):
     elif boolean.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected, not {}.'.format(boolean))
+        raise configargparse.ArgumentTypeError('Boolean value expected, not {}.'.format(boolean))
 
 
 def restricted_float(x):
@@ -113,19 +114,23 @@ def restricted_float(x):
     """
     x = float(x)
     if x < 0.0 or x > 1.0:
-        raise argparse.ArgumentTypeError("{} not in range [0.0, 1.0]".format(x))
+        raise configargparse.ArgumentTypeError("{} not in range [0.0, 1.0]".format(x))
     return x
 
 
 def parse():
 
-    parser = argparse.ArgumentParser(description=(
+    parser = configargparse.ArgumentParser(description=(
         "turtleFSI is an open source Fluid-Structure Interaction (FSI) solver written in Python "
         + "and built upon the FEniCS finite element library. The purpose of turtleFSI is to "
         + "provide a user friendly and numerically robust monolithic FSI solver able to handle "
         + "problems characterized by large deformation. turtleFSI benefites from the state-of-the-art "
         + "parrallel computing features available from the FEniCS library and can be executed with "
         + "MPI on large computing resources."))
+
+    # Configuration file
+    parser.add_argument('-c', '--config', is_config_file=True,
+                        help='turtleFSI configuration file')
 
     # Define solver, numerics, and problem file
     parser.add_argument("-p", "--problem", type=str, default="turtle_demo", metavar="Problem",
@@ -237,9 +242,9 @@ def parse():
                         help="Path to subfolder to restart from")
 
     # Set spatial and temporal resolution
-    parser.add_argument("-dt", metavar="Time step", type=float,
+    parser.add_argument("-dt", "--time-step", metavar="Time step", type=float,
                         help="Set timestep, dt", default=None)
-    parser.add_argument("-T", type=float, metavar="End time",
+    parser.add_argument("-T", "--end-time", type=float, metavar="End time",
                         help="Set end time", default=None)
     parser.add_argument("--p-deg", metavar="Pressure degree", type=int,
                         help="Set degree of pressure", default=None)
@@ -260,15 +265,37 @@ def parse():
                         default=None)
 
     # Parse arguments
-    args = parser.parse_args()
+    args, unknownargs = parser.parse_known_args()
 
-    # Add unspecificed arguments
+    # Add dt and T as parameters for time-step and end-time respectively
+    d = {'dt': args.__dict__['time_step'],
+         'T': args.__dict__['end_time']}
+    args.__dict__.update(d)
+
+    # Add arguments specified by --new-arguments
     if args.new_arguments is not None:
         args.__dict__.update(args.new_arguments)
         args.__dict__.pop("new_arguments")
 
+    # Add unknown arguments
+    for arg in unknownargs:
+        d = {}
+        k, v = arg.strip("--").split('=')
+        try:
+            d[k] = ast.literal_eval(v)
+        except (ValueError, SyntaxError):
+            d[k] = v
+
+        # Treat list items (given as --item1=1 --item2=2...)
+        if k in args.__dict__:
+            if not isinstance(args.__dict__[k], list):
+                args.__dict__.update({k: [args.__dict__[k]]})
+            args.__dict__.update({k: args.__dict__[k] + [d[k]]})
+        else:
+            args.__dict__.update(d)
+
     # Update the default values and then set the entire dictionary to be the inpute from
-    # arparse
+    # argparse
     if args.compiler_parameters is not None:
         from turtleFSI.problems import default_variables
         default_variables["compiler_parameters"].update(args.compiler_parameters)

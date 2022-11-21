@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-DEPENDENCIES = []
+DEPENDENCIES = ['configargparse']
 TEST_DEPENDENCIES = ['pytest']
 
 VERSION = "1.5"

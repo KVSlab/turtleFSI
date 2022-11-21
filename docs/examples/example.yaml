@@ -1,0 +1,175 @@
+# Configuration file for turtleFSI
+
+################################################################################
+# Define solver, numerics, and problem file
+################################################################################
+
+# Name of problem file to solve. Could either be located in the turtleFSI
+# repository (TF_cfd, TF_csm, TF_fsi, turtle_demo) or it could be a problem
+# file you have created locally.
+problem: "turtle_demo"
+
+# Setting temporal integration.
+# (theta=0 : first order explicit forward Euler scheme)
+# (theta=1 : first order implicit backward Euler scheme)
+# (theta=0.5 : second-order Crank-Nicolson scheme)
+# (theta=0.5+dt : gives a better long-term numerical stability while keeping
+# the second order accuracy of the Crank-Nicolson scheme)
+theta: 0.501
+
+################################################################################
+# Set fluid, solid, and extrapolation
+################################################################################
+
+# Turn on/off solving of the fluid problem ('fluid', 'no_fluid')
+fluid: "fluid"
+
+# Turn on/off solving of the solid problem ('solid', 'no_solid')
+solid: "solid"
+
+# Use Robin boundary conditions for solid
+robin_bc: False
+
+# Set approach for extrapolating the deformation into the fluid domain
+# ('laplace', 'elastic', 'biharmonic', 'no_extrapolation')
+extrapolation: "laplace"
+
+# Set the sub type of the extrapolation method ('constant'," 'small_constant',
+# 'volume', 'volume_change', 'constrained_disp', 'constrained_disp_vel')
+extrapolation-sub-type: "constant"
+
+# List of boundary ids for the weak formulation of the biharmonic mesh lifting
+# operator with 'constrained_disp_vel'
+#bc-ids: []
+
+################################################################################
+# Material settings / physical constants
+################################################################################
+
+# Maximum velocity at inlet
+Um: 0.8
+
+# Density of the fluid
+rho-f: 1.0E3
+
+# Fluid dynamic viscosity
+mu-f: 1.0
+
+# Density of the solid
+rho-s: 1.0E3
+
+# Shear modulus or 2nd Lame Coef. for the solid
+mu-s: 5.0E4
+
+# Poisson ratio in the solid
+nu-s: 0.45
+
+# 1st Lame Coef. for the solid
+lambda-s: 4.5E5
+
+# Elastic response necesary for RobinBC
+k_s: 0.0
+
+# Viscoelastic response necesary for RobinBC
+c_s: 0.0
+
+# Gravitational force on the solid
+#gravity: None
+
+################################################################################
+# Domain settings
+################################################################################
+
+# Domain id of the fluid domain
+dx-f-id: 1
+
+# Domain id of the solid domain
+dx-s-id: 2
+
+# Domain id of the solid boundary necessary for RobinBC
+#ds_s_id: None
+
+################################################################################
+# Solver settings
+################################################################################
+
+# Selected linear solver for each Newton iteration, to see a complete list
+# run list_linear_solvers()
+linear-solver: "mumps"
+
+# Absolute error tolerance for the Newton iterations
+atol: 1e-7
+
+# Relative error tolerance for the Newton iterations
+rtol: 1e-7
+
+# Maximum number of iterations in the Newton solver
+max-it: 50
+
+# Relaxation factor in the Netwon solver
+lmbda: 1.0
+
+# How often to recompute the Jacobian over Newton iterations
+recompute: 5
+
+# How often to recompute the Jacobian over time steps.
+recompute-tstep: 1
+
+# Update the default values of the compiler arguments by providing a key=value,
+# e.g. optimize=False. You can provide multiple key=value pairs seperated by a
+# whitespace
+#compiler-parameters: None
+
+################################################################################
+# Output settings
+################################################################################
+
+# Turn on/off verbose printing
+verbose: True
+
+# Set FEniCS loglevel
+loglevel: 20
+
+# Saving frequency of the files defined in the problem file
+save-step: 10
+
+# Degree of the functions saved for visualisation. '1':P1, '2':P2, etc...
+save-deg: 1
+
+# How often to store a checkpoint (use to later restart a simulation)
+checkpoint-step: 500
+
+# Path to store the results. You can store multiple simulations in one folder
+folder: "results"
+
+# Over write the standard 1, 2, 3 name of the sub folders
+#sub-folder: None
+
+# Path to subfolder to restart from
+#restart-folder: None
+
+################################################################################
+# Set spatial and temporal resolution
+################################################################################
+
+# Set timestep, dt
+time-step: 0.001
+
+# Set end time
+end-time: 1
+
+# Set degree of pressure
+p-deg: 1
+
+# Set degree of velocity
+v-deg: 2
+
+# Set degree of deformation
+d-deg: 2
+
+################################################################################
+# Misc settings
+################################################################################
+
+# Stop simulations cleanly after the given number of seconds
+#killtime: None
