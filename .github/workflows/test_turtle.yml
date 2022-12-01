@@ -21,6 +21,9 @@ jobs:
     steps:
       # This action sets the current path to the root of your github repo
       - uses: actions/checkout@v3
+      
+      - name: Update pip and setuptools
+        run: python3 -m pip install --upgrade pip
 
       - name: "Install code"
         run: python3 setup.py install
