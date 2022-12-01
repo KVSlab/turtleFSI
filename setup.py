@@ -21,7 +21,7 @@ setuptools.setup(
         "Documentation": "https://turtlefsi.readthedocs.io/",
         "Source Code": URL,
     },
-    description="",
+    description="turtleFSI - Fluid-structure interaction",
     long_description=long_description,
     long_description_content_type="text/markdown",
 
