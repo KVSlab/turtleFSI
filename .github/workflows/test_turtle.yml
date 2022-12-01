@@ -15,8 +15,6 @@ on:
     - cron: "0 8 * * *"
 jobs:
   check-code:
-    env: 
-      DEB_PYTHON_INSTALL_LAYOUT: deb_system
     runs-on: ubuntu-22.04
     container: quay.io/fenicsproject/stable:latest
     steps:

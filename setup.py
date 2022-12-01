@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-DEPENDENCIES = ['configargparse', "fenics-dolfin", "numpy",
+DEPENDENCIES = ['configargparse', "fenics-dolfin",
                 "scipy", "cppimport"]
 TEST_DEPENDENCIES = ['pytest']
 
