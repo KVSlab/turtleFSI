@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 DEPENDENCIES = ['configargparse', "fenics-dolfin", "numpy",
-                "scipy", "fenicstools @ git+https://github.com/mikaem/fenicstools", "cppimport"]
+                "scipy", "cppimport"]
 TEST_DEPENDENCIES = ['pytest']
 
 VERSION = "1.5"
