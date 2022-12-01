@@ -3,7 +3,8 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-DEPENDENCIES = ['configargparse']
+DEPENDENCIES = ['configargparse', "fenics-dolfin", "numpy",
+                "scipy", "fenicstools @ git+https://github.com/mikaem/fenicstools", "cppimport"]
 TEST_DEPENDENCIES = ['pytest']
 
 VERSION = "1.5"
@@ -20,7 +21,7 @@ setuptools.setup(
         "Documentation": "https://turtlefsi.readthedocs.io/",
         "Source Code": URL,
     },
-    description="turtleFSI - Fluid-structure interaction",
+    description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
 
@@ -38,8 +39,9 @@ setuptools.setup(
               "turtleFSI.problems",
               "turtleFSI.utils"],
     package_dir={"turtleFSI": "turtleFSI"},
-    package_data = {"turtleFSI": ["utils/probe/*.h",
-                                  "utils/probe/*.cpp"]},
-    include_package_data = True,
-    entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']}
+    package_data={"turtleFSI": ["utils/probe/*.h",
+                                "utils/probe/*.cpp"]},
+    include_package_data=True,
+    entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']},
+
 )
