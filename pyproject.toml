@@ -1,0 +1,48 @@
+[build-system] # Require setuptool version due to https://github.com/pypa/setuptools/issues/2938
+requires = ["setuptools>=61.0.0"]
+
+[project]
+name = "turtleFSI"
+version = "1.5"
+description = "turtleFSI - Fluid-structure interaction"
+authors = [{name = "Kristian Valen-Sendstad", email = "kvs@simula.no"}]
+license = {file = "LICENSE"}
+readme = "README.md"
+dependencies = [
+    'configargparse',
+    "fenics-dolfin",
+    "scipy",
+    "cppimport",
+    "numpy",
+    "fenicstools@git+https://github.com/mikaem/fenicstools"
+]
+classifiers=[
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        "Programming Language :: Python :: 3",
+    ]
+requires-python = ">=3.7"
+
+[project.urls]
+Documentation = "https://turtlefsi.readthedocs.io/"
+Source-Code = "https://github.com/KVSlab/turtleFSI.git"
+
+[project.scripts]
+turtleFSI="turtleFSI.run_turtle:main"
+a
+[project.optional-dependencies]
+tests = [
+    "pytest"
+]
+all = [
+   "turtleFSI[tests]",
+]
+testpaths = [
+    "tests"
+]
+
+[tool.setuptools]
+packages = ["turtleFSI", "turtleFSI.modules", "turtleFSI.problems", "turtleFSI.utils"]
+
+[tool.setuptools.package-data]
+turtleFSI = ["utils/probe/*.h", "utils/probe/*.cpp"]
