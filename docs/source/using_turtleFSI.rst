@@ -305,6 +305,10 @@ Given that the parameter ``--save-step`` not was set larger than the number of t
 be a folder: ``[folder]/[sub-folder]/Visualization`` with ``xdmf`` files that can be opened in a
 visualization probrem, for instance ParaView. Below we have visualized the pressure and velocity at 2.5 s.
 
+.. note::
+    In order to visualize the deformation of the mesh in ParaView, you need to apply a ``Warp by Vector`` filter to the ``displacement.xdmf``. 
+    You can control the scale of the deofrmation by adjusting the  ``Scale Factor``.
+
 .. figure:: ../../figs/Turtle_Flow_Pressure_Fields_t_2.5s.png
    :width: 600px
    :align: center
