@@ -11,6 +11,7 @@ from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, Vec
 import pickle
 from pathlib import Path
 from xml.etree import ElementTree as ET
+import numpy as np
 
 _compiler_parameters = dict(parameters["form_compiler"])
 _compiler_parameters.update({"quadrature_degree": 4, "optimize": True})
@@ -346,6 +347,11 @@ def start_from_checkpoint(dvp_, restart_folder, mesh, **namespace):
         checkpoint_path = str(restart_folder.joinpath("checkpoint_" + name + ".xdmf"))
         with XDMFFile(MPI.comm_world, checkpoint_path) as f:
             f.read_checkpoint(field, name)
+
+    # check if field constains any Nan values and stop the simulation if it detects any Nan values
+    for name, field in fields:
+        if np.isnan(field.vector().get_local()).any():
+            raise ValueError("Nan values detected in field " + name + ". Stopping simulation.")
 
     assign(dvp_["n-1"].sub(0), fields[0][1])  # update d_["n-1"] to checkpoint d_["n-1"]
     assign(dvp_["n-1"].sub(1), fields[1][1])  # update v_["n-1"] to checkpoint v_["n-1"]
