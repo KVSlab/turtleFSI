@@ -56,7 +56,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         recompute_frequency = iter > 0 and iter % recompute == 0
 
         # Recompute Jacobian due to increased residual
-        recompute_residual = iter > 0 and (last_rel_res < rel_res or last_residual < residual)
+        recompute_residual = iter > 0 and last_residual < residual
 
         # Recompute Jacobian on first step of simulation (important if restart is used)
         recompute_initialize = iter == 0 and counter == first_step_num
