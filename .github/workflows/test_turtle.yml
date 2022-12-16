@@ -15,16 +15,16 @@ on:
     - cron: "0 8 * * *"
 jobs:
   check-code:
-
     runs-on: ubuntu-22.04
-    container: quay.io/fenicsproject/stable:latest
+    # Runs against FEniCS main branch built the 08-12-2022
+    container: ghcr.io/scientificcomputing/fenics:2022-12-08
     steps:
       # This action sets the current path to the root of your github repo
       - uses: actions/checkout@v3
+      
 
       - name: "Install code"
         run: python3 setup.py install
-
       - name: Run tests
         run: |
           python3 -m pytest

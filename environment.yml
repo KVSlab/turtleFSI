@@ -1,0 +1,12 @@
+
+name: turtleFSI
+channels:
+  - conda-forge
+dependencies:
+  - fenics-dolfin
+  - python=3.10
+  - pip
+  - git
+  - scipy
+  - pip:
+    - cppimport
