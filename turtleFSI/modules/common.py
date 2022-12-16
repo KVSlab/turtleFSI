@@ -8,19 +8,6 @@ Common functions used in the variational formulations for the variational forms
 of the mesh lifting equations, fluid equations and the structure equation.
 """
 
-from dolfin import grad, det, Identity, tr, inv
-
-
-# File under GNU GPL (v3) licence, see LICENSE file for details.
-# This software is distributed WITHOUT ANY WARRANTY; without even
-# the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-# PURPOSE.
-
-"""
-Common functions used in the variational formulations for the variational forms
-of the mesh lifting equations, fluid equations and the structure equation.
-"""
-
 from dolfin import grad, det, Identity, tr, inv, inner, as_tensor, as_vector, derivative, variable
 import ufl  # ufl module
 
