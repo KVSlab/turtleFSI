@@ -16,4 +16,5 @@ Welcome to turtleFSI's documentation!
    using_turtleFSI
    verif_perf
    new_features
+   known_issues
    acknow_ref
