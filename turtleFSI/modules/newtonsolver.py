@@ -3,10 +3,8 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI, PETScOptions
+from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI
 
-PETScOptions.set("mat_mumps_icntl_4", 1) # If negatvie or zero, MUMPS will suppress diagnositc printining, statistics, and warning messages. 
-PETScOptions.set("mat_mumps_icntl_14", 400) # allocate more memory to mumps
 
 def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonlinear,
                  DVP, dvp_, up_sol, compiler_parameters, **namespace):
@@ -45,6 +43,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
     iter = 0
     residual = 10**8
     rel_res = 10**8
+
     # Capture if residual increases from last iteration
     last_rel_res = residual
     last_residual = rel_res
