@@ -22,7 +22,7 @@ the MUMPS solver (our default linear solver) may fail with the following error m
  *** -------------------------------------------------------------------------
 
 While the specific reason for this error message can vary, it may occur even when the Newton iteration appears to converge correctly.
-In such a case, it is likely that the MUMPs does not hold enough memory to solve the linear system.
+In such a case, it is likely that the MUMPS does not hold enough memory to solve the linear system.
 To provide more useful information to the user and reduce the likelihood of encountering this error message, 
 we have added two lines of code to the ``newtonsolver.py`` file. 
 These lines will (1) print the actual error message from the MUMPS solver and (2) allocate more memory to MUMPS. 
