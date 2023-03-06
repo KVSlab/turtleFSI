@@ -27,9 +27,6 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     A = Matrix(A_pre)
     b = None
 
-    # Option not available in FEniCS 2018.1.0
-    # up_sol.parameters['reuse_factorization'] = True
-
     return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol)
 
 
