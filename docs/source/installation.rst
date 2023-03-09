@@ -12,7 +12,7 @@ The dependencies of turtleFSI are:
 
 * FEniCS 2019.1.0
 * Numpy >1.1X
-* Python >=3.5
+* Python >=3.7
 * FEniCStools 2019.1.0 (optional)
 
 Basic Installation
