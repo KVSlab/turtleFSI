@@ -1,4 +1,4 @@
-name: Test turtlefsi
+name: Test against FEniCS master branch
 
 on:
   push:
@@ -14,10 +14,10 @@ on:
     # The CI is executed every day at 8am
     - cron: "0 8 * * *"
 jobs:
-  check-code:
+  test-code:
     runs-on: ubuntu-22.04
-    # Runs against FEniCS main branch built the 08-12-2022
-    container: ghcr.io/scientificcomputing/fenics:2022-12-08
+    # Runs against FEniCS main branch
+    container: ghcr.io/scientificcomputing/fenics:2023-04-21
     steps:
       # This action sets the current path to the root of your github repo
       - uses: actions/checkout@v3

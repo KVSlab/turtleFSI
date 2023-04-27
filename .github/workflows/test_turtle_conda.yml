@@ -1,0 +1,42 @@
+name: Test turtle against FEniCS stable
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    branches: ["master"]
+
+env:
+  DEB_PYTHON_INSTALL_LAYOUT: deb_system
+  IPP_NONINTERACTIVE: "1"
+
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  test-conda:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Install turtle dependencies via conda
+        uses: ./.github/actions/conda-install
+        with:
+          python-version: ${{ matrix.python-version }}
+
+ 
+      - name: "Install code"
+        run: python3 -m pip install --no-deps .
+
+      - name: Run tests
+        run: |
+          python3 -m pip install pytest
+          python3 -m pytest -xvs
