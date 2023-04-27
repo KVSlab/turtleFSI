@@ -1,4 +1,4 @@
-name: Test turtle with anaconda installation
+name: Test turtle against FEniCS stable
 
 on:
   workflow_dispatch:
