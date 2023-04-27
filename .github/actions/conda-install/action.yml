@@ -1,0 +1,54 @@
+name: Install turtle dependencies via conda
+
+inputs:
+  python-version:
+    description: Python version to install
+    required: true
+    type: string
+    default: "3.10"
+
+runs:
+  using: composite
+  steps:
+    # cache ref https://github.com/conda-incubator/setup-miniconda#caching-packages
+
+    - name: Setup conda-forge
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment:  turtleFSI
+          python-version: ${{ inputs.python-version }}
+          use-mamba: true
+          # uncomment to install env in one go (without caching)
+          # environment-file: environment.yml
+
+    - name: Get Date
+      id: get-date
+      run: echo "today=$(/bin/date -u '+%Y%m%d')" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Cache conda env
+      uses: actions/cache@v3
+      id: cache-env
+      with:
+        path: ${{ env.CONDA }}/envs/turtleFSI
+        key:
+          conda-env-${{ steps.get-date.outputs.today }}-${{ inputs.python-version }}-${{ hashFiles('environment.yml') }}-${{ hashFiles('.github/actions/install-dependencies/**') }}
+
+    - name: Clear package cache
+      # package cache seems to be stale
+      run:
+          mamba clean -y --index-cache
+
+      shell: bash -el {0}
+    - name: Update environment
+      if: steps.cache-env.outputs.cache-hit != 'true'
+      run:
+          mamba env update -n turtleFSI -f environment.yml
+      shell: bash -el {0}
+
+    - name: List environment
+      run:
+          mamba list -n turtleFSI
+      shell: bash -el {0}
