@@ -34,7 +34,7 @@ jobs:
 
  
       - name: "Install code"
-        run: python3 -m pip install --no-deps
+        run: python3 -m pip install --no-deps .
 
       - name: Run tests
         run:
