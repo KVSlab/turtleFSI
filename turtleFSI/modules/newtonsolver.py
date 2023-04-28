@@ -70,7 +70,6 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
             A.axpy(1.0, A_pre, True)
             A.ident_zeros()
             [bc.apply(A) for bc in bcs]
-            up_sol.set_operator(A)
 
         # Compute right hand side
         b = assemble(-F, tensor=b)
