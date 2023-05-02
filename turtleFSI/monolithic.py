@@ -12,6 +12,7 @@ from dolfin import *
 from pathlib import Path
 import pickle
 import time
+from pprint import pprint
 
 from turtleFSI.utils import *
 from turtleFSI.problems import *
@@ -50,6 +51,10 @@ if default_variables["restart_folder"] is not None:
 
 # Set variables in global namespace
 vars().update(default_variables)
+
+# Print out variables
+if MPI.rank(MPI.comm_world) == 0 and verbose:
+    pprint(default_variables)
 
 # Create folders
 vars().update(create_folders(**vars()))
