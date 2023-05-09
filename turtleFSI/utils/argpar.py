@@ -186,6 +186,12 @@ def parse():
                         help="1st Lame Coef. for the solid")
     parser.add_argument("--gravity", type=float, default=None,
                         help="Gravitational force on the solid")
+    
+    parser.add_argument("--solid_properties", type=yaml.safe_load, default=None, 
+                        help="Solid properties as a dictionary")
+
+    parser.add_argument("--fluid_properties", type=yaml.safe_load, default=None,
+                        help="Fluid properties as a dictionary")
 
     # Domain settings
     parser.add_argument("--dx-f-id", type=int, default=None,
@@ -264,12 +270,17 @@ def parse():
                         " multiple key=value pairs seperated by a whitespace",
                         default=None)
     
-    # TODO: move this above and also add fluid_properties
-    parser.add_argument("--solid_properties", type=yaml.safe_load)
     # Parse arguments
     args, unknownargs = parser.parse_known_args()
-    # TODO: Now solid_properties can be read as a dictionary from the config file, but the values are read as strings. This should be fixed.
-    # from IPython import embed; embed(); exit(1)
+    
+    if args.__dict__["solid_properties"]:
+        for k, v in args.__dict__["solid_properties"].items():
+            if k != "material_model":
+                args.__dict__["solid_properties"][k] = float(v)
+    
+    if args.__dict__["fluid_properties"]:
+        for k, v in args.__dict__["fluid_properties"].items():
+            args.__dict__["fluid_properties"][k] = float(v)
 
     # Add dt and T as parameters for time-step and end-time respectively
     d = {'dt': args.__dict__['time_step'],
