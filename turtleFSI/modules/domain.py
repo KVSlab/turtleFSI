@@ -22,15 +22,18 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
 
     # 1. Create differential for each fluid region, and organize into fluid_properties list of dicts
     dx_f = {}
-    if isinstance(dx_f_id, list): # If dx_f_id is a list (i.e, if there are multiple fluid regions):
-        for fluid_region in range(len(dx_f_id)):
-            dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each fluid region
-            fluid_properties.append({"dx_f_id":dx_f_id[fluid_region],"rho_f":rho_f[fluid_region],"mu_f":mu_f[fluid_region]})
-        dx_f_id_list=dx_f_id
-    else:
-        dx_f[0] = dx(dx_f_id, subdomain_data=domains)
-        dx_f_id_list=[dx_f_id]
-        fluid_properties.append({"dx_f_id":dx_f_id,"rho_f":rho_f,"mu_f":mu_f})
+    if len(fluid_properties) == 0:
+        if isinstance(dx_f_id, list): # If dx_f_id is a list (i.e, if there are multiple fluid regions):
+            for fluid_region in range(len(dx_f_id)):
+                dx_f[fluid_region] = dx(dx_f_id[fluid_region], subdomain_data=domains) # Create dx_f for each fluid region
+                fluid_properties.append({"dx_f_id":dx_f_id[fluid_region],"rho_f":rho_f[fluid_region],"mu_f":mu_f[fluid_region]})
+            dx_f_id_list=dx_f_id
+        else:
+            dx_f[0] = dx(dx_f_id, subdomain_data=domains)
+            dx_f_id_list=[dx_f_id]
+            fluid_properties.append({"dx_f_id":dx_f_id,"rho_f":rho_f,"mu_f":mu_f})
+    elif isinstance(fluid_properties, dict):
+        fluid_properties = [fluid_properties]
 
     # Create solid region differentials
     dx_s = {}
