@@ -18,7 +18,7 @@ will overwrite the default value defined in the problems/__init__.py file.
 import configargparse
 import string
 import ast
-
+import yaml
 
 class StoreDictKeyPair(configargparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -120,13 +120,13 @@ def restricted_float(x):
 
 def parse():
 
-    parser = configargparse.ArgumentParser(description=(
-        "turtleFSI is an open source Fluid-Structure Interaction (FSI) solver written in Python "
-        + "and built upon the FEniCS finite element library. The purpose of turtleFSI is to "
-        + "provide a user friendly and numerically robust monolithic FSI solver able to handle "
-        + "problems characterized by large deformation. turtleFSI benefites from the state-of-the-art "
-        + "parrallel computing features available from the FEniCS library and can be executed with "
-        + "MPI on large computing resources."))
+    parser = configargparse.ArgParser(config_file_parser_class=configargparse.ConfigparserConfigFileParser, 
+            description=("turtleFSI is an open source Fluid-Structure Interaction (FSI) solver written in Python "
+                        + "and built upon the FEniCS finite element library. The purpose of turtleFSI is to "
+                        + "provide a user friendly and numerically robust monolithic FSI solver able to handle "
+                        + "problems characterized by large deformation. turtleFSI benefites from the state-of-the-art "
+                        + "parrallel computing features available from the FEniCS library and can be executed with "
+                        + "MPI on large computing resources."))
 
     # Configuration file
     parser.add_argument('-c', '--config', is_config_file=True,
@@ -263,9 +263,13 @@ def parse():
                         " by providing a key=value, e.g. folder=TF_fsi_results. You can provide" +
                         " multiple key=value pairs seperated by a whitespace",
                         default=None)
-
+    
+    # TODO: move this above and also add fluid_properties
+    parser.add_argument("--solid_properties", type=yaml.safe_load)
     # Parse arguments
     args, unknownargs = parser.parse_known_args()
+    # TODO: Now solid_properties can be read as a dictionary from the config file, but the values are read as strings. This should be fixed.
+    # from IPython import embed; embed(); exit(1)
 
     # Add dt and T as parameters for time-step and end-time respectively
     d = {'dt': args.__dict__['time_step'],
