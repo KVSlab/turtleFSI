@@ -269,7 +269,7 @@ def parse():
                         " by providing a key=value, e.g. folder=TF_fsi_results. You can provide" +
                         " multiple key=value pairs seperated by a whitespace",
                         default=None)
-    
+
     # Parse arguments
     args, unknownargs = parser.parse_known_args()
     
