@@ -10,5 +10,6 @@ dependencies:
   - scipy
   - configargparse
   - numpy
+  - pyyaml
   - pip:
     - cppimport

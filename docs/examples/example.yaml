@@ -1,5 +1,5 @@
 # Configuration file for turtleFSI
-
+[Parameter for turtleFSI] # Section is required by configargparse but is not used anywhere in turtleFSI
 ################################################################################
 # Define solver, numerics, and problem file
 ################################################################################
@@ -7,7 +7,7 @@
 # Name of problem file to solve. Could either be located in the turtleFSI
 # repository (TF_cfd, TF_csm, TF_fsi, turtle_demo) or it could be a problem
 # file you have created locally.
-problem: "turtle_demo"
+problem: turtle_demo
 
 # Setting temporal integration.
 # (theta=0 : first order explicit forward Euler scheme)
@@ -22,21 +22,21 @@ theta: 0.501
 ################################################################################
 
 # Turn on/off solving of the fluid problem ('fluid', 'no_fluid')
-fluid: "fluid"
+fluid: fluid
 
 # Turn on/off solving of the solid problem ('solid', 'no_solid')
-solid: "solid"
+solid: solid
 
 # Use Robin boundary conditions for solid
 robin_bc: False
 
 # Set approach for extrapolating the deformation into the fluid domain
 # ('laplace', 'elastic', 'biharmonic', 'no_extrapolation')
-extrapolation: "laplace"
+extrapolation: laplace
 
 # Set the sub type of the extrapolation method ('constant'," 'small_constant',
 # 'volume', 'volume_change', 'constrained_disp', 'constrained_disp_vel')
-extrapolation-sub-type: "constant"
+extrapolation-sub-type: constant
 
 # List of boundary ids for the weak formulation of the biharmonic mesh lifting
 # operator with 'constrained_disp_vel'
@@ -95,7 +95,7 @@ dx-s-id: 2
 
 # Selected linear solver for each Newton iteration, to see a complete list
 # run list_linear_solvers()
-linear-solver: "mumps"
+linear-solver: mumps
 
 # Absolute error tolerance for the Newton iterations
 atol: 1e-7
@@ -140,7 +140,7 @@ save-deg: 1
 checkpoint-step: 500
 
 # Path to store the results. You can store multiple simulations in one folder
-folder: "results"
+folder: results
 
 # Over write the standard 1, 2, 3 name of the sub folders
 #sub-folder: None
