@@ -27,6 +27,8 @@ turtleFSI/utils/probe/*.so
 *.pickle
 *.vtu
 *.xml.gz
+*.txt
+*.pvd
 
 # Distribution / packaging
 lib/
