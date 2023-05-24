@@ -84,7 +84,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Update solution using the Newton increment
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         # After adding the residual to the solution, we need to re-apply the boundary conditions
-        # because the residual (dvp_res.vector) is not guranteed to be zero on the boundary
+        # because the residual (dvp_res.vector) is not guaranteed to be zero on the boundary
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
         # Reset residuals
