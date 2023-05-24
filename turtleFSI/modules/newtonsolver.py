@@ -65,6 +65,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
             # Assemble non-linear part of Jacobian, keep sparsity pattern (keep_diagonal=True)
+            # Here, we assume that A is already assembled with the linear part of the Jacobian, and not None type
             assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
