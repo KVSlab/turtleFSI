@@ -75,7 +75,10 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
             [bc.apply(A) for bc in bcs]
 
         # Aseemble right hand side vector
-        b = assemble(-F)
+        if b is None:
+            b = assemble(-F)
+        else:
+            assemble(-F, tensor=b)
 
         # Apply boundary conditions before solve
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
