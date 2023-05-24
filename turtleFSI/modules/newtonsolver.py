@@ -79,11 +79,12 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
 
         # Apply boundary conditions before solve
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
-        # Solve the linear system A * x = b where A is the Jacobian matrix, x is the Newton increment and b is the residual
+        # Solve the linear system A * x = b where A is the Jacobian matrix, x is the Newton increment and b is the -residual
         up_sol.solve(dvp_res.vector(), b)
         # Update solution using the Newton increment
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         # After adding the residual to the solution, we need to re-apply the boundary conditions
+        # because the residual (dvp_res.vector) is not guranteed to be zero on the boundary
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
         # Reset residuals
