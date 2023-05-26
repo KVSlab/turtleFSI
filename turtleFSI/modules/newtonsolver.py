@@ -66,7 +66,12 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
                 print("Compute Jacobian matrix")
             # Assemble non-linear part of Jacobian, keep sparsity pattern (keep_diagonal=True)
             # Here, we assume that A is already assembled with the linear part of the Jacobian, and not None type
-            assemble(J_nonlinear, tensor=A,
+            if A is None:
+                A = assemble(J_nonlinear,
+                             form_compiler_parameters=compiler_parameters,
+                             keep_diagonal=True)
+            else:
+                assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
             # Add non-linear and linear part of Jacobian
@@ -88,7 +93,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Update solution using the Newton increment
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
         # After adding the residual to the solution, we need to re-apply the boundary conditions
-        # because the residual (dvp_res.vector) is not guaranteed to be zero on the boundary
+        # because the residual (dvp_res.vector) is not guaranteed to satisfy the boundary conditions
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
         # Reset residuals
