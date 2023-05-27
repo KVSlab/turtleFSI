@@ -64,20 +64,36 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         if recompute_for_timestep or recompute_frequency or recompute_residual or recompute_initialize:
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
-            assemble(J_nonlinear, tensor=A,
+            # Assemble non-linear part of Jacobian, keep sparsity pattern (keep_diagonal=True)
+            # Here, we assume that A is already assembled with the linear part of the Jacobian, and not None type
+            if A is None:
+                A = assemble(J_nonlinear,
+                             form_compiler_parameters=compiler_parameters,
+                             keep_diagonal=True)
+            else:
+                assemble(J_nonlinear, tensor=A,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
+            # Add non-linear and linear part of Jacobian
             A.axpy(1.0, A_pre, True)
+            # Insert ones on diagonal to make sure the matrix is non-singular (related to solid pressure being zero)
             A.ident_zeros()
             [bc.apply(A) for bc in bcs]
 
-        # Compute right hand side
-        b = assemble(-F, tensor=b)
+        # Aseemble right hand side vector
+        if b is None:
+            b = assemble(-F)
+        else:
+            assemble(-F, tensor=b)
 
-        # Apply boundary conditions and solve
+        # Apply boundary conditions before solve
         [bc.apply(b, dvp_["n"].vector()) for bc in bcs]
+        # Solve the linear system A * x = b where A is the Jacobian matrix, x is the Newton increment and b is the -residual
         up_sol.solve(dvp_res.vector(), b)
+        # Update solution using the Newton increment
         dvp_["n"].vector().axpy(lmbda, dvp_res.vector())
+        # After adding the residual to the solution, we need to re-apply the boundary conditions
+        # because the residual (dvp_res.vector) is not guaranteed to satisfy the boundary conditions
         [bc.apply(dvp_["n"].vector()) for bc in bcs]
 
         # Reset residuals
