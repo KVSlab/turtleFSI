@@ -67,6 +67,8 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     # If fluid_properties is not empty, assume that fluid_properties is given and convert it to a list if it is not a list
     elif isinstance(fluid_properties, dict):
         fluid_properties = [fluid_properties]
+    else:
+        raise ValueError("Failed to assign fluid properties. Please check the input of fluid_properties.")
 
     # Work on solid domain and boundary (boundary is only needed if Robin boundary conditions are used)    
     dx_s = {}
@@ -93,6 +95,8 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
             solid_properties.append({"dx_s_id":dx_s_id,"material_model":material_model,"rho_s":rho_s,"mu_s":mu_s,"lambda_s":lambda_s})
     elif isinstance(solid_properties, dict): 
         solid_properties = [solid_properties]
+     else:
+        raise ValueError("Failed to assign solid properties. Please check the input of solid_properties.")
     
     # Create solid boundary differentials for Robin boundary conditions. 
     if robin_bc:
