@@ -5,45 +5,50 @@
 
 from turtleFSI.modules import *
 from dolfin import ds, MPI
+from dolfin.cpp.mesh import MeshFunctionSizet
+from typing import Union
 
 """
 Last update: 2023-06-12
 Kei Yamamoto added docstring for assign_domain_properties function and added comments in the function.
 """
 
-def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id, material_model, rho_s, mu_s, lambda_s, solid_properties, domains, ds_s_id, boundaries, robin_bc, **namespace):
+def assign_domain_properties(dx: ufl.measure.Measure, dx_f_id: Union[int, list], rho_f: Union[float, list], 
+                             mu_f: Union[float, list], fluid_properties: Union[list, dict], dx_s_id: Union[int, list], 
+                             material_model: str, rho_s: Union[float, list], mu_s: [float, list], lambda_s: Union[float, list],
+                             solid_properties: Union[list, dict], domains: MeshFunctionSizet, ds_s_id: Union[int, list],
+                             boundaries: MeshFunctionSizet, robin_bc: bool, **namespace):
     """
     Assigns solid and fluid properties to each region.   
 
     Args:
-        dx (dolfin.Measure): Measure of the domain 
-        dx_f_id (either int or list): ID of the fluid region, or list of IDs of multiple fluid regions
-        rho_f (float or list): Density of the fluid, or list of densities of multiple fluid regions
-        mu_f (float or list): Viscosity of the fluid, or list of viscosities of multiple fluid regions
-        fluid_properties (dict or list of dicts): Dictionary of fluid properties, or list of dictionaries of fluid properties for multiple fluid regions
-        dx_s_id (either int or list): ID of the solid region, or list of IDs of multiple solid regions
-        material_model (str or list of str): Material model of the solid, or list of material models of multiple solid regions
-        rho_s (float or list): Density of the solid, or list of densities of multiple solid regions
-        mu_s (float or list): Shear modulus or 2nd Lame Coef. of the solid, or list of shear modulus of multiple solid regions
-        lambda_s (float or list): First Lame parameter of the solid, or list of first Lame parameters of multiple solid regions
-        solid_properties (dict or list of dicts): Dictionary of solid properties, or list of dictionaries of solid properties for multiple solid regions
-        domains (dolfin.MeshFunction): MeshFunction of the domains
-        ds_s_id (either int or list): ID of the solid boundary, or list of IDs of multiple solid boundaries where Robin boundary conditions are applied
-        boundaries (dolfin.MeshFunction): MeshFunction of the boundaries
-        robin_bc (bool): True if Robin boundary conditions are used, False otherwise
+        dx: Measure of the domain 
+        dx_f_id: ID of the fluid region, or list of IDs of multiple fluid regions
+        rho_f: Density of the fluid, or list of densities of multiple fluid regions
+        mu_f: Viscosity of the fluid, or list of viscosities of multiple fluid regions
+        fluid_properties: Dictionary of fluid properties, or list of dictionaries of fluid properties for multiple fluid regions
+        dx_s_id: ID of the solid region, or list of IDs of multiple solid regions
+        material_model: Material model of the solid, or list of material models of multiple solid regions
+        rho_s: Density of the solid, or list of densities of multiple solid regions
+        mu_s: Shear modulus or 2nd Lame Coef. of the solid, or list of shear modulus of multiple solid regions
+        lambda_s: First Lame parameter of the solid, or list of first Lame parameters of multiple solid regions
+        solid_properties: Dictionary of solid properties, or list of dictionaries of solid properties for multiple solid regions
+        domains: MeshFunction of the domains
+        ds_s_id: ID of the solid boundary, or list of IDs of multiple solid boundaries where Robin boundary conditions are applied
+        boundaries: MeshFunction of the boundaries
+        robin_bc: True if Robin boundary conditions are used, False otherwise
 
     Returns:
-        dx_f (dict of dolfin.Measure): Measure of the fluid domain for each fluid region
-        dx_f_id_list (list): List of IDs of single/multiple fluid regions
-        ds_s_ext_id_list (list): List of IDs of single/multiple solid boundaries where Robin boundary conditions are applied
-        ds_s (dict of dolfin.Measure): Measure of the solid boundary for each solid region
-        fluid_properties (list of dicts): List of dictionaries of fluid properties for single/multiple fluid regions
-        dx_s (dict of dolfin.Measure): Measure of the solid domain for each solid region
-        dx_s_id_list (list): List of IDs of single/multiple solid regions
-        solid_properties (list of dicts): List of dictionaries of solid properties for single/multiple solid regions
+        dx_f: Measure of the fluid domain for each fluid region
+        dx_f_id_list: List of IDs of single/multiple fluid regions
+        ds_s_ext_id_list: List of IDs of single/multiple solid boundaries where Robin boundary conditions are applied
+        ds_s: Measure of the solid boundary for each solid region
+        fluid_properties: List of dictionaries of fluid properties for single/multiple fluid regions
+        dx_s: Measure of the solid domain for each solid region
+        dx_s_id_list: List of IDs of single/multiple solid regions
+        solid_properties: List of dictionaries of solid properties for single/multiple solid regions
 
     """
-
     # DB, May 2nd, 2022: All these conversions to lists seem a bit cumbersome, but this allows the solver to be backwards compatible.
     # Work on fluid domain 
     dx_f = {}
@@ -56,7 +61,6 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     else:
         dx_f[0] = dx(dx_f_id, subdomain_data=domains)
         dx_f_id_list=[dx_f_id]
-
     # Check if fluid_porperties is empty and if so, create fluid_properties to each region, 
     if len(fluid_properties) == 0:
         if isinstance(dx_f_id, list): 
@@ -68,7 +72,7 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     elif isinstance(fluid_properties, dict):
         fluid_properties = [fluid_properties]
     else:
-        raise ValueError("Failed to assign fluid properties. Please check the input of fluid_properties.")
+        assert isinstance(fluid_properties, list), "fluid_properties must be a list of dictionaries"
 
     # Work on solid domain and boundary (boundary is only needed if Robin boundary conditions are used)    
     dx_s = {}
@@ -96,8 +100,8 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
     elif isinstance(solid_properties, dict): 
         solid_properties = [solid_properties]
     else:
-        raise ValueError("Failed to assign solid properties. Please check the input of solid_properties.")
-    
+        assert isinstance(solid_properties, list), "solid_properties must be a list of dictionaries"
+
     # Create solid boundary differentials for Robin boundary conditions. 
     if robin_bc:
         ds_s = {}
