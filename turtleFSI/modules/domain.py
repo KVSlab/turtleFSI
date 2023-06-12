@@ -24,7 +24,7 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
         dx_s_id (either int or list): ID of the solid region, or list of IDs of multiple solid regions
         material_model (str or list of str): Material model of the solid, or list of material models of multiple solid regions
         rho_s (float or list): Density of the solid, or list of densities of multiple solid regions
-        mu_s (float or list): Viscosity of the solid, or list of viscosities of multiple solid regions
+        mu_s (float or list): Shear modulus or 2nd Lame Coef. of the solid, or list of shear modulus of multiple solid regions
         lambda_s (float or list): First Lame parameter of the solid, or list of first Lame parameters of multiple solid regions
         solid_properties (dict or list of dicts): Dictionary of solid properties, or list of dictionaries of solid properties for multiple solid regions
         domains (dolfin.MeshFunction): MeshFunction of the domains
@@ -80,7 +80,8 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
         dx_s_id_list=[dx_s_id]
 
     # Assign material properties to each solid region
-    # NOTE: len(solid_properties) == 0 only works for St. Venant-Kirchhoff material model. For other material models, solid_properties must be given. 
+    # NOTE: len(solid_properties) == 0 only works for St. Venant-Kirchhoff material model. 
+    #       For other material models, solid_properties must be given from config file or inside the problem file.
     if len(solid_properties) == 0:
         if isinstance(dx_s_id, list): 
             for solid_region in range(len(dx_s_id)):
