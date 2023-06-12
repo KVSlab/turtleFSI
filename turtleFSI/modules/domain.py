@@ -95,7 +95,7 @@ def assign_domain_properties(dx, dx_f_id, rho_f, mu_f, fluid_properties, dx_s_id
             solid_properties.append({"dx_s_id":dx_s_id,"material_model":material_model,"rho_s":rho_s,"mu_s":mu_s,"lambda_s":lambda_s})
     elif isinstance(solid_properties, dict): 
         solid_properties = [solid_properties]
-     else:
+    else:
         raise ValueError("Failed to assign solid properties. Please check the input of solid_properties.")
     
     # Create solid boundary differentials for Robin boundary conditions. 
