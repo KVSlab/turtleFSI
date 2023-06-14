@@ -53,10 +53,7 @@ However, if you are using Linux or MaxOSX you can install turtleFSI through anac
         conda create -n your_environment -c conda-forge turtleFSI
 
 You can then activate your environment by runing ``source activate your_environment``.
-You are now all set, and can start running fluid-structure interaction simulations. If 
-you would like to use ``save_deg > 1``, then please install fenicstools by runningthe following::
-
-	pip install git+https://github.com/mikaem/fenicstools
+You are now all set, and can start running fluid-structure interaction simulations.
 
 Use
 ---
