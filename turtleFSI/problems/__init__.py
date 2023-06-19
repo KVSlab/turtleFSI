@@ -218,8 +218,16 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
                 f.write(text)
 
 
-def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh, domains, **namespace):
+def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh, **namespace):
+    """
+    Helper function for saving the displacement, velocity and pressure fields to visualization files.
+    The underlying assumption is that the displacement and velocity fields have the same order.
+    By using the save_deg parameter, we interpolate higher order fields to lower order fields that are defined on the refined mesh. 
+    """
     # Files for storing results
+    if save_deg > v_deg:
+        raise ValueError("save_deg must be less than or equal to v_deg")
+    
     if not "d_file" in namespace.keys():
         d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
         v_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity.xdmf")))
@@ -227,14 +235,12 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
         for tmp_t in [d_file, v_file, p_file]:
             tmp_t.parameters["flush_output"] = True
             tmp_t.parameters["rewrite_function_mesh"] = False
-
-        if save_deg > 1:
+        # Here, we assume that displacement and velocity have the same order. Last condition is to make sure we do not interpolate when v_deg = 1, save_deg = 2
+        if save_deg > 1 and v_deg >= save_deg:
           
-            # Create function space for d, v and p
+            # Create function space for d and v
             dve = VectorElement('CG', mesh.ufl_cell(), v_deg)
-            pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
             FSdv = FunctionSpace(mesh, dve)   # Higher degree FunctionSpace for d and v
-            FSp= FunctionSpace(mesh, pe)     # Higher degree FunctionSpace for p
 
             # Copy mesh
             mesh_viz = Mesh(mesh)
@@ -242,24 +248,28 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             for i in range(save_deg-1):
                 mesh_viz = refine(mesh_viz)  # refine the mesh
 
-            # Create visualization function space for d, v and p
+            # Create visualization function space for d and v on refined mesh with 1st order
             dve_viz = VectorElement('CG', mesh_viz.ufl_cell(), 1)
-            pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
             FSdv_viz = FunctionSpace(mesh_viz, dve_viz)   # Visualisation FunctionSpace for d and v
-            FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
 
             # Create lower-order function for visualization on refined mesh
             d_viz = Function(FSdv_viz)
             v_viz = Function(FSdv_viz)
-            p_viz = Function(FSp_viz)
     
             # Create a transfer matrix between higher degree and lower degree (visualization) function spaces
             dv_trans = PETScDMCollection.create_transfer_matrix(FSdv,FSdv_viz)
-            p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
 
-            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, p_viz=p_viz, 
-                dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz)
-
+            return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, dv_trans=dv_trans, mesh_viz=mesh_viz)
+            # Pressure is usually saved with lower order than velocity and displacement, so we need separate treatment
+            if p_deg >= save_deg:
+                pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
+                FSp= FunctionSpace(mesh, pe)     # Higher degree FunctionSpace for p
+                pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
+                FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
+                p_viz = Function(FSp_viz)
+                p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
+                return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz, v_viz=v_viz, p_viz=p_viz, dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz)
+                
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
 
@@ -273,7 +283,8 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
     v = dvp_["n"].sub(1, deepcopy=True)
     p = dvp_["n"].sub(2, deepcopy=True)
 
-    if save_deg > 1: # To save higher-order nodes
+    # The following assumes that all variables have element degree that is higher than one. For example, P3P32 (dvp) with save_deg >=2.
+    if save_deg > 1 and p_deg >= save_deg:
 
         # Interpolate by using the transfer matrix between higher degree and lower degree (visualization) function spaces
         namespace["d_viz"].vector()[:] = namespace["dv_trans"]*d.vector()
@@ -281,11 +292,19 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
         namespace["p_viz"].vector()[:] = namespace["p_trans"]*p.vector()
 
         write_solution(namespace["d_viz"], namespace["v_viz"], namespace["p_viz"], 
-            namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
+            namespace["d_file"], namespace["v_file"], namespace["p_file"], t) 
+
+    # The following interploate displacement and velocity but not pressure. For example, P2P2P1 (dvp) with save_deg >=2.
+    elif save_deg > 1 and p_deg < save_deg and v_deg >= save_deg:
+        namespace["d_viz"].vector()[:] = namespace["dv_trans"]*d.vector()
+        namespace["v_viz"].vector()[:] = namespace["dv_trans"]*v.vector()
+
+        write_solution(namespace["d_viz"], namespace["v_viz"], p, namespace["d_file"], namespace["v_file"], namespace["p_file"], t) 
+        
 
     else: # To save only the corner nodes
 
-        write_solution(d, v, p, namespace["d_file"], namespace["v_file"], namespace["p_file"], t) # Write results
+        write_solution(d, v, p, namespace["d_file"], namespace["v_file"], namespace["p_file"], t) 
 
     return return_dict
 

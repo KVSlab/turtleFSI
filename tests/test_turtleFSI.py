@@ -5,7 +5,7 @@
 
 import pytest
 import numpy as np
-from os import system
+from os import system, path
 from pathlib import Path
 
 
@@ -125,3 +125,18 @@ def test_elastic():
     assert compare(distance_y, distance_y_reference)
     assert compare(drag, drag_reference)
     assert compare(lift, lift_reference)
+
+
+def test_save_deg2():
+    """simple test if the save_deg 2 works"""
+    cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --theta 0.51 --save-deg 2" +
+           " --save-step 1 --folder tmp --sub-folder 7")
+    d = system(cmd)
+
+    d_path = path.join("tmp", "7", "Visualization", "displacement.xdmf")
+    v_path = path.join("tmp", "7", "Visualization", "velocity.xdmf")
+    p_path = path.join("tmp", "7", "Visualization", "pressure.xdmf")
+
+    assert path.exists(d_path)
+    assert path.exists(v_path)
+    assert path.exists(p_path)
