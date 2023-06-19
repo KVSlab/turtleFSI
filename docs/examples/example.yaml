@@ -67,10 +67,10 @@ nu-s: 0.45
 # 1st Lame Coef. for the solid
 lambda-s: 4.5E5
 
-# Elastic response necesary for RobinBC
+# Elastic response necessary for RobinBC
 k_s: 0.0
 
-# Viscoelastic response necesary for RobinBC
+# Viscoelastic response necessary for RobinBC
 c_s: 0.0
 
 # Gravitational force on the solid

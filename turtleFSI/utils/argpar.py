@@ -293,6 +293,7 @@ def parse():
         args.__dict__.pop("new_arguments")
 
     # Add unknown arguments
+    unknownargs_dict = {}
     for arg in unknownargs:
         d = {}
         k, v = arg.strip("--").split('=')
@@ -302,12 +303,15 @@ def parse():
             d[k] = v
 
         # Treat list items (given as --item1=1 --item2=2...)
-        if k in args.__dict__:
-            if not isinstance(args.__dict__[k], list):
-                args.__dict__.update({k: [args.__dict__[k]]})
-            args.__dict__.update({k: args.__dict__[k] + [d[k]]})
+        if k in unknownargs_dict:
+            if not isinstance(unknownargs_dict[k], list):
+                unknownargs_dict.update({k: [unknownargs_dict[k]]})
+            unknownargs_dict.update({k: unknownargs_dict[k] + [d[k]]})
         else:
-            args.__dict__.update(d)
+            if isinstance(d[k], list):
+                d[k] = [d[k]]  # nested list
+            unknownargs_dict.update(d)
+    args.__dict__.update(unknownargs_dict)
 
     # Update the default values and then set the entire dictionary to be the inpute from
     # argparse
