@@ -167,10 +167,10 @@ class WomersleyComponent(UserExpression):
         self.ns = np.arange(1, self.N)
 
         # Allocate for 0...N-1
-        alpha = np.zeros(self.N, dtype=np.complex)
-        self.beta = np.zeros(self.N, dtype=np.complex)
-        self.jn0_betas = np.zeros(self.N, dtype=np.complex)
-        self.jn1_betas = np.zeros(self.N, dtype=np.complex)
+        alpha = np.zeros(self.N, dtype=np.complex128)
+        self.beta = np.zeros(self.N, dtype=np.complex128)
+        self.jn0_betas = np.zeros(self.N, dtype=np.complex128)
+        self.jn1_betas = np.zeros(self.N, dtype=np.complex128)
 
         # Compute vectorized for 1...N-1 (keeping element 0 in arrays to make indexing work out later)
         alpha[1:] = self.radius * np.sqrt(self.ns * (self.omega / self.nu))
@@ -181,7 +181,7 @@ class WomersleyComponent(UserExpression):
     def _precompute_r_dependent_coeffs(self, y):
         pir2 = np.pi * self.radius**2
         # Compute intermediate terms for womersley function
-        r_dependent_coeffs = np.zeros(self.N, dtype=np.complex)
+        r_dependent_coeffs = np.zeros(self.N, dtype=np.complex128)
         if hasattr(self, 'Vn'):
             #r_dependent_coeffs[0] = (self.Vn[0]/2.0) * (1 - y**2)
             r_dependent_coeffs[0] = self.Vn[0] * (1 - y**2)
