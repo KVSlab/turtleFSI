@@ -218,8 +218,16 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
                 f.write(text)
 
 
-def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh, domains, **namespace):
+def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh, **namespace):
+    """
+    Helper function for saving the displacement, velocity and pressure fields to visualization files.
+    The underlying assumption is that the displacement and velocity fields have the same order.
+    By using the save_deg parameter, we interpolate higher order fields to lower order fields that are defined on the refined mesh. 
+    """
     # Files for storing results
+    if save_deg > v_deg:
+        raise ValueError("save_deg must be less than or equal to v_deg")
+    
     if not "d_file" in namespace.keys():
         d_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("displacement.xdmf")))
         v_file = XDMFFile(MPI.comm_world, str(visualization_folder.joinpath("velocity.xdmf")))
@@ -252,17 +260,16 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
             dv_trans = PETScDMCollection.create_transfer_matrix(FSdv,FSdv_viz)
 
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz,v_viz=v_viz, dv_trans=dv_trans, mesh_viz=mesh_viz)
-        # Pressure is usually saved with lower order than velocity and displacement, so we need separate treatment
-        elif save_deg > 1 and p_deg >= save_deg:
-            pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
-            FSp= FunctionSpace(mesh, pe)     # Higher degree FunctionSpace for p
-            pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
-            FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
-            p_viz = Function(FSp_viz)
-            p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
-            p_dict = dict(p_file=p_file, p_viz=p_viz, p_trans=p_trans)
-            return_dict.update(p_dict)
-
+            # Pressure is usually saved with lower order than velocity and displacement, so we need separate treatment
+            if p_deg >= save_deg:
+                pe = FiniteElement('CG', mesh.ufl_cell(), p_deg)
+                FSp= FunctionSpace(mesh, pe)     # Higher degree FunctionSpace for p
+                pe_viz = FiniteElement('CG', mesh_viz.ufl_cell(), 1)
+                FSp_viz = FunctionSpace(mesh_viz, pe_viz)     # Visualisation FunctionSpace for p
+                p_viz = Function(FSp_viz)
+                p_trans = PETScDMCollection.create_transfer_matrix(FSp,FSp_viz)
+                return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file, d_viz=d_viz, v_viz=v_viz, p_viz=p_viz, dv_trans=dv_trans, p_trans=p_trans, mesh_viz=mesh_viz)
+                
         else:
             return_dict = dict(v_file=v_file, d_file=d_file, p_file=p_file)
 
