@@ -3,21 +3,22 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
-"""Problem file for running the "CSM" benchmarks in [1]. The problem is beam under load.
-
-[1] Turek, Stefan, and Jaroslav Hron. "Proposal for numerical benchmarking of fluid-structure interaction
-between an elastic object and laminar incompressible flow." Fluid-structure interaction.
-Springer, Berlin, Heidelberg, 2006. 371-385."""
+"""
+This file is a problem file for the uniaxial tension test of a Mooney-Rivlin material.
+"""
 
 from dolfin import *
-import numpy as np
-from os import path
-import stress_strain as StrStr
+import turtleFSI.problems.Test_Material.stress_strain as StrStr
 
 from turtleFSI.problems import *
 parameters["form_compiler"]["quadrature_degree"] = 6 # Not investigated thorougly. See MSc theses of Gjertsen. 
 
 def set_problem_parameters(default_variables, **namespace):
+
+    E_s_val = 1E6
+    nu_s_val = 0.45
+    mu_s_val = E_s_val/(2*(1+nu_s_val))  # 0.345E6
+    lambda_s_val = nu_s_val*2.*mu_s_val/(1. - 2.*nu_s_val)
     
     default_variables.update(dict(
         # Temporal variables
@@ -93,7 +94,6 @@ class PrescribedDisp(UserExpression):
         value[0] = self.factor
 
 
-
 def create_bcs(DVP,d_deg,solid_vel, boundaries, **namespace):
     # Sliding contact on 3 sides
     u_lwallX = DirichletBC(DVP.sub(0).sub(0), ((0.0)), boundaries, 1)
@@ -109,9 +109,11 @@ def create_bcs(DVP,d_deg,solid_vel, boundaries, **namespace):
 
     return dict(bcs=bcs,d_t=d_t)
 
+
 def pre_solve(t, d_t, **namespace):
     """Update boundary conditions"""
     d_t.update(t)
+
 
 def post_solve(t, dvp_, verbose,counter,save_step, visualization_folder,solid_properties, mesh, dx_s,  **namespace):
 
