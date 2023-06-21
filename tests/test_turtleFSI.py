@@ -39,8 +39,8 @@ def test_csm():
 
 @pytest.mark.parametrize("num_p", [1, 2])
 def test_fsi(num_p):
-    cmd = ("mpirub -np {} turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True" +
-           "--theta 0.51 --folder tmp --sub-folder 3")
+    cmd = ("mpirun -np {} turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True" +
+           " --theta 0.51 --folder tmp --sub-folder 3")
     d = system(cmd.format(num_p))
 
     drag = np.loadtxt("tmp/3/Drag.txt")[-1]
@@ -62,8 +62,8 @@ def test_fsi(num_p):
                                                     "constant", "small_constant"])
 def test_laplace(extrapolation_sub_type):
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
-           "--extrapolation laplace --extrapolation-sub-type {}" +
-           "--folder tmp --sub-folder 4")
+           " --extrapolation laplace --extrapolation-sub-type {}" +
+           " --folder tmp --sub-folder 4")
     d = system(cmd.format(extrapolation_sub_type))
 
     drag = np.loadtxt("tmp/4/Drag.txt")[-1]
@@ -85,8 +85,8 @@ def test_laplace(extrapolation_sub_type):
                         ["constrained_disp", "constrained_disp_vel"])
 def test_biharmonic(extrapolation_sub_type):
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
-           "--extrapolation biharmonic --extrapolation-sub-type {}" + 
-           "--folder tmp --sub-folder 5")
+           " --extrapolation biharmonic --extrapolation-sub-type {}" + 
+           " --folder tmp --sub-folder 5")
     d = system(cmd.format(extrapolation_sub_type))
 
     drag = np.loadtxt("tmp/5/Drag.txt")[-1]
