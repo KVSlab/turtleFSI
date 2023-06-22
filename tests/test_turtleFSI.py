@@ -30,8 +30,8 @@ def test_csm():
 
     distance_x = np.loadtxt("tmp/2/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/2/dis_y.txt")[-1]
-    distance_x_reference = -3.312418050495862e-05
-    distance_y_reference = -0.003738529237136441
+    distance_x_reference = -3.313014369394714527e-05
+    distance_y_reference = -3.770127311444726199e-03
 
     assert np.isclose(distance_x, distance_x_reference)
     assert np.isclose(distance_y, distance_y_reference)

@@ -21,13 +21,11 @@ def set_problem_parameters(default_variables, **namespace):
     # Parameters
     default_variables.update(dict(
         # Temporal variables
-        T=30,          # End time [s]
+        T=10,          # End time [s]
         dt=0.01,       # Time step [s]
-        theta=0.5,     # Temporal scheme
+        theta=0.51,     # Temporal scheme
 
         # Physical constants
-        rho_f=1.0e3,   # Fluid density [kg/m3]
-        mu_f=1.0,      # Fluid dynamic viscosity [Pa.s]
         rho_s=1.0e3,   # Solid density[kg/m3]
         mu_s=0.5e6,    # Shear modulus, 2nd Lame Coef. CSM3: 0.5E6 [Pa]
         nu_s=0.4,      # Solid Poisson ratio [-]
@@ -84,8 +82,9 @@ def initiate(f_L, R, c_x, c_y, **namespace):
 def create_bcs(DVP, boundaries, **namespace):
     # Clamp on the left hand side
     u_barwall = DirichletBC(DVP.sub(0), ((0.0, 0.0)), boundaries, 1)
+    v_barwall = DirichletBC(DVP.sub(1), ((0.0, 0.0)), boundaries, 1)
 
-    return dict(bcs=[u_barwall])
+    return dict(bcs=[u_barwall, v_barwall])
 
 ################################################################################
 # the function mpi4py_comm and peval are used to overcome FEniCS limitation of
