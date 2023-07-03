@@ -1,4 +1,5 @@
 # Configuration file for turtleFSI
+# !!NOTE!!: configargparse conver all key names to lowercase. Do not use uppercase as parameter. 
 [Parameter for turtleFSI] # Section is required by configargparse but is not used anywhere in turtleFSI
 ################################################################################
 # Define solver, numerics, and problem file
@@ -47,7 +48,7 @@ extrapolation-sub-type: constant
 ################################################################################
 
 # Maximum velocity at inlet
-Um: 0.8
+um: 0.8
 
 # Density of the fluid
 rho-f: 1.0E3

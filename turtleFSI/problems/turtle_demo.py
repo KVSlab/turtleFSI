@@ -35,7 +35,7 @@ def set_problem_parameters(default_variables, **namespace):
         T=0.2,                         # End time [s] (set T to several seconds to simulate several swimming cycles)
         dt=0.005,                      # Time step [s]
         theta=0.505,                   # Theta value (0.5 + dt), shifted Crank-Nicolson scheme
-        Um=1.0,                        # Max. velocity inlet [m/s]
+        um=1.0,                        # Max. velocity inlet [m/s]
         rho_f=1.0E3,                   # Fluid density [kg/m3]
         mu_f=1.0,                      # Fluid dynamic viscosity [Pa.s]
         rho_s=1.0E3,                   # Solid density [kg/m3]
@@ -88,19 +88,19 @@ def get_mesh_domain_and_boundaries(args, **namespace):
 
 
 class Inlet(UserExpression):
-    def __init__(self, Um, **kwargs):
+    def __init__(self, um, **kwargs):
         self.t = 0.0
         self.t_ramp = 0.5  # time to ramp-up to max inlet velocity (from 0 to Um)
-        self.Um = Um       # Max. velocity inlet [m/s]
+        self.um = um       # Max. velocity inlet [m/s]
         super().__init__(**kwargs)
 
     def update(self, t):
         self.t = t
         if self.t < self.t_ramp:
-            self.value = self.Um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
+            self.value = self.um * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2  # ramp-up the inlet velocity
         else:
-            Um_min = self.Um/6  # lower velocity during oscillations
-            self.value = (self.Um-Um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + Um_min
+            um_min = self.um/6  # lower velocity during oscillations
+            self.value = (self.um-um_min) * np.abs(np.cos(self.t/self.t_ramp*np.pi)-1)/2 + um_min
 
     def eval(self, value, x):
         value[0] = self.value
@@ -110,11 +110,11 @@ class Inlet(UserExpression):
         return (2,)
 
 
-def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, verbose, **namespace):
+def create_bcs(DVP, boundaries, um, v_deg, extrapolation_sub_type, verbose, **namespace):
     if MPI.rank(MPI.comm_world) == 0 and verbose:
         print("Create bcs")
 
-    inlet = Inlet(Um, degree=v_deg)
+    inlet = Inlet(um, degree=v_deg)
     noslip = ((0.0, 0.0))
 
     # Segments indices (make sure of the consistency with the boundary file)

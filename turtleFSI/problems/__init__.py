@@ -81,7 +81,7 @@ default_variables = dict(
     k_s = 0.0,       # elastic response necesary for RobinBC
     c_s = 0.0,       # viscoelastic response necesary for RobinBC 
     gravity=None,    # Gravitational force on the solid
-    Um=0.8,          # Maximum velocity at inlet
+    um=0.8,          # Maximum velocity at inlet
 
     # Variational formulations
     fluid="fluid",                             # ["fluid", "no_fluid"] Turn off fluid and only solve the solid problem
