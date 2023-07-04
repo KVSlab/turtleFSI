@@ -120,7 +120,7 @@ def restricted_float(x):
 
 def parse():
 
-    parser = configargparse.ArgParser(config_file_parser_class=configargparse.ConfigparserConfigFileParser, 
+    parser = configargparse.ArgParser(
             description=("turtleFSI is an open source Fluid-Structure Interaction (FSI) solver written in Python "
                         + "and built upon the FEniCS finite element library. The purpose of turtleFSI is to "
                         + "provide a user friendly and numerically robust monolithic FSI solver able to handle "
