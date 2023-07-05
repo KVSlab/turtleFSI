@@ -1,5 +1,4 @@
 # Configuration file for turtleFSI
-[Parameter for turtleFSI] # Section is required by configargparse but is not used anywhere in turtleFSI
 ################################################################################
 # Define solver, numerics, and problem file
 ################################################################################
