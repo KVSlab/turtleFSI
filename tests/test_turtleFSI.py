@@ -5,14 +5,14 @@
 
 import pytest
 import numpy as np
-from os import system, path
 from pathlib import Path
+import subprocess
 
 
 def test_cfd():
     cmd = ("turtleFSI --problem TF_cfd -dt 0.01 -T 0.05 --verbose True" +
            " --folder tmp --sub-folder 1")
-    d = system(cmd)
+    subprocess.run(cmd, shell=True, check=True)
 
     drag = np.loadtxt(Path.cwd().joinpath("tmp/1/Drag.txt"))[-1]
     lift = np.loadtxt(Path.cwd().joinpath("tmp/1/Lift.txt"))[-1]
@@ -26,7 +26,7 @@ def test_cfd():
 def test_csm():
     cmd = ("turtleFSI --problem TF_csm -dt 0.01 -T 0.05 --verbose True" +
            " --folder tmp --sub-folder 2")
-    d = system(cmd)
+    subprocess.run(cmd, shell=True, check=True)
 
     distance_x = np.loadtxt("tmp/2/dis_x.txt")[-1]
     distance_y = np.loadtxt("tmp/2/dis_y.txt")[-1]
@@ -41,7 +41,7 @@ def test_csm():
 def test_fsi(num_p):
     cmd = ("mpirun -np {} turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True" +
            " --theta 0.51 --folder tmp --sub-folder 3")
-    d = system(cmd.format(num_p))
+    subprocess.run(cmd.format(num_p), shell=True, check=True)
 
     drag = np.loadtxt("tmp/3/Drag.txt")[-1]
     lift = np.loadtxt("tmp/3/Lift.txt")[-1]
@@ -64,8 +64,7 @@ def test_laplace(extrapolation_sub_type):
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
            " --extrapolation laplace --extrapolation-sub-type {}" +
            " --folder tmp --sub-folder 4")
-    d = system(cmd.format(extrapolation_sub_type))
-
+    subprocess.run(cmd.format(extrapolation_sub_type), shell=True, check=True)
     drag = np.loadtxt("tmp/4/Drag.txt")[-1]
     lift = np.loadtxt("tmp/4/Lift.txt")[-1]
     distance_x = np.loadtxt("tmp/4/dis_x.txt")[-1]
@@ -87,7 +86,7 @@ def test_biharmonic(extrapolation_sub_type):
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
            " --extrapolation biharmonic --extrapolation-sub-type {}" + 
            " --folder tmp --sub-folder 5")
-    d = system(cmd.format(extrapolation_sub_type))
+    subprocess.run(cmd.format(extrapolation_sub_type), shell=True, check=True)
 
     drag = np.loadtxt("tmp/5/Drag.txt")[-1]
     lift = np.loadtxt("tmp/5/Lift.txt")[-1]
@@ -107,7 +106,7 @@ def test_biharmonic(extrapolation_sub_type):
 def test_elastic():
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --verbose True --theta 0.51" +
            " -e elastic -et constant --folder tmp --sub-folder 6")
-    d = system(cmd)
+    subprocess.run(cmd, shell=True, check=True)
 
     drag = np.loadtxt("tmp/6/Drag.txt")[-1]
     lift = np.loadtxt("tmp/6/Lift.txt")[-1]
@@ -128,12 +127,12 @@ def test_save_deg2():
     """simple test if the save_deg 2 works"""
     cmd = ("turtleFSI --problem TF_fsi -dt 0.01 -T 0.05 --theta 0.51 --save-deg 2" +
            " --save-step 1 --folder tmp --sub-folder 7")
-    d = system(cmd)
+    subprocess.run(cmd, shell=True, check=True)
 
-    d_path = path.join("tmp", "7", "Visualization", "displacement.xdmf")
-    v_path = path.join("tmp", "7", "Visualization", "velocity.xdmf")
-    p_path = path.join("tmp", "7", "Visualization", "pressure.xdmf")
+    d_path = Path.cwd().joinpath("tmp/7/Visualization/displacement.xdmf")
+    v_path = Path.cwd().joinpath("tmp/7/Visualization/velocity.xdmf")
+    p_path = Path.cwd().joinpath("tmp/7/Visualization/pressure.xdmf")
 
-    assert path.exists(d_path)
-    assert path.exists(v_path)
-    assert path.exists(p_path)
+    assert d_path.is_file()
+    assert v_path.is_file()
+    assert p_path.is_file()
