@@ -43,6 +43,7 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
     iter = 0
     residual = 10**8
     rel_res = 10**8
+
     # Capture if residual increases from last iteration
     last_rel_res = residual
     last_residual = rel_res
