@@ -111,4 +111,4 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
                   % (iter, residual, atol, rel_res, rtol))
         iter += 1
 
-    return dict(up_sol=up_sol, A=A)
+    return dict(up_sol=up_sol, A=A, b=b)
