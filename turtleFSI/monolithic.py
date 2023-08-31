@@ -60,22 +60,12 @@ if MPI.rank(MPI.comm_world) == 0 and verbose:
 vars().update(create_folders(**vars()))
 
 # Get mesh information / In case of restart, read mesh from restart folder
-if restart_folder is not None:
-    mesh = Mesh()
-    mesh_path = restart_folder.parent.joinpath("Mesh", "mesh.h5")
-    hdf = HDF5File(MPI.comm_world, mesh_path.__str__(), "r")
-    hdf.read(mesh, "/mesh", True)
-    boundaries = MeshFunction("size_t", mesh, mesh.topology().dim() - 1)
-    hdf.read(boundaries, "/boundaries")
-    domains = MeshFunction("size_t", mesh, mesh.topology().dim())
-    hdf.read(domains, "/domains")
+mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 
-else:
-    mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
-
+if restart_folder is None:
     # Save mesh, domains, and boundaries for restart/post-processing
     mesh_path = results_folder.joinpath("Mesh", "mesh.h5")
-    with HDF5File(MPI.comm_world, mesh_path.__str__(), "w") as hdf:
+    with HDF5File(mesh.mpi_comm(), mesh_path.__str__(), "w") as hdf:
         hdf.write(mesh, "/mesh")
         hdf.write(boundaries, "/boundaries")
         hdf.write(domains, "/domains")
