@@ -12,5 +12,3 @@ dependencies:
   - configargparse
   - numpy
   - pyyaml
-  - pip:
-    - cppimport
