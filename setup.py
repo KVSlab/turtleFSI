@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 DEPENDENCIES = ['configargparse', "fenics-dolfin",
-                "scipy", "cppimport", "numpy", "pyyaml"]
+                "scipy", "numpy", "pyyaml"]
 TEST_DEPENDENCIES = ['pytest']
 
 VERSION = "1.5"
@@ -39,8 +39,6 @@ setuptools.setup(
               "turtleFSI.problems",
               "turtleFSI.utils"],
     package_dir={"turtleFSI": "turtleFSI"},
-    package_data={"turtleFSI": ["utils/probe/*.h",
-                                "utils/probe/*.cpp"]},
     include_package_data=True,
     entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']},
 
