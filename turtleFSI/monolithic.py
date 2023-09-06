@@ -64,8 +64,8 @@ mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
 
 # Save mesh, domains, and boundaries for post-processing
 if restart_folder is None:
-    mesh_path = results_folder.joinpath("Mesh", "mesh.h5")
-    with HDF5File(mesh.mpi_comm(), mesh_path.__str__(), "w") as hdf:
+    h5_mesh_path = results_folder.joinpath("Mesh", "mesh.h5")
+    with HDF5File(mesh.mpi_comm(), h5_mesh_path.__str__(), "w") as hdf:
         hdf.write(mesh, "/mesh")
         hdf.write(boundaries, "/boundaries")
         hdf.write(domains, "/domains")
