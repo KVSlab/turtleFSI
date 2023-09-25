@@ -25,7 +25,7 @@ runs:
 
     - name: Modify environment file
       run: |
-        sed -i "s/python>3.7/python=${{ inputs.python-version }}/g" environment.yml
+        sed -i'' -e "s/python>3.7/python=${{ inputs.python-version }}/g" environment.yml
       shell: bash
 
     - name: Get Date
