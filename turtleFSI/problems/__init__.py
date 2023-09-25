@@ -8,7 +8,7 @@ commandline.
 """
 
 from dolfin import parameters, XDMFFile, MPI, assign, Mesh, refine, project, VectorElement, FiniteElement, PETScDMCollection, FunctionSpace, Function
-import pickle
+import json
 from pathlib import Path
 from xml.etree import ElementTree as ET
 import numpy as np
@@ -187,8 +187,9 @@ def checkpoint(dvp_, default_variables, checkpoint_folder, mesh, **namespace):
 
     # Dump default parameters
     if MPI.rank(MPI.comm_world) == 0:
-        with open(str(checkpoint_folder.joinpath("default_variables.pickle")), "bw") as f:
-            pickle.dump(default_variables, f)
+        with open(str(checkpoint_folder.joinpath("default_variables.json")), "w") as f:
+            default_variables["restart_folder"] = str(default_variables["restart_folder"])
+            json.dump(default_variables, f)
 
     # Dump physical fields
     fields = _get_fields(dvp_, mesh)
