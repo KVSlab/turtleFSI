@@ -45,7 +45,7 @@ runs:
     - name: Update environment
       if: steps.cache-env.outputs.cache-hit != 'true'
       run:
-          mamba env update -n turtleFSI -f environment.yml
+          mamba env -n turtleFSI -f environment.yml
       shell: bash -el {0}
 
     - name: List environment
