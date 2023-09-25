@@ -23,6 +23,11 @@ runs:
           # uncomment to install env in one go (without caching)
           # environment-file: environment.yml
 
+    - name: Modify environment file
+      run: |
+        sed -i'' -e "s/python>3.7/python=${{ inputs.python-version }}/g" environment.yml
+      shell: bash
+
     - name: Get Date
       id: get-date
       run: echo "today=$(/bin/date -u '+%Y%m%d')" >> "$GITHUB_OUTPUT"
