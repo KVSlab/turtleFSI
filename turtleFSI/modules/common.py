@@ -208,8 +208,7 @@ def get_eig(T):
     return lambda1, lambda2, lambda3 
 
 """
-The following functions strting with W are strain energy density functions for hyperelastic materials. 
-We could also add the Yeoh model, or Fung model if its possible to make it compressible.
+The following functions starting with W are strain energy density functions for hyperelastic materials. 
 """
 
 def W_St_Venant_Kirchoff(F, lambda_s, mu_s):
