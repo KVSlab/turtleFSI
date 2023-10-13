@@ -1,5 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/turtlefsi2/badge/?version=latest)](https://turtlefsi2.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/KVSlab/turtleFSI.svg?branch=master)](https://travis-ci.org/KVSlab/turtleFSI)
+[![Actions FEniCS stable](https://github.com/KVSLab/turtleFSI/actions/workflows/test_turtle_conda.yml/badge.svg)](https://github.com/KVSlab/turtleFSI/actions/workflows/test_turtle_conda.yml)
+[![Actions FEniCS master](https://github.com/KVSLab/turtleFSI/actions/workflows/test_turtle.yml/badge.svg)](https://github.com/KVSlab/turtleFSI/actions/workflows/test_turtle.yml)
 [![status](https://joss.theoj.org/papers/b7febdaa2709205d40b51227091c3b0b/status.svg)](https://joss.theoj.org/papers/b7febdaa2709205d40b51227091c3b0b)
 
 # turtleFSI - a Fluid-Structure Interaction Solver
