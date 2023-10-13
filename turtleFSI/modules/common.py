@@ -264,8 +264,8 @@ def W_Mooney_Rivlin(F, lambda_s, mu_s, C01, C10, C11):
     D1 = 2/K                         # D1 is calculated from the Bulk Modulus
     B = F*F.T                        # Left cauchy-green strain tensor
     I1 = tr(B)                       # 1st Invariant
-    I2 = 0.5*(tr(B)**2-tr(B * B))    # 2nd invariant (also known as I3)
-    Ibar1 = (J**(-2/3))*I1
+    I2 = 0.5*(tr(B)**2-tr(B * B))    # 2nd invariant
+    Ibar1 = (J**(-2/3))*I1           
     Ibar2 = (J**(-4/3))*I2
 
     # Strain energy density function for 3 term Compressible Mooney-Rivlin Model
