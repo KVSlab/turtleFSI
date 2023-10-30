@@ -6,7 +6,7 @@ dependencies:
   - fenics-dolfin
   - metis=5.1.0
   - hdf5=1.12.2
-  - petsc4py=3.19.0
+  - mpi4py=3.1.4
   - python>3.7
   - pip
   - git
