@@ -4,6 +4,7 @@
 # PURPOSE.
 
 from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI, PETScOptions
+from numpy import nan as np_nan
 
 PETScOptions.set("mat_mumps_icntl_4", 1) # If negatvie or zero, MUMPS will suppress diagnositc printining, statistics, and warning messages. 
 PETScOptions.set("mat_mumps_icntl_14", 400) # allocate more memory to mumps
@@ -103,8 +104,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Check residual
         residual = b.norm('l2')
         rel_res = norm(dvp_res, 'l2')
-        if rel_res > 1E20 or residual > 1E20:
-            raise RuntimeError("Error: The simulation has diverged during the Newton solve.")
+        if rel_res > 1E20 or residual > 1E20 or rel_res is np_nan or residual is np_nan:
+            raise RuntimeError("Error: The simulation has diverged during the Newton solve with residual = %.3e and relative residual = %.3e" % (residual, rel_res))
 
         if MPI.rank(MPI.comm_world) == 0 and verbose:
             print("Newton iteration %d: r (atol) = %.3e (tol = %.3e), r (rel) = %.3e (tol = %.3e) "
