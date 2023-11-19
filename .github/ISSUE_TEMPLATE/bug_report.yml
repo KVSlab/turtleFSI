@@ -1,0 +1,63 @@
+name: Bug report
+description: Create a report if you believe something is not working
+title: "[BUG]: "
+labels: ["bug"]
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: How to reproduce the bug
+      description: Explain how to reproduce the issue you are having
+      placeholder: I ran a demo or test that failed. The name of the demo is `demo_something.py`
+    validations:
+      required: true
+
+  - type: textarea
+    id: mwe-python
+    attributes:
+      label: Minimal Example (Python)
+      description: Add (optionally) a minimal script that reproduces the bug
+      render: Python
+
+    validations:
+      required: false
+
+  - type: textarea
+    id: output-python
+    attributes:
+      label: Output (Python)
+      description: If you get an error message or any output, please add it here
+      render: bash
+
+    validations:
+      required: false
+  
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of turtleFSI are you running?
+      options:
+        - master branch
+        - 2.4
+        - 2.3
+        - 2.2
+        - 2.1
+        - 2.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Installation
+      description: How did you install turtleFSI?
+      placeholder: i.e. "I used the Docker images on a Windows 11" or "I installed turtleFSI with conda on a MacBook Air with the M1 chip. Here are the steps to reproduce my installation ..."
+
+  - type: textarea
+    id: extra
+    attributes: 
+      label: Additional information
+      description: If you have any additional information, please add it here.
+      placeholder: You can drag and drop files here to attach them
