@@ -7,7 +7,7 @@ DEPENDENCIES = ['configargparse', "fenics-dolfin",
                 "scipy", "numpy", "pyyaml"]
 TEST_DEPENDENCIES = ['pytest']
 
-VERSION = "2.3"
+VERSION = "2.4"
 URL = "https://github.com/KVSlab/turtleFSI.git"
 
 setuptools.setup(
