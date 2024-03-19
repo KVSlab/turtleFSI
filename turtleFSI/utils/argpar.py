@@ -275,7 +275,7 @@ def parse():
     
     if args.__dict__["solid_properties"]:
         for k, v in args.__dict__["solid_properties"].items():
-            if k != "material_model":
+            if k != "material_model" and k != "dx_s_id":
                 args.__dict__["solid_properties"][k] = float(v)
     
     if args.__dict__["fluid_properties"]:
