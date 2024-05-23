@@ -73,9 +73,15 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
     """
     if robin_bc:
         info_blue("Robin BC is used for the solid domain.")
-        for solid_boundaries in range(len(ds_s_ext_id_list)): 
-            F_solid_linear += theta0 * inner((k_s * d_["n"] + c_s * v_["n"]), psi)*ds_s[solid_boundaries] 
-            F_solid_linear += theta1 * inner((k_s * d_["n-1"] + c_s * v_["n-1"]), psi)*ds_s[solid_boundaries] 
+        assert type(k_s) == list, "k_s should be a list."
+        assert type(c_s) == list, "c_s should be a list."
+        assert len(k_s) == len(c_s) == len(ds_s_ext_id_list), "k_s, c_s and ds_s_ext_id_list should have the same length."
+        for solid_boundaries in range(len(ds_s_ext_id_list)):
+            if MPI.rank(MPI.comm_world) == 0:
+                print(f"solid_boundaries: {solid_boundaries}, ds_s_ext_id_list: {ds_s_ext_id_list[solid_boundaries]}")
+                print(f"k_s: {k_s[solid_boundaries]}, c_s: {c_s[solid_boundaries]}")
+            F_solid_linear += theta0 * inner((k_s[solid_boundaries] * d_["n"] + c_s[solid_boundaries] * v_["n"]), psi)*ds_s[solid_boundaries]
+            F_solid_linear += theta1 * inner((k_s[solid_boundaries] * d_["n-1"] + c_s[solid_boundaries] * v_["n-1"]), psi)*ds_s[solid_boundaries]
             
 
     return dict(F_solid_linear=F_solid_linear, F_solid_nonlinear=F_solid_nonlinear)

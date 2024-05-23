@@ -2,7 +2,6 @@ from dolfin import *
 from turtleFSI.problems import *
 import numpy as np
 from scipy.integrate import odeint
-from turtleFSI.utils.Probe import Probe
 import matplotlib.pyplot as plt
 
 """
@@ -35,8 +34,8 @@ def set_problem_parameters(default_variables, **namespace):
         T=0.1,                              # Simulation end time
         dt=0.0005,                          # Time step size
         theta=0.501,                        # Theta scheme (implicit/explicit time stepping): 0.5 + dt
-        atol=1e-7,                          # Absolute tolerance in the Newton solver
-        rtol=1e-7,                          # Relative tolerance in the Newton solver
+        atol=1e-10,                          # Absolute tolerance in the Newton solver
+        rtol=1e-10,                          # Relative tolerance in the Newton solver
         mesh_file="cylinder",               # Mesh file name
         inlet_id=2,                         # inlet id 
         outlet_id1=3,                       # outlet id
@@ -52,14 +51,14 @@ def set_problem_parameters(default_variables, **namespace):
         nu_s=nu_s_val,                      # Solid Poisson ratio [-]
         lambda_s=lambda_s_val,              # Solid 1rst Lamé coef. [Pa]
         robin_bc = True,                    # Robin BC
-        k_s = 1.0E5,                        # elastic response necesary for RobinBC
-        c_s = 1.0E2,                        # viscoelastic response necesary for RobinBC 
+        k_s = [1.0E5],                      # elastic response necesary for RobinBC
+        c_s = [1.0E2],                      # viscoelastic response necesary for RobinBC 
         dx_f_id=1,                          # ID of marker in the fluid domain
         dx_s_id=1002,                       # ID of marker in the solid domain
         extrapolation="laplace",            # laplace, elastic, biharmonic, no-extrapolation
         extrapolation_sub_type="constant",  # constant, small_constant, volume, volume_change, bc1, bc2
         recompute=30,                       # Number of iterations before recompute Jacobian. 
-        recompute_tstep=10,                 # Number of time steps before recompute Jacobian. 
+        recompute_tstep=100,                # Number of time steps before recompute Jacobian. 
         save_step=1,                        # Save frequency of files for visualisation
         folder="robinbc_validation",        # Folder where the results will be stored
         checkpoint_step=50,                 # checkpoint frequency
@@ -108,7 +107,7 @@ def _mass_spring_damper_system_ode(x, t, params_dict):
     dxdt = [dx1dt, dx2dt] 
     return dxdt 
 
-def initiate(dvp_, mesh, DVP, **namespace):
+def initiate(mesh, **namespace):
     # Position to probe
     x_coordinate = mesh.coordinates()[:, 0]
     y_coordinate = mesh.coordinates()[:, 1]
@@ -119,14 +118,19 @@ def initiate(dvp_, mesh, DVP, **namespace):
     z_middle = (z_coordinate.max() + z_coordinate.min())/2
 
     middle_point = np.array([x_middle, y_middle, z_middle])
-    d_probe = Probe(middle_point, DVP.sub(0))
-    d_probe(dvp_["n"].sub(0, deepcopy=True))
-    return dict(d_probe=d_probe)
+    d_list = []
+    return dict(d_list=d_list, middle_point=middle_point)
 
-def post_solve(d_probe, dvp_, **namespace):
-    d_probe(dvp_["n"].sub(0, deepcopy=True))
 
-def finished(T, dt, mesh, rho_s, k_s, c_s, boundaries, gravity, d_probe, **namespace):
+def post_solve(dvp_, d_list, middle_point, **namespace):
+    d = dvp_["n"].sub(0, deepcopy=True)
+    d_eval = d(middle_point)[1]
+    d_list.append(d_eval)
+
+    return dict(d_list=d_list)
+    
+
+def finished(T, dt, mesh, rho_s, k_s, c_s, boundaries, gravity, d_list, **namespace):
     # Define time step and initial conditions
     t_analytical = np.linspace(0, T, int(T/dt) + 1)
     analytical_solution_init = [0,0]
@@ -135,15 +139,15 @@ def finished(T, dt, mesh, rho_s, k_s, c_s, boundaries, gravity, d_probe, **names
     ds_robin = Measure("ds", domain=mesh, subdomain_data=boundaries, subdomain_id=1033)
     params_dict = dict()
     params_dict["m"] = volume*rho_s
-    params_dict["k"] = k_s
-    params_dict["c"] = c_s
+    params_dict["k"] = k_s[0]
+    params_dict["c"] = c_s[0]
     params_dict["A"] = assemble(1*ds_robin)
     params_dict["F"] = -gravity*volume*rho_s
     # Solve the ode to compute the analytical solution
     analytical_solution = odeint(_mass_spring_damper_system_ode, analytical_solution_init, t_analytical, args=(params_dict,))
     analytical_displacement = analytical_solution[:,0]
     # Plot both numerical and analytical solutions for a comparison
-    plt.plot(d_probe.get_probe_sub(1), label="turtleFSI")
+    plt.plot(d_list, label="turtleFSI")
     plt.plot(analytical_displacement, label="analytical")
     plt.legend()
     plt.show()
