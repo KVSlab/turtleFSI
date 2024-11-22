@@ -398,7 +398,7 @@ def print_information(counter, t, T, dt, timer, previous_t, verbose, **namespace
     """Print information about the time step and solver time"""
     elapsed_time = timer.elapsed()[0] - previous_t
     if verbose:
-        txt = "Solved for timestep {:d}, t = {:2.04f} in {:3.1f} s"
+        txt = "Solved for timestep {:d}, t = {:2.08f} in {:3.1f} s"
         txt = txt.format(counter, t, elapsed_time)
         print(txt)
     else:
