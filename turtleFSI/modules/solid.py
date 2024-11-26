@@ -3,6 +3,8 @@
 # the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.
 
+from collections.abc import Iterable
+
 from turtleFSI.modules import *
 from turtleFSI.problems import info_blue
 from dolfin import Constant, inner, grad, MPI
@@ -73,9 +75,9 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
     """
     if robin_bc:
         info_blue("Robin BC is used for the solid domain.")
-        assert type(k_s) == list, "k_s should be a list."
-        assert type(c_s) == list, "c_s should be a list."
-        assert len(k_s) == len(c_s) == len(ds_s_ext_id_list), "k_s, c_s and ds_s_ext_id_list should have the same length."
+        assert isinstance(k_s, Iterable), "k_s should be an iterable (e.g., list, tuple, etc.)."
+        assert isinstance(c_s, Iterable), "c_s should be an iterable (e.g., list, tuple, etc.)."
+        assert len(k_s) == len(c_s) == len(ds_s_ext_id_list), "k_s, c_s, and ds_s_ext_id_list should have the same length."
         for solid_boundaries in range(len(ds_s_ext_id_list)):
             if MPI.rank(MPI.comm_world) == 0:
                 print(f"solid_boundaries: {solid_boundaries}, ds_s_ext_id_list: {ds_s_ext_id_list[solid_boundaries]}")
