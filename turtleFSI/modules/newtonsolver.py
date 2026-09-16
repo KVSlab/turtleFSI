@@ -6,6 +6,8 @@
 from dolfin import assemble, derivative, TrialFunction, Matrix, norm, MPI, PETScOptions
 from numpy import isnan
 
+from turtleFSI.modules.newton_block_forms import build_equation_3_blocks
+
 PETScOptions.set("mat_mumps_icntl_4", 1) # If negatvie or zero, MUMPS will suppress diagnositc printining, statistics, and warning messages. 
 PETScOptions.set("mat_mumps_icntl_14", 400) # allocate more memory to mumps
 
@@ -23,12 +25,15 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     J_linear = derivative(F_lin, dvp_["n"], chi)
     J_nonlinear = derivative(F_nonlin, dvp_["n"], chi)
 
+    equation_3 = build_equation_3_blocks(DVP=DVP, dvp_=dvp_, **namespace)
+
     A_pre = assemble(J_linear, form_compiler_parameters=compiler_parameters,
                      keep_diagonal=True)
     A = Matrix(A_pre)
     b = None
 
-    return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol)
+    return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol,
+                **equation_3)
 
 
 def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
