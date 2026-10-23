@@ -7,7 +7,7 @@ from turtleFSI.modules import *
 from dolfin import Constant, inner, inv, grad, div, FunctionSpace, Function
 
 
-def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k, theta, nonnewtonian, mesh, **namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k, theta, mesh, nonnewtonian=False, **namespace):
     """
     ALE formulation (theta-scheme) of the incompressible Navier-Stokes flow problem:
 
