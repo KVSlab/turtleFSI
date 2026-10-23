@@ -4,10 +4,10 @@
 # PURPOSE.
 
 from turtleFSI.modules import *
-from dolfin import Constant, inner, inv, grad, div
+from dolfin import Constant, inner, inv, grad, div, FunctionSpace, Function
 
 
-def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k, theta, **namespace):
+def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k, theta, nonnewtonian, mesh, **namespace):
     """
     ALE formulation (theta-scheme) of the incompressible Navier-Stokes flow problem:
 
@@ -23,8 +23,14 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k,
 
     for fluid_region in range(len(dx_f_id_list)):
         rho_f = fluid_properties[fluid_region]["rho_f"]
-        mu_f = fluid_properties[fluid_region]["mu_f"]
+        mu_eff = fluid_properties[fluid_region]["mu_f"]
 
+        if nonnewtonian:
+            V_mu = FunctionSpace(mesh, "DG", 1)
+            mu_eff = Function(V_mu)
+            mu_eff.interpolate(Constant(fluid_properties[fluid_region]["mu_f"]))
+        
+        # in the loop save shear rate
         # Note that we here split the equation into a linear and nonlinear part for faster
         # computation of the Jacobian matrix.
     
@@ -43,9 +49,9 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k,
                                    inv(F_(d_["n"])).T, grad(psi)) * dx_f[fluid_region]
     
         # Stress from velocity
-        F_fluid_nonlinear += theta0 * inner(J_(d_["n"]) * sigma_f_u(v_["n"], d_["n"], mu_f) *
+        F_fluid_nonlinear += theta0 * inner(J_(d_["n"]) * sigma_f_u(v_["n"], d_["n"], mu_eff) *
                                             inv(F_(d_["n"])).T, grad(psi)) * dx_f[fluid_region]
-        F_fluid_linear += theta1 * inner(J_(d_["n-1"]) * sigma_f_u(v_["n-1"], d_["n-1"], mu_f)
+        F_fluid_linear += theta1 * inner(J_(d_["n-1"]) * sigma_f_u(v_["n-1"], d_["n-1"], mu_eff)
                                          * inv(F_(d_["n-1"])).T, grad(psi)) * dx_f[fluid_region]
     
         # Divergence free term
@@ -55,4 +61,4 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k,
         F_fluid_nonlinear -= rho_f / k * inner(J_(d_["n"]) * grad(v_["n"]) * inv(F_(d_["n"])) *
                                            (d_["n"] - d_["n-1"]), psi) * dx_f[fluid_region]
 
-    return dict(F_fluid_linear=F_fluid_linear, F_fluid_nonlinear=F_fluid_nonlinear)
+    return dict(F_fluid_linear=F_fluid_linear, F_fluid_nonlinear=F_fluid_nonlinear, mu_eff=mu_eff)
