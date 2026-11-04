@@ -12,7 +12,6 @@ from vampy.simulation.simulation_common import print_mesh_information
 from turtleFSI.problems import *
 from dolfin import HDF5File, Mesh, MeshFunction, assemble, FacetNormal, ds, \
     DirichletBC, Measure, inner, parameters, Function, XDMFFile, FunctionSpace, MPI
-from turtleFSI.modules.nonnewtonian import update_mu_eff
 from vasp.simulations.simulation_common import load_probe_points, calculate_and_print_flow_properties, \
     print_probe_points, InterfacePressure, local_project
 from turtleFSI.modules.common import J_
@@ -90,6 +89,8 @@ def set_problem_parameters(default_variables, **namespace):
         # mu = mu_inf + (mu_0 - mu_inf) / (1 + (lmbda * shear_rate)**n)**a
         # mu_0: zero-shear viscosity [Pa.s], mu_inf: infinite-shear viscosity [Pa.s],
         # lmbda: time constant [s], n and a: dimensionless model exponents
+        # With several fluid regions, "nonnewtonian" and "cross_params" can also be set per region
+        # in fluid_properties; the values below are then used for the regions that do not set them.
         nonnewtonian=True,
         cross_params={"mu_0": 0.056, "mu_inf": 0.00345, "lmbda": 3.736, "n": 2.406, "a": 0.254},
         solid_properties={"dx_s_id":2,"material_model":"MooneyRivlin","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"C01":0.02e6,"C10":0.0,"C11":1.8e6},
@@ -213,7 +214,7 @@ def initiate(mesh_path, scale_probe, mesh, v_deg, p_deg, **namespace):
     return dict(probe_points=probe_points)
 
 
-def pre_solve(t, inlet,interface_pressure, mu_eff, cross_params, v_, d_, dvp_, nonnewtonian, **namespace):
+def pre_solve(t, inlet, interface_pressure, mu_eff, **namespace):
     for uc in inlet:
         # Update the time variable used for the inlet boundary condition
         uc.set_t(t)
@@ -227,26 +228,9 @@ def pre_solve(t, inlet,interface_pressure, mu_eff, cross_params, v_, d_, dvp_, n
     # Update pressure condition
     interface_pressure.update(t)
 
-    # Update the non-Newtonian effective viscosity
-    if nonnewtonian:
-        has_n_minus_2 = (
-            "n-2" in v_
-            and "n-2" in d_
-            and "n-2" in dvp_
-            and dvp_["n-2"].vector().norm("l2") > 0.0
-        )
-
-        v2 = v_["n-2"] if has_n_minus_2 else v_["n-1"]
-        d2 = d_["n-2"] if has_n_minus_2 else d_["n-1"]
-
-        update_mu_eff(
-            mu_eff,
-            v_["n-1"],
-            d_["n-1"],
-            v2,
-            d2,
-            **cross_params,
-        )
+    # Update the non-Newtonian effective viscosity (mu_eff is None for a Newtonian fluid)
+    if mu_eff is not None:
+        mu_eff.update()
 
     return dict(inlet=inlet, interface_pressure=interface_pressure)
 
@@ -271,7 +255,7 @@ def compute_minimum_jacobian(mesh: Mesh, d: Function, local_rhs: bool = False) -
 
 def post_solve(dvp_, n, dsi, dt, mesh, inlet_area, mu_f, rho_f, probe_points, t,
                mu_eff, visualization_folder,
-               counter, save_step, nonnewtonian, MPI,
+               counter, save_step, MPI,
                T_Cycle, n_save_second_cycle, **namespace):
 
     d = dvp_["n"].sub(0, deepcopy=True)
@@ -279,7 +263,7 @@ def post_solve(dvp_, n, dsi, dt, mesh, inlet_area, mu_f, rho_f, probe_points, t,
     p = dvp_["n"].sub(2, deepcopy=True)
 
     # Store viscosity only during the second cardiac cycle
-    if nonnewtonian and _save_second_cycle_only(
+    if mu_eff is not None and _save_second_cycle_only(
         counter=counter,
         dt=dt,
         T_Cycle=T_Cycle,
@@ -297,14 +281,13 @@ def post_solve(dvp_, n, dsi, dt, mesh, inlet_area, mu_f, rho_f, probe_points, t,
             mu_file.parameters["rewrite_function_mesh"] = False
             namespace["mu_file"] = mu_file
 
-        mu_eff.rename("Viscosity", "mu")
         namespace["mu_file"].write(mu_eff, t)
 
     print_probe_points(v, p, probe_points)
     calculate_and_print_flow_properties(dt, mesh, v, inlet_area, mu_f, rho_f, n, dsi)
     compute_minimum_jacobian(mesh, d)
 
-    if nonnewtonian and "mu_file" in namespace:
+    if "mu_file" in namespace:
         return dict(mu_file=namespace["mu_file"])
 
     return dict()
