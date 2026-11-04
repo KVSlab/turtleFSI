@@ -121,7 +121,7 @@ def _save_second_cycle_only(counter: int, dt: float, T_Cycle: float, n_save_seco
     save_stride = max(1, steps_per_cycle // n_save_second_cycle)
 
     return (
-        step_number > steps_per_cycle
+        steps_per_cycle < step_number <= 2 * steps_per_cycle
         and (step_number - steps_per_cycle) % save_stride == 0
     )
 
