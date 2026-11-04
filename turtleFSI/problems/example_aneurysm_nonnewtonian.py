@@ -309,9 +309,11 @@ def post_solve(dvp_, n, dsi, dt, mesh, inlet_area, mu_f, rho_f, probe_points, t,
     ):
 
         if "mu_file" not in namespace:
+            run_number = namespace["run_number"]
+            mu_filename = "viscosity.xdmf" if run_number == 0 else f"viscosity_run_{run_number}.xdmf"
             mu_file = XDMFFile(
                 MPI.comm_world,
-                str(Path(visualization_folder) / "viscosity.xdmf")
+                str(Path(visualization_folder) / mu_filename)
             )
             mu_file.parameters["flush_output"] = True
             mu_file.parameters["rewrite_function_mesh"] = False
