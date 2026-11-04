@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 """
-Problem file for aneurysm FSI simulation
+Example problem file: aneurysm FSI simulation with a non-Newtonian fluid (modified Cross model).
 """
 from pathlib import Path
 import numpy as np
@@ -10,13 +10,15 @@ import numpy as np
 from vampy.simulation.Womersley import make_womersley_bcs, compute_boundary_geometry_acrn
 from vampy.simulation.simulation_common import print_mesh_information
 from turtleFSI.problems import *
-_turtle_save_files_visualization = save_files_visualization
 from dolfin import HDF5File, Mesh, MeshFunction, assemble, FacetNormal, ds, \
-    DirichletBC, Measure, inner, parameters, VectorFunctionSpace, Function, XDMFFile, FunctionSpace, MPI
+    DirichletBC, Measure, inner, parameters, Function, XDMFFile, FunctionSpace, MPI
 from turtleFSI.modules.nonnewtonian import update_mu_eff
 from vasp.simulations.simulation_common import load_probe_points, calculate_and_print_flow_properties, \
-    print_probe_points, InterfacePressure, peval, local_project
-from turtleFSI.modules.common import J_    
+    print_probe_points, InterfacePressure, local_project
+from turtleFSI.modules.common import J_
+
+# Keep a reference to the default turtleFSI saving function, which is wrapped below
+_turtle_save_files_visualization = save_files_visualization
 
 # set compiler arguments
 parameters["form_compiler"]["quadrature_degree"] = 6
@@ -40,10 +42,10 @@ def set_problem_parameters(default_variables, **namespace):
     default_variables.update(dict(
         # Temporal parameters
         T=2.0,  # Simulation end time
-        dt=0.0002,  # Timne step size
+        dt=0.0002,  # Time step size
         theta=0.501,  # Theta scheme parameter
         save_step=1,  # Save frequency of files for visualisation
-        n_save_second_cycle = 500, # Number of steps saved in the second cycle
+        n_save_second_cycle=500,  # Number of time steps saved in the second cardiac cycle
         checkpoint_step=50,  # Save frequency of checkpoint files
         # Linear solver parameters
         linear_solver="mumps",
@@ -81,16 +83,15 @@ def set_problem_parameters(default_variables, **namespace):
         mesh_path="mesh_C0004/model_clipped_3.h5",
         FC_file="FC_MCA_10",  # File name containing the fourier coefficients for the flow waveform
         P_FC_File="FC_Pressure",  # File name containing the fourier coefficients for the pressure waveform
-        compiler_parameters=_compiler_parameters,  # Update the defaul values of the compiler arguments (FEniCS)
+        compiler_parameters=_compiler_parameters,  # Update the default values of the compiler arguments (FEniCS)
         save_deg=2,  # Degree of the functions saved for visualisation
         scale_probe=True,  # Scale the probe points to meters
-        nonnewtonian = True,
-        cross_params = {"mu_0": 0.056, "mu_inf": 0.00345, "lmbda": 3.736, "n": 2.406, "a": 0.254},
-        # mu_0=5.6E-2,      # Cross model zero-shear viscosity [Pa.s]
-        # mu_inf=3.45E-3,   # Cross model infinite-shear viscosity [Pa.s]
-        # lmbda=3.736,      # Cross model time constant [s]
-        # n=1.45,
-        # a=0.254,
+        # Non-Newtonian fluid (modified Cross model):
+        # mu = mu_inf + (mu_0 - mu_inf) / (1 + (lmbda * shear_rate)**n)**a
+        # mu_0: zero-shear viscosity [Pa.s], mu_inf: infinite-shear viscosity [Pa.s],
+        # lmbda: time constant [s], n and a: dimensionless model exponents
+        nonnewtonian=True,
+        cross_params={"mu_0": 0.056, "mu_inf": 0.00345, "lmbda": 3.736, "n": 2.406, "a": 0.254},
         solid_properties={"dx_s_id":2,"material_model":"MooneyRivlin","rho_s":1.0E3,"mu_s":mu_s_val,"lambda_s":lambda_s_val,"C01":0.02e6,"C10":0.0,"C11":1.8e6},
     ))
     return default_variables
@@ -139,27 +140,6 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
         T_Cycle=T_Cycle,
         n_save_second_cycle=n_save_second_cycle,
     )
-
-    step_number = counter + 1
-    t_debug = step_number * dt
-
-    if MPI.rank(MPI.comm_world) == 0:
-        if counter < 5:
-            print(
-                f"[DEBUG save_files_visualization] called: "
-                f"counter={counter}, step={step_number}, "
-                f"t≈{t_debug:.6f}, solver_t={t:.6f}, "
-                f"should_save={should_save}",
-                flush=True,
-            )
-
-        if should_save:
-            print(
-                f"[DEBUG save_files_visualization] SAVING: "
-                f"counter={counter}, step={step_number}, "
-                f"t≈{t_debug:.6f}, solver_t={t:.6f}",
-                flush=True,
-            )
 
     if not should_save:
         return {}
@@ -230,8 +210,6 @@ def initiate(mesh_path, scale_probe, mesh, v_deg, p_deg, **namespace):
     if scale_probe:
         probe_points = probe_points * 0.001
 
-    Vv = VectorFunctionSpace(mesh, "CG", v_deg)
-
     return dict(probe_points=probe_points)
 
 
@@ -249,7 +227,7 @@ def pre_solve(t, inlet,interface_pressure, mu_eff, cross_params, v_, d_, dvp_, n
     # Update pressure condition
     interface_pressure.update(t)
 
-    # update nonewtonian viscosity
+    # Update the non-Newtonian effective viscosity
     if nonnewtonian:
         has_n_minus_2 = (
             "n-2" in v_
