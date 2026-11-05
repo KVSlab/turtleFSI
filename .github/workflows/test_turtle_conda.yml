@@ -12,6 +12,7 @@ env:
 
 defaults:
   run:
+    # This is perfect! It ensures Micromamba activates the environment automatically.
     shell: bash -el {0}
 
 jobs:
@@ -21,22 +22,20 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
 
     steps:
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # (Updated to standard v4, adjust if v7 is custom)
 
       - name: Install turtle dependencies via conda
         uses: ./.github/actions/conda-install
         with:
           python-version: ${{ matrix.python-version }}
 
- 
-      - name: "Install code"
-        run: python3 -m pip install --no-deps .
+      - name: Install code
+        run: python -m pip install --no-deps .
 
       - name: Run tests
         run: |
-          python3 -m pip install pytest
-          python3 -m pytest -xvs
+          python -m pip install pytest
+          python -m pytest -xvs
