@@ -4,9 +4,9 @@ channels:
   - conda-forge
 dependencies:
   - fenics-dolfin
-  - metis=5.1.0
-  - hdf5=1.12.2
-  - mpi4py=3.1.4
+  - metis
+  - hdf5
+  - mpi4py
   - python>3.7
   - pip
   - git
