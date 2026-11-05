@@ -113,22 +113,27 @@ def get_mesh_domain_and_boundaries(mesh_path, **namespace):
 
     return mesh, domains, boundaries
 
-def _save_second_cycle_only(counter: int, dt: float, T_Cycle: float, n_save_second_cycle: int) -> bool:
+def _save_second_cycle_only(counter: int, dt: float, T_Cycle: float, n_save_second_cycle: int,
+                            save_step: int) -> bool:
     """
     Save only selected timesteps during the second cardiac cycle.
-    """
-    step_number = counter + 1
 
+    counter is the solver's zero-based time step counter (t = (counter + 1) * dt), and the solver
+    only calls save_files_visualization when counter % save_step == 0. The stride between saved
+    time steps is therefore a multiple of save_step, so that the visualization and the viscosity
+    outputs select the same time steps for any save_step.
+    """
     steps_per_cycle = int(round(T_Cycle / dt))
     save_stride = max(1, steps_per_cycle // n_save_second_cycle)
+    save_stride = max(save_step, save_stride - save_stride % save_step)
 
     return (
-        steps_per_cycle < step_number <= 2 * steps_per_cycle
-        and (step_number - steps_per_cycle) % save_stride == 0
+        steps_per_cycle <= counter < 2 * steps_per_cycle
+        and counter % save_stride == 0
     )
 
 def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_deg, mesh,
-                             counter, dt, T_Cycle, n_save_second_cycle, **namespace):
+                             counter, dt, T_Cycle, n_save_second_cycle, save_step, **namespace):
     """
     Wrapper around the default turtleFSI visualization saving.
 
@@ -140,6 +145,7 @@ def save_files_visualization(visualization_folder, dvp_, t, save_deg, v_deg, p_d
         dt=dt,
         T_Cycle=T_Cycle,
         n_save_second_cycle=n_save_second_cycle,
+        save_step=save_step,
     )
 
     if not should_save:
@@ -268,6 +274,7 @@ def post_solve(dvp_, n, dsi, dt, mesh, inlet_area, mu_f, rho_f, probe_points, t,
         dt=dt,
         T_Cycle=T_Cycle,
         n_save_second_cycle=n_save_second_cycle,
+        save_step=save_step,
     ):
 
         if "mu_file" not in namespace:
