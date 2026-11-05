@@ -5,7 +5,7 @@ inputs:
     description: Python version to install
     required: true
     type: string
-    default: "3.10"
+    default: "3.12"
 
 runs:
   using: composite
@@ -13,7 +13,7 @@ runs:
     # cache ref https://github.com/conda-incubator/setup-miniconda#caching-packages
 
     - name: Setup conda-forge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v4
       with:
           miniforge-variant: Mambaforge
           miniforge-version: latest
@@ -34,7 +34,7 @@ runs:
       shell: bash
 
     - name: Cache conda env
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       id: cache-env
       with:
         path: ${{ env.CONDA }}/envs/turtleFSI

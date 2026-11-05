@@ -17,10 +17,10 @@ jobs:
   test-code:
     runs-on: ubuntu-22.04
     # Runs against FEniCS main branch
-    container: ghcr.io/scientificcomputing/fenics:2023-04-21
+    container: ghcr.io/scientificcomputing/fenics:2025-10-09
     steps:
       # This action sets the current path to the root of your github repo
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       
 
       - name: "Install code"

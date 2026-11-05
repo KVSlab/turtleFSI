@@ -21,11 +21,11 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
 
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Install turtle dependencies via conda
         uses: ./.github/actions/conda-install
