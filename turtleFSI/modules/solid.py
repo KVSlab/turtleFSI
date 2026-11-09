@@ -6,7 +6,6 @@
 from collections.abc import Iterable
 
 from turtleFSI.modules import *
-from turtleFSI.problems import info_blue
 from dolfin import Constant, inner, grad, MPI
 
 def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, solid_properties, k, theta,
@@ -54,9 +53,6 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
             else:
                 if MPI.rank(MPI.comm_world) == 0:
                     print("Invalid/No entry for viscoelasticity, assuming no viscoelasticity.")
-        else:
-            if MPI.rank(MPI.comm_world) == 0:
-                print("No entry for viscoelasticity, assuming no viscoelasticity.")
 
         # Stress (Note that if viscoelasticity is used, Piola1() is no longer the total stress, it is the non-rate dependant (elastic) component of the stress)
         F_solid_nonlinear += theta0 * inner(Piola1(d_["n"], solid_properties[solid_region]), grad(psi)) * dx_s[solid_region]
@@ -74,14 +70,11 @@ def solid_setup(d_, v_, phi, psi, dx_s, ds_s, dx_s_id_list, ds_s_ext_id_list, so
     Biomech Model Mechanobiol 11, 1–18 (2012). https://doi.org/10.1007/s10237-011-0289-z
     """
     if robin_bc:
-        info_blue("Robin BC is used for the solid domain.")
+        # The Robin boundaries and coefficients are printed by print_material_models (turtleFSI/modules/domain.py)
         assert isinstance(k_s, Iterable), "k_s should be an iterable (e.g., list, tuple, etc.)."
         assert isinstance(c_s, Iterable), "c_s should be an iterable (e.g., list, tuple, etc.)."
         assert len(k_s) == len(c_s) == len(ds_s_ext_id_list), "k_s, c_s, and ds_s_ext_id_list should have the same length."
         for solid_boundaries in range(len(ds_s_ext_id_list)):
-            if MPI.rank(MPI.comm_world) == 0:
-                print(f"solid_boundaries: {solid_boundaries}, ds_s_ext_id_list: {ds_s_ext_id_list[solid_boundaries]}")
-                print(f"k_s: {k_s[solid_boundaries]}, c_s: {c_s[solid_boundaries]}")
             F_solid_linear += theta0 * inner((k_s[solid_boundaries] * d_["n"] + c_s[solid_boundaries] * v_["n"]), psi)*ds_s[solid_boundaries]
             F_solid_linear += theta1 * inner((k_s[solid_boundaries] * d_["n-1"] + c_s[solid_boundaries] * v_["n-1"]), psi)*ds_s[solid_boundaries]
             

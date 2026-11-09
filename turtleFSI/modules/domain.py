@@ -7,6 +7,7 @@ from turtleFSI.modules import *
 from dolfin import ds, MPI
 from dolfin.cpp.mesh import MeshFunctionSizet
 from typing import Union
+import numpy as np
 
 """
 Last update: 2023-06-15
@@ -119,3 +120,96 @@ def assign_domain_properties(dx: ufl.measure.Measure, dx_f_id: Union[int, list],
         ds_s_ext_id_list = None
 
     return dict(dx_f=dx_f, dx_f_id_list=dx_f_id_list, ds_s_ext_id_list=ds_s_ext_id_list, ds_s=ds_s, fluid_properties=fluid_properties, dx_s=dx_s, dx_s_id_list=dx_s_id_list, solid_properties=solid_properties)
+
+
+# Parameters of each solid material model, in the order they are printed (see Piola1 in turtleFSI/modules/common.py)
+_SOLID_MODEL_PARAMETERS = {
+    "StVenantKirchoff": ("rho_s", "mu_s", "lambda_s"),
+    "StVenantKirchoffEnergy": ("rho_s", "mu_s", "lambda_s"),
+    "NeoHookean": ("rho_s", "mu_s", "lambda_s"),
+    "MooneyRivlin": ("rho_s", "mu_s", "lambda_s", "C01", "C10", "C11"),
+    "Gent": ("rho_s", "mu_s", "Jm"),
+}
+
+
+def _as_list(value) -> list:
+    """Return value as a list: None -> [], a list or tuple -> list, anything else -> [value]."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return [value]
+
+
+def _format_parameters(parameters: dict, keys: list) -> str:
+    """Format the given keys of a dictionary as 'key = value' pairs."""
+    pairs = []
+    for key in keys:
+        value = parameters[key]
+        if isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, bool):
+            pairs.append(f"{key} = {value:.4e}")
+        else:
+            pairs.append(f"{key} = {value}")
+    return ", ".join(pairs)
+
+
+def print_material_models(solid_properties: list, fluid_properties: list, solid: str = "solid", fluid: str = "fluid",
+                          robin_bc: bool = False, k_s=None, c_s=None, ds_s_ext_id_list=None,
+                          nonnewtonian: bool = False, cross_params=None, **namespace) -> None:
+    """
+    Print the material model and the parameters of each solid and fluid region, and the Robin boundary condition,
+    as they are used in the simulation (i.e. after assign_domain_properties).
+
+    Args:
+        solid_properties: List of dictionaries of solid properties for each solid region
+        fluid_properties: List of dictionaries of fluid properties for each fluid region
+        solid: Solid module ("solid" or "no_solid")
+        fluid: Fluid module ("fluid" or "no_fluid")
+        robin_bc: True if the Robin boundary condition is used for the solid
+        k_s, c_s: Elastic and viscous coefficients of the Robin boundary condition, one per boundary
+        ds_s_ext_id_list: IDs of the boundaries where the Robin boundary condition is applied
+        nonnewtonian: Default non-Newtonian flag for the fluid regions that do not set it
+        cross_params: Default modified Cross parameters for the fluid regions that do not set them
+    """
+    if MPI.rank(MPI.comm_world) != 0:
+        return
+
+    width = 80
+    lines = ["", " Material models ".center(width, "=")]
+
+    if solid == "no_solid":
+        lines.append("Solid: not solved (solid = no_solid)")
+    else:
+        for region_properties in _as_list(solid_properties):
+            model = region_properties.get("material_model")
+            lines.append(f"Solid region dx_s_id={region_properties.get('dx_s_id', '?')}: {model}")
+            keys = list(_SOLID_MODEL_PARAMETERS.get(model, ()))
+            keys += [key for key in region_properties if key not in keys and key not in ("dx_s_id", "material_model")]
+            keys = [key for key in keys if key in region_properties]
+            lines.append("    " + _format_parameters(region_properties, keys))
+
+    if fluid == "no_fluid":
+        lines.append("Fluid: not solved (fluid = no_fluid)")
+    else:
+        for region_properties in _as_list(fluid_properties):
+            region = region_properties.get("dx_f_id", "?")
+            if region_properties.get("nonnewtonian", nonnewtonian):
+                params = region_properties.get("cross_params", cross_params) or {}
+                lines.append(f"Fluid region dx_f_id={region}: non-Newtonian (modified Cross)")
+                text = _format_parameters(region_properties, [key for key in ("rho_f",) if key in region_properties])
+                lines.append("    " + ", ".join(part for part in (text, _format_parameters(params, list(params))) if part))
+            else:
+                lines.append(f"Fluid region dx_f_id={region}: Newtonian")
+                lines.append("    " + _format_parameters(region_properties,
+                                                         [key for key in ("rho_f", "mu_f") if key in region_properties]))
+
+    if solid != "no_solid":
+        if robin_bc:
+            lines.append("Robin boundary condition: on")
+            for ds_id, k, c in zip(_as_list(ds_s_ext_id_list), _as_list(k_s), _as_list(c_s)):
+                lines.append(f"    ds_s_id = {ds_id}: " + _format_parameters({"k_s": k, "c_s": c}, ["k_s", "c_s"]))
+        else:
+            lines.append("Robin boundary condition: off")
+
+    lines.append("=" * width)
+    print("\n".join(lines), flush=True)
