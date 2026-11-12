@@ -8,7 +8,7 @@ Common functions used in the variational formulations for the variational forms
 of the mesh lifting equations, fluid equations and the structure equation.
 """
 
-from dolfin import grad, det, Identity, tr, inv, inner, as_tensor, as_vector, derivative, variable
+from dolfin import grad, det, Identity, tr, inv, inner, as_tensor, as_vector, derivative, variable, Constant
 import ufl  # ufl module
 
 def get_dimension(u):
@@ -28,11 +28,14 @@ def get_dimension(u):
 
     return dim
 
-def F_(d):
+def F_(d, shape_displacement=None):
     """
-    Deformation gradient tensor
+    Physical deformation gradient tensor pulled back to the reference domain.
+
+    With no shape map this is the original turtleFSI F = I + grad(d). With a
+    shape map T(x; mu), the paper's definition is F = I + grad(d) G^{-1}.
     """
-    return Identity(get_dimension(d)) + grad(d)
+    return Identity(get_dimension(d)) + grad(d) * inv(G_(d, shape_displacement))
 
 def L_(v):
     """
@@ -46,27 +49,82 @@ def D_(v):
     """    
     return 0.5*(L_(v) + L_(v).T)
 
-def J_(d):
+def J_(d, shape_displacement=None):
     """
-    Determinant of the deformation gradient
+    Determinant of the physical deformation gradient.
     """
-    return det(F_(d))
+    return det(F_(d, shape_displacement))
 
 
-def eps(d):
+def G_(u, shape_displacement=None):
     """
-    Infinitesimal strain tensor
+    Shape-parametrization Jacobian matrix.
+
+    Defaults to the identity map. Passing a shape displacement field represents
+    T(x; mu) = x + shape_displacement(x; mu), so G = I + grad(shape_displacement).
     """
-    return 0.5 * (grad(d) * inv(F_(d)) + inv(F_(d)).T * grad(d).T)
+    if shape_displacement is None:
+        return Identity(get_dimension(u))
+    return Identity(get_dimension(shape_displacement)) + grad(shape_displacement)
 
 
-def sigma_f_u(u, d, mu_f):
+def K_(u, shape_displacement=None):
     """
-    Deviatoric component of the Cauchy stress tensor (fluid problem)
+    Determinant of the shape-parametrization Jacobian matrix.
     """
-    return mu_f * (grad(u) * inv(F_(d)) + inv(F_(d)).T * grad(u).T)
+    return det(G_(u, shape_displacement))
 
 
+def region_value(value, region):
+    """
+    Return a global or per-region parameter value.
+    """
+    if isinstance(value, dict):
+        return value.get(region)
+    if isinstance(value, (list, tuple)) and value and not isinstance(value[0], (int, float)):
+        return value[region]
+    return value
+
+
+def vector_body_force(value, dim):
+    """
+    Convert a vector body-force value into a UFL-compatible object.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        return Constant(tuple(value))
+    return value
+
+# extension: harmonic extension: sigma_ext_d_f
+def sigma_ext(d, shape_displacement=None):
+    """
+    Harmonic extension tensor from Ballarin/Rozza Section 2.3(D).
+    """
+    G_inv = inv(G_(d, shape_displacement))
+    return (1.0 / (J_(d, shape_displacement) * K_(d, shape_displacement))) * grad(d) * G_inv
+
+
+
+def eps(d, shape_displacement=None):
+    """
+    Infinitesimal strain tensor.
+    """
+    F = F_(d, shape_displacement)
+    G_inv = inv(G_(d, shape_displacement))
+    grad_d = grad(d) * G_inv
+    return 0.5 * (grad_d * inv(F) + inv(F).T * grad_d.T)
+
+# fluid: incompressible Newtonian fluid: fluid viscous stress
+def sigma_f_u(u, d, mu_f, shape_displacement=None):
+    """
+    Deviatoric component of the Cauchy stress tensor (fluid problem).
+    """
+    G_inv = inv(G_(u, shape_displacement))
+    transformed_gradient = grad(u) * G_inv * inv(F_(d, shape_displacement))
+    return mu_f * (transformed_gradient + transformed_gradient.T)
+
+# fluid: incompressible Newtonian fluid: pressure stress
 def sigma_f_p(p, u):
     """
     Hydrostatic component of the Cauchy stress tensor (fluid problem)
@@ -74,42 +132,57 @@ def sigma_f_p(p, u):
     return -p * Identity(get_dimension(u))
 
 
-def sigma(u, p, d, mu_f):
+def sigma(u, p, d, mu_f, shape_displacement=None):
     """
     Cauchy stress tensor (fluid problem)
     """
-    return sigma_f_u(u, d, mu_f) + sigma_f_p(p, u)
+    return sigma_f_u(u, d, mu_f, shape_displacement) + sigma_f_p(p, u)
 
 
-def E(d):
+def E(d, shape_displacement=None):
     """
-    Green-Lagrange strain tensor
+    Green-Lagrange strain tensor.
     """
-    return 0.5*(F_(d).T*F_(d) - Identity(get_dimension(d)))
+    F = F_(d, shape_displacement)
+    return 0.5*(F.T*F - Identity(get_dimension(d)))
 
 
-def S(d, solid_properties):
+def S(d, solid_properties, shape_displacement=None):
     """
     Second Piola-Kirchhoff Stress (solid problem)
     """
-    F = F_(d)
-    S__ = inv(F)*Piola1(d, solid_properties)
+    F = F_(d, shape_displacement)
+    S__ = inv(F)*Piola1(d, solid_properties, shape_displacement)
 
     return S__
 
-def Piola1(d, solid_properties):
+def Piola1(d, solid_properties, shape_displacement=None):
     """
     First Piola-Kirchhoff Stress (solid problem)
     """
-    if solid_properties["material_model"] == "StVenantKirchoff":
+    if solid_properties["material_model"] in ("LinearElastic", "BallarinRozzaLinearElastic"):
+        I = Identity(get_dimension(d))
+        lambda_s = solid_properties["lambda_s"]
+        mu_s = solid_properties["mu_s"]
+
+        # structure: compressible linear elastic material: e_s
+        strain = 0.5 * (grad(d) * inv(G_(d, shape_displacement))
+                        + inv(G_(d, shape_displacement)).T * grad(d).T)
+
+        # structure compressible linear elastic material: P_s_d
+        P = lambda_s * tr(strain) * I + 2 * mu_s * strain
+
+    # default turtleFSI extensions: 
+    elif solid_properties["material_model"] == "StVenantKirchoff":
         I = Identity(get_dimension(d)) # Identity matrix
         lambda_s = solid_properties["lambda_s"]
         mu_s = solid_properties["mu_s"]
-        S_svk = 2*mu_s*E(d) + lambda_s*tr(E(d))*I  # Calculate First Piola Kirchoff Stress with Explicit form of St. Venant Kirchoff model
-        P = F_(d)*S_svk  # Convert to First Piola-Kirchoff Stress
+        E_solid = E(d, shape_displacement)
+        S_svk = 2*mu_s*E_solid + lambda_s*tr(E_solid)*I  # Calculate First Piola Kirchoff Stress with Explicit form of St. Venant Kirchoff model
+        P = F_(d, shape_displacement)*S_svk  # Convert to First Piola-Kirchoff Stress
     else: 
         # ["StVenantKirchoff",""StVenantKirchoffEnergy","NeoHookean","MooneyRivlin","Gent"]
-        F = ufl.variable(F_(d))  # Note that dolfin and ufl "variable" are different.
+        F = ufl.variable(F_(d, shape_displacement))  # Note that dolfin and ufl "variable" are different.
         if solid_properties["material_model"] == "StVenantKirchoffEnergy":
             W = W_St_Venant_Kirchoff(F, solid_properties["lambda_s"], solid_properties["mu_s"])
         elif solid_properties["material_model"] == "NeoHookean":
@@ -138,11 +211,12 @@ def Svisc_D(v, solid_properties):
 
     return S_svk
 
-def S_linear(d, alfa_mu, alfa_lam):
+def S_linear(d, alfa_mu, alfa_lam, shape_displacement=None):
     """
     Second Piola-Kirchhoff Stress (mesh problem - Linear Elastic materials)
     """
-    return alfa_lam * tr(eps(d)) * Identity(get_dimension(d)) + 2.0 * alfa_mu * eps(d)
+    strain = eps(d, shape_displacement)
+    return alfa_lam * tr(strain) * Identity(get_dimension(d)) + 2.0 * alfa_mu * strain
 
 
 def get_eig(T):
