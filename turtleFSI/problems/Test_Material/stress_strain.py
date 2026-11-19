@@ -1,8 +1,6 @@
 from dolfin import *
 from turtleFSI.modules import common
-import numpy as np
-import ufl  # ufl module
-from os import path
+
 #from turtleFSI.problems import *
 
 def project_solid(tensorForm, fxnSpace, dx_s):

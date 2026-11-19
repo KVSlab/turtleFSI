@@ -9,7 +9,10 @@ of the mesh lifting equations, fluid equations and the structure equation.
 """
 
 from dolfin import grad, det, Identity, tr, inv, inner, as_tensor, as_vector, derivative, variable
-import ufl  # ufl module
+try:
+    import ufl  # ufl module
+except ImportError:
+    import ufl_legacy as ufl
 
 def get_dimension(u):
 

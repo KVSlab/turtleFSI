@@ -9,7 +9,7 @@ on:
 env:
   DEB_PYTHON_INSTALL_LAYOUT: deb_system
   IPP_NONINTERACTIVE: "1"
-
+  UCX_TLS: "tcp,shm"
 defaults:
   run:
     # This is perfect! It ensures Micromamba activates the environment automatically.
