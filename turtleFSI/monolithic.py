@@ -121,15 +121,10 @@ dS = Measure("dS", subdomain_data=boundaries)
 dx = Measure("dx", subdomain_data=domains)
 
 # Domains
-exec("from turtleFSI.modules.domain import assign_domain_properties")
+exec("from turtleFSI.modules.domain import assign_domain_properties, print_material_models")
 vars().update(assign_domain_properties(**vars()))
-if MPI.rank(MPI.comm_world) == 0:
-    print("{} solid region(s) found, using following parameters".format(len(dx_s_id_list)))
-    for solid_region in solid_properties:
-        print(solid_region)
-    print("{} fluid region(s) found, using following parameters".format(len(dx_f_id_list)))
-    for fluid_region in fluid_properties:
-        print(fluid_region)
+# Print the material models and parameters used for each region, and the Robin boundary condition
+print_material_models(**vars())
 
 # Define solver
 # Adding the Matrix() argument is a FEniCS 2018.1.0 hack
