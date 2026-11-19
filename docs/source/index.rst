@@ -14,6 +14,8 @@ Welcome to turtleFSI's documentation!
 
    installation
    using_turtleFSI
+   output_layout
+   pod_galerkin_rom_implementation_plan
    verif_perf
    new_features
    known_issues

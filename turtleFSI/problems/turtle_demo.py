@@ -32,7 +32,7 @@ def set_problem_parameters(default_variables, **namespace):
     lambda_s_val = nu_s_val*2.*mu_s_val/(1. - 2.*nu_s_val)
 
     default_variables.update(dict(
-        T=0.2,                         # End time [s] (set T to several seconds to simulate several swimming cycles)
+        T=5,                         # End time [s] (set T to several seconds to simulate several swimming cycles)
         dt=0.005,                      # Time step [s]
         theta=0.505,                   # Theta value (0.5 + dt), shifted Crank-Nicolson scheme
         Um=1.0,                        # Max. velocity inlet [m/s]
@@ -151,3 +151,56 @@ def create_bcs(DVP, boundaries, Um, v_deg, extrapolation_sub_type, verbose, **na
 def pre_solve(t, inlet, **namespace):
     # Update the time variable used for the inlet boundary condition
     inlet.update(t)
+
+def initiate(mesh, domains, dx_f_id, dx_s_id, folder, **namespace):
+    """
+    This runs ONCE at the start. 
+    We create the submeshes and files here so the simulation stays fast.
+    """
+    # Create the submeshes for fluid and solid regions
+    fluid_mesh = SubMesh(mesh, domains, dx_f_id)
+    solid_mesh = SubMesh(mesh, domains, dx_s_id)
+
+    # Prepare the XDMF files for saving
+    file_d_fluid = XDMFFile(MPI.comm_world, path.join(folder, "disp_fluid.xdmf"))
+    file_d_solid = XDMFFile(MPI.comm_world, path.join(folder, "disp_solid.xdmf"))
+
+    # Allow Paraview to append data over time
+    file_d_fluid.parameters["flush_output"] = True
+    file_d_solid.parameters["flush_output"] = True
+
+    # Return these so they are available in the 'namespace' for post_solve
+    return dict(fluid_mesh=fluid_mesh, 
+                solid_mesh=solid_mesh, 
+                file_d_fluid=file_d_fluid, 
+                file_d_solid=file_d_solid)
+
+def post_solve(**namespace):
+    """
+    Using **namespace allows the function to safely pull variables
+    by name from the solver's internal state.
+    """
+    # 1. Pull required variables from the namespace
+    t = namespace.get('t')
+    w = namespace.get('w')
+    fluid_mesh = namespace.get('fluid_mesh')
+    solid_mesh = namespace.get('solid_mesh')
+    file_d_fluid = namespace.get('file_d_fluid')
+    file_d_solid = namespace.get('file_d_solid')
+
+    # 2. Extract displacement (component index 2)
+    _, _, d = w.split(deepcopy=True)
+
+    # 3. Save Fluid Displacement
+    V_f = VectorFunctionSpace(fluid_mesh, "CG", d.function_space().ufl_element().degree())
+    d_f = interpolate(d, V_f)
+    d_f.rename("displacement_fluid", "label")
+    file_d_fluid.write(d_f, t)
+
+    # 4. Save Solid Displacement
+    V_s = VectorFunctionSpace(solid_mesh, "CG", d.function_space().ufl_element().degree())
+    d_s = interpolate(d, V_s)
+    d_s.rename("displacement_solid", "label")
+    file_d_solid.write(d_s, t)
+
+

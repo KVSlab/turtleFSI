@@ -25,18 +25,30 @@ def solver_setup(F_fluid_linear, F_fluid_nonlinear, F_solid_linear, F_solid_nonl
     J_linear = derivative(F_lin, dvp_["n"], chi)
     J_nonlinear = derivative(F_nonlin, dvp_["n"], chi)
 
-    equation_3 = build_equation_3_blocks(DVP=DVP, dvp_=dvp_, **namespace)
+    equation_3_namespace = dict(namespace)
+    equation_3_namespace.pop("DVP", None)
+    equation_3_namespace.pop("dvp_", None)
+    equation_3 = build_equation_3_blocks(DVP=DVP, dvp_=dvp_, **equation_3_namespace)
 
     A_pre = assemble(J_linear, form_compiler_parameters=compiler_parameters,
                      keep_diagonal=True)
-    A = Matrix(A_pre)
+    # The solve matrix needs the union of linear and nonlinear couplings,
+    # including interior-facet entries from the paper extension. A copy of
+    # A_pre alone can reject these entries during in-place PETSc assembly.
+    A = assemble(J_linear + J_nonlinear, form_compiler_parameters=compiler_parameters,
+                 keep_diagonal=True)
     b = None
 
-    return dict(F=F, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol,
+    # This J (and assembled A) is the WHOLE equation-(4) Newton matrix, not
+    # the paper's fluid stiffness A^F. For named M_F, A_F, C_F_u, etc., see
+    # modules.equation_4.build_equation_4_forms / assemble_equation_4.
+    J = J_linear + J_nonlinear
+
+    return dict(F=F, J=J, J_nonlinear=J_nonlinear, A_pre=A_pre, A=A, b=b, up_sol=up_sol,
                 **equation_3)
 
 
-def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
+def newtonsolver(F, J, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_tstep, compiler_parameters,
                  dvp_, up_sol, dvp_res, rtol, atol, max_it, counter, first_step_num, verbose, **namespace):
     """
     Solve the non-linear system of equations with Newton scheme. The standard is to compute the Jacobian
@@ -54,7 +66,8 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
     last_rel_res = residual
     last_residual = rel_res
     up_sol.set_operator(A)
-    while rel_res > rtol and residual > atol and iter < max_it:
+    adaptive = namespace.get("adaptive_time_step", False)
+    while (adaptive or rel_res > rtol) and residual > atol and iter < max_it:
         # Check if recompute Jacobian from 'recompute_tstep' (time step)
         recompute_for_timestep = iter == 0 and (counter % recompute_tstep == 0)
 
@@ -70,21 +83,16 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         if recompute_for_timestep or recompute_frequency or recompute_residual or recompute_initialize:
             if MPI.rank(MPI.comm_world) == 0 and verbose:
                 print("Compute Jacobian matrix")
-            # Assemble non-linear part of Jacobian, keep sparsity pattern (keep_diagonal=True)
-            # Here, we assume that A is already assembled with the linear part of the Jacobian, and not None type
-            if A is None:
-                A = assemble(J_nonlinear,
-                             form_compiler_parameters=compiler_parameters,
-                             keep_diagonal=True)
-            else:
-                assemble(J_nonlinear, tensor=A,
+            # Assemble the complete Jacobian freshly. Reusing a PETSc matrix
+            # for only J_nonlinear can fail when the nonlinear form inserts
+            # entries outside the current sparsity pattern.
+            A = assemble(J,
                          form_compiler_parameters=compiler_parameters,
                          keep_diagonal=True)
-            # Add non-linear and linear part of Jacobian
-            A.axpy(1.0, A_pre, True)
             # Insert ones on diagonal to make sure the matrix is non-singular (related to solid pressure being zero)
             A.ident_zeros()
             [bc.apply(A) for bc in bcs]
+            up_sol.set_operator(A)
 
         # Aseemble right hand side vector
         if b is None:
@@ -109,6 +117,11 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
         # Check residual
         residual = b.norm('l2')
         rel_res = norm(dvp_res, 'l2')
+        if adaptive:
+            # Acceptance must use the residual at the updated trial state.
+            trial_residual = assemble(-F)
+            [bc.apply(trial_residual, dvp_["n"].vector()) for bc in bcs]
+            residual = trial_residual.norm('l2')
         if rel_res > 1E20 or residual > 1E20 or isnan(rel_res) or isnan(residual):
             raise RuntimeError("Error: The simulation has diverged during the Newton solve with residual = %.3e and relative residual = %.3e" % (residual, rel_res))
 
@@ -117,4 +130,6 @@ def newtonsolver(F, J_nonlinear, A_pre, A, b, bcs, lmbda, recompute, recompute_t
                   % (iter, residual, atol, rel_res, rtol))
         iter += 1
 
-    return dict(up_sol=up_sol, A=A, b=b)
+    return dict(up_sol=up_sol, A=A, b=b,
+                newton_iterations=iter, newton_converged=residual <= atol,
+                newton_residual=residual)

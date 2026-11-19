@@ -50,7 +50,9 @@ class ReducedOperatorBundle:
     projected_residual_at_reference: np.ndarray | None = None
     projected_jacobian_mean_shift: np.ndarray | None = None
     linear_operator_blocks: ReducedLinearOperatorBlocks | None = None
+    component_operator_blocks: dict[tuple[str, ...], dict[tuple[str, str], np.ndarray]] | None = None
     metadata: dict[str, Any] | None = None
+    named_equation_6_operators: dict[str, np.ndarray] | None = None
 
     @property
     def J_N(self) -> np.ndarray:
@@ -163,13 +165,15 @@ def equilibrate_linear_system(
     tiny = np.finfo(float).tiny
     for _ in range(iterations):
         row_norms = np.linalg.norm(scaled_operator, axis=1)
-        row_update = np.where(row_norms > tiny, 1.0 / row_norms, 1.0)
+        row_update = np.ones_like(row_norms)
+        np.divide(1.0, row_norms, out=row_update, where=row_norms > tiny)
         scaled_operator = row_update[:, None] * scaled_operator
         scaled_rhs = row_update[:, None] * scaled_rhs
         row_scaling *= row_update
 
         column_norms = np.linalg.norm(scaled_operator, axis=0)
-        column_update = np.where(column_norms > tiny, 1.0 / column_norms, 1.0)
+        column_update = np.ones_like(column_norms)
+        np.divide(1.0, column_norms, out=column_update, where=column_norms > tiny)
         scaled_operator = scaled_operator * column_update[None, :]
         column_scaling *= column_update
 
@@ -375,7 +379,9 @@ def save_reduced_operator_bundle(
     projected_residual_at_reference: np.ndarray | None = None,
     projected_jacobian_mean_shift: np.ndarray | None = None,
     linear_operator_blocks: ReducedLinearOperatorBlocks | None = None,
+    component_operator_blocks: dict[tuple[str, ...], dict[tuple[str, str], np.ndarray]] | None = None,
     metadata: dict[str, Any] | None = None,
+    named_equation_6_operators: dict[str, np.ndarray] | None = None,
 ) -> None:
     """Save reduced operators for online use without full FEniCS assembly."""
 
@@ -398,6 +404,29 @@ def save_reduced_operator_bundle(
             arrays[f"J_N__{row_name}__{column_name}"] = linear_operator_blocks.blocks[(row_name, column_name)]
         for row_name, rhs_block in linear_operator_blocks.rhs_blocks.items():
             arrays[f"rhs_N__{row_name}"] = rhs_block
+    if component_operator_blocks is not None:
+        manifest = []
+        index = 0
+        for component_path, reduced_blocks in component_operator_blocks.items():
+            component_key = tuple(str(part) for part in component_path)
+            for row_name, column_name in reduced_blocks:
+                array_key = f"component_J_N__{index}"
+                arrays[array_key] = np.asarray(
+                    reduced_blocks[(row_name, column_name)],
+                    dtype=float,
+                )
+                manifest.append(
+                    {
+                        "path": list(component_key),
+                        "row": str(row_name),
+                        "column": str(column_name),
+                        "array_key": array_key,
+                    }
+                )
+                index += 1
+        arrays["component_block_manifest_json"] = np.asarray(
+            [json.dumps(manifest, sort_keys=True)]
+        )
 
     if quadratic_tensor is not None:
         arrays["quadratic_tensor"] = np.asarray(quadratic_tensor, dtype=float)
@@ -415,6 +444,12 @@ def save_reduced_operator_bundle(
         arrays["J_N_mean_shift"] = arrays["projected_jacobian_mean_shift"]
     if metadata:
         arrays["metadata_json"] = np.asarray([json.dumps(metadata, sort_keys=True)])
+    if named_equation_6_operators is not None:
+        arrays["equation_6_operator_names"] = np.asarray(list(named_equation_6_operators))
+        for name, matrix in named_equation_6_operators.items():
+            if name in arrays and not np.array_equal(arrays[name], matrix):
+                raise ValueError(f"Named equation (6) array conflicts with saved {name}")
+            arrays[name] = np.asarray(matrix, dtype=float)
     np.savez_compressed(path, **arrays)
 
 
@@ -444,6 +479,17 @@ def load_reduced_operator_bundle(path: Path) -> ReducedOperatorBundle:
                 for row_name in explicit_names
             },
         )
+    component_blocks = None
+    if "component_block_manifest_json" in data.files:
+        manifest = json.loads(str(np.asarray(data["component_block_manifest_json"]).reshape(-1)[0]))
+        component_blocks = {}
+        for item in manifest:
+            component_path = tuple(str(part) for part in item["path"])
+            block_key = (str(item["row"]), str(item["column"]))
+            component_blocks.setdefault(component_path, {})[block_key] = np.asarray(
+                data[str(item["array_key"])],
+                dtype=float,
+            )
 
     return ReducedOperatorBundle(
         operator=np.asarray(data["J_N"] if "J_N" in data.files else data["operator"], dtype=float),
@@ -468,7 +514,12 @@ def load_reduced_operator_bundle(path: Path) -> ReducedOperatorBundle:
         if "J_N_mean_shift" in data.files or "projected_jacobian_mean_shift" in data.files
         else None,
         linear_operator_blocks=explicit_blocks,
+        component_operator_blocks=component_blocks,
         metadata=metadata,
+        named_equation_6_operators={
+            str(name): np.asarray(data[str(name)], dtype=float)
+            for name in data["equation_6_operator_names"]
+        } if "equation_6_operator_names" in data.files else None,
     )
 
 

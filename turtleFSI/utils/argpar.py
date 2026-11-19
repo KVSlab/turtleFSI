@@ -161,9 +161,9 @@ def parse():
     parser.add_argument("-et", "--extrapolation-sub-type", type=str,
                         metavar="Extrapolation sub type", default=None,
                         choices=["constant", "small_constant", "volume", "volume_change",
-                                 "constrained_disp", "constrained_disp_vel"],
+                                 "paper", "constrained_disp", "constrained_disp_vel"],
                         help="Set the sub type of the extrapolation method ('constant'," +
-                        "'small_constant', 'volume', 'volume_change', 'constrained_disp', " +
+                        "'small_constant', 'volume', 'volume_change', 'paper', 'constrained_disp', " +
                         "'constrained_disp_vel')")
     parser.add_argument("--bc-ids", nargs="+", type=int, default=None, metavar="ID list",
                         help="List of boundary ids for the weak formulation of the" +
@@ -246,8 +246,22 @@ def parse():
                         help="Over write the standard 1, 2, 3 name of the sub folders")
     parser.add_argument("--restart-folder", type=str, default=None,
                         help="Path to subfolder to restart from")
+    parser.add_argument("--rom-export-dvp", type=str2bool, default=None,
+                        help="Export exact mixed-space DoF snapshots for POD-Galerkin")
+    parser.add_argument("--rom-export-step", type=int, default=None,
+                        help="Frequency for exact mixed-space DoF snapshot export")
+    parser.add_argument("--rom-export-folder", type=str, default=None,
+                        help="Subfolder under results folder for exact ROM DoF snapshots")
 
     # Set spatial and temporal resolution
+    parser.add_argument("--adaptive-time-step", type=str2bool, default=None,
+                        help="Enable convergence-based adaptive stepping for serial TF_fsi_reference")
+    parser.add_argument("--adaptive-dt-min", type=float, default=None)
+    parser.add_argument("--adaptive-dt-max", type=float, default=None)
+    parser.add_argument("--adaptive-output-interval", type=float, default=None,
+                        help="Physical-time interval for ROM and visualization output in adaptive mode")
+    parser.add_argument("--adaptive-output-start", type=float, default=None,
+                        help="First scheduled output time in adaptive mode")
     parser.add_argument("-dt", "--time-step", metavar="Time step", type=float,
                         help="Set timestep, dt", default=None)
     parser.add_argument("-T", "--end-time", type=float, metavar="End time",

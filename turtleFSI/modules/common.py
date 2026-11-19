@@ -106,6 +106,40 @@ def sigma_ext(d, shape_displacement=None):
 
 
 
+def paper_interface_ids(fsi_id, dS, n):
+    """Require an explicit interface choice for the paper extension equation."""
+    if fsi_id is None:
+        raise ValueError("Paper extension requires fsi_id; use [] explicitly for no interface")
+    markers = list(fsi_id) if isinstance(fsi_id, (list, tuple)) else [fsi_id]
+    if markers and (dS is None or n is None):
+        raise ValueError("Paper extension requires dS and n for the fluid-solid interface")
+    return markers
+
+
+def paper_fluid_indicator(dx_f, dx_f_id_list):
+    """DG0 fluid-cell indicator selecting the physical interior-facet trace.
+
+    Facet '+' and '-' labels do not identify physical subdomains. The cell
+    markers must belong to the same mesh/partition as the fluid measures.
+    """
+    from dolfin import Function, FunctionSpace, cells
+
+    domains = dx_f[0].subdomain_data()
+    if domains is None:
+        raise ValueError("Paper interface terms require cell markers on dx_f")
+    space = FunctionSpace(domains.mesh(), "DG", 0)
+    indicator = Function(space)
+    values = indicator.vector().get_local()
+    fluid_ids = set(dx_f_id_list)
+    for cell in cells(domains.mesh()):
+        dof = space.dofmap().cell_dofs(cell.index())[0]
+        if dof < len(values):  # owned entries; apply() synchronizes ghost values
+            values[dof] = float(domains[cell] in fluid_ids)
+    indicator.vector().set_local(values)
+    indicator.vector().apply("insert")
+    return indicator
+
+
 def eps(d, shape_displacement=None):
     """
     Infinitesimal strain tensor.

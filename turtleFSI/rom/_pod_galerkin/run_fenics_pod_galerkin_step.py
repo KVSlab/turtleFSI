@@ -11,6 +11,7 @@ import numpy as np
 from turtleFSI.rom._pod_galerkin.fenics_monolithic import FEniCSMonolithicProblem
 from turtleFSI.rom._pod_galerkin.monolithic_pod import load_monolithic_pod_basis
 from turtleFSI.rom._pod_galerkin.monolithic_pod import split_reduced_coefficients
+from turtleFSI.rom._pod_galerkin.ballarin_monolithic import block_basis_from_monolithic
 from turtleFSI.rom._pod_galerkin.problem_overrides import (
     parse_problem_overrides,
     replay_overrides,
@@ -35,6 +36,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--dt", type=float, default=None)
     parser.add_argument("--theta", type=float, default=None)
+    parser.add_argument("--equation-6-blocks", action="store_true",
+                        help="Build each Newton Jacobian from checked, named equation (6) operators.")
     parser.add_argument(
         "--problem-override",
         nargs="*",
@@ -210,6 +213,9 @@ def main() -> None:
 
     mean = basis.pod_basis.mean
     raw_phi = basis.pod_basis.basis
+    equation_6_basis = block_basis_from_monolithic(basis) if args.equation_6_blocks else None
+    if equation_6_basis is not None and not np.array_equal(equation_6_basis.combined_basis, raw_phi):
+        raise ValueError("Equation (6) requires blocked basis order: displacement, velocity, supremizer, pressure")
     pressure_field = _pressure_field(basis)
     enforce_dirichlet = not args.no_enforce_dirichlet
     if enforce_dirichlet:
@@ -243,6 +249,10 @@ def main() -> None:
 
     def projected_jacobian(coefficients):
         state = reconstruct(coefficients)
+        if equation_6_basis is not None:
+            return problem.projected_equation_6(
+                equation_6_basis, state[:, 0], constrain_basis=enforce_dirichlet,
+            )["J_N"]
         return problem.projected_jacobian(phi, state[:, 0])
 
     target_state = dvp[:, target_index].reshape(-1, 1)
@@ -279,6 +289,11 @@ def main() -> None:
     final_projected_residual = projected_residual(result.coefficients)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if equation_6_basis is not None:
+        named = problem.projected_equation_6(
+            equation_6_basis, result.full_state[:, 0], constrain_basis=enforce_dirichlet,
+        )
+        np.savez_compressed(output_dir / "equation_6_operators.npz", **named)
     block_coefficients = split_reduced_coefficients(result.coefficients, basis.fields)
     np.savez_compressed(
         output_dir / "fenics_pod_galerkin_step.npz",
@@ -293,6 +308,7 @@ def main() -> None:
         },
     )
     summary = {
+        "equation_6_blocks": args.equation_6_blocks,
         "problem": args.problem,
         "basis": str(args.basis),
         "snapshots": str(args.snapshots),

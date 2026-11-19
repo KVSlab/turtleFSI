@@ -188,9 +188,33 @@ def save_monolithic_pod_basis(
     for field in basis.fields:
         if field.dofs is not None:
             arrays[f"{field.name}_dofs"] = np.asarray(field.dofs, dtype=np.int64)
+    named_matrices = {}
+    fields_by_name = {field.name: field for field in basis.fields}
+    if all(
+        name in fields_by_name and fields_by_name[name].dofs is not None
+        for name in ("displacement", "velocity", "pressure")
+    ):
+        # Full mixed-space rows, matching the embedding used by the solver.
+        for name, key in (
+            ("displacement", "Z_d"), ("velocity", "Z_u"),
+            ("supremizer", "Z_s"), ("pressure", "Z_p"),
+        ):
+            field = fields_by_name.get(name)
+            named_matrices[key] = (
+                basis.pod_basis.basis[:, field.start:field.stop]
+                if field is not None
+                else np.zeros((basis.num_dofs, 0), dtype=basis.pod_basis.basis.dtype)
+            )
+        named_matrices["Z_u_s"] = np.hstack([named_matrices["Z_u"], named_matrices["Z_s"]])
+        arrays.update(named_matrices)
     np.savez_compressed(output_dir / "monolithic_pod_basis.npz", **arrays)
 
     summary = {
+        "named_basis_matrices": {
+            key: {"shape": list(matrix.shape), "array_key": key,
+                  "file": "monolithic_pod_basis.npz", "row_space": "mixed DVP"}
+            for key, matrix in named_matrices.items()
+        },
         "snapshots_path": snapshots_path,
         "num_dofs": basis.num_dofs,
         "num_modes": basis.num_modes,

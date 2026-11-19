@@ -27,7 +27,7 @@ def set_problem_parameters(default_variables, **namespace):
     # Overwrite or add new variables to 'default_variables'
     default_variables.update(dict(
         # Temporal variables
-        T=30,                         # End time [s]
+        T=1,                         # End time [s]
         dt=0.01,                      # Time step [s]
         theta=0.51,                    # Temporal scheme
 

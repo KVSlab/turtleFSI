@@ -34,12 +34,13 @@ setuptools.setup(
         'Intended Audience :: Science/Research',
         "Programming Language :: Python :: 3",
     ],
-    packages=["turtleFSI",
-              "turtleFSI.modules",
-              "turtleFSI.problems",
-              "turtleFSI.utils"],
+    packages=setuptools.find_packages(),
     package_dir={"turtleFSI": "turtleFSI"},
     include_package_data=True,
-    entry_points={'console_scripts': ['turtleFSI=turtleFSI.run_turtle:main']},
+    entry_points={'console_scripts': [
+        'turtleFSI=turtleFSI.run_turtle:main',
+        'turtleFSI-pod=turtleFSI.rom.pod:main',
+        'turtleFSI-pod-galerkin=turtleFSI.rom.pod_galerkin:main',
+    ]},
 
 )

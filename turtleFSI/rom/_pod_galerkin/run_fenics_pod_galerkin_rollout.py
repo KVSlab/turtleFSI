@@ -10,6 +10,7 @@ import numpy as np
 
 from turtleFSI.rom._pod_galerkin.fenics_monolithic import FEniCSMonolithicProblem
 from turtleFSI.rom._pod_galerkin.monolithic_pod import load_monolithic_pod_basis
+from turtleFSI.rom._pod_galerkin.ballarin_monolithic import block_basis_from_monolithic
 from turtleFSI.rom._pod_galerkin.monolithic_pod import split_reduced_coefficients
 from turtleFSI.rom._pod_galerkin.problem_overrides import (
     parse_problem_overrides,
@@ -29,6 +30,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--dt", type=float, default=None)
     parser.add_argument("--theta", type=float, default=None)
+    parser.add_argument("--equation-6-blocks", action="store_true",
+                        help="Build each Newton Jacobian from checked, named equation (6) operators.")
     parser.add_argument(
         "--problem-override",
         nargs="*",
@@ -144,6 +147,9 @@ def main() -> None:
     problem = FEniCSMonolithicProblem.build(args.problem, overrides=overrides)
     mean = basis.pod_basis.mean
     raw_phi = basis.pod_basis.basis
+    equation_6_basis = block_basis_from_monolithic(basis) if args.equation_6_blocks else None
+    if equation_6_basis is not None and not np.array_equal(equation_6_basis.combined_basis, raw_phi):
+        raise ValueError("Equation (6) requires blocked basis order: displacement, velocity, supremizer, pressure")
     enforce_dirichlet = not args.no_enforce_dirichlet
     if enforce_dirichlet:
         phi = problem.constrain_increment_basis(raw_phi)
@@ -192,6 +198,10 @@ def main() -> None:
 
         def projected_jacobian(coefficients):
             state = reconstruct(coefficients)
+            if equation_6_basis is not None:
+                return problem.projected_equation_6(
+                    equation_6_basis, state[:, 0], constrain_basis=enforce_dirichlet,
+                )["J_N"]
             return problem.projected_jacobian(phi, state[:, 0])
 
         result = reduced_newton_solve_projected(
@@ -234,6 +244,13 @@ def main() -> None:
             "jacobian_update_iterations": list(result.jacobian_update_iterations),
         }
         step_summaries.append(step_summary)
+        if equation_6_basis is not None:
+            named = problem.projected_equation_6(
+                equation_6_basis, current_full[:, 0], constrain_basis=enforce_dirichlet,
+            )
+            operator_dir = Path(args.output_dir) / "equation_6"
+            operator_dir.mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(operator_dir / f"step_{step + 1:05d}.npz", **named)
 
     full = np.asarray(full_history, dtype=float).T
     coefficients = np.asarray(coefficient_history, dtype=float).T
@@ -270,6 +287,7 @@ def main() -> None:
     )
 
     summary = {
+        "equation_6_blocks": args.equation_6_blocks,
         "problem": args.problem,
         "basis": str(args.basis),
         "snapshots": str(args.snapshots),

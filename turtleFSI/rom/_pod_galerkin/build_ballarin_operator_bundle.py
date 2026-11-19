@@ -14,6 +14,8 @@ from turtleFSI.rom._pod_galerkin.monolithic_pod import load_monolithic_pod_basis
 from turtleFSI.rom._pod_galerkin.offline_online import (
     ReducedLinearOperatorBlocks,
     ReducedLinearOperators,
+    equilibrate_linear_system,
+    matrix_condition_number,
     rhs_N_from_equation6_linearization,
     save_reduced_operator_bundle,
 )
@@ -32,12 +34,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reference-index", type=int, default=0)
     parser.add_argument("--dt", type=float, default=None)
     parser.add_argument("--theta", type=float, default=None)
+    parser.add_argument("--equation-6-blocks", action="store_true",
+                        help="Project and save each equation (4) operator; verify and use their equation (6) sum.")
     parser.add_argument(
         "--problem-override",
         nargs="*",
         default=[],
         metavar="KEY=VALUE",
         help="Additional problem namespace overrides passed to the FEniCS problem builder.",
+    )
+    parser.add_argument(
+        "--paper-forms",
+        action="store_true",
+        help="Override compatible options for Ballarin/Rozza Section 2.3/Table I forms.",
     )
     return parser.parse_args()
 
@@ -102,6 +111,52 @@ def _project_matrix_action_blocks(problem, matrix, block_basis, rhs_N: np.ndarra
     )
 
 
+def _operator_diagnostics(operator: np.ndarray, blocks: ReducedLinearOperatorBlocks) -> dict[str, Any]:
+    matrix = np.asarray(operator, dtype=float)
+    singular_values = np.linalg.svd(matrix, compute_uv=False)
+    condition_number = matrix_condition_number(matrix)
+    row_norms = np.linalg.norm(matrix, axis=1)
+    column_norms = np.linalg.norm(matrix, axis=0)
+    tiny = 1e-14
+    try:
+        equilibrated, _, _, _ = equilibrate_linear_system(matrix, np.zeros((matrix.shape[0], 1)), iterations=8)
+        equilibrated_condition_number = matrix_condition_number(equilibrated)
+    except ValueError:
+        equilibrated_condition_number = condition_number
+    return {
+        "condition_number": float(condition_number),
+        "equilibrated_condition_number": float(equilibrated_condition_number),
+        "singular_values": [float(value) for value in singular_values],
+        "smallest_singular_value": float(singular_values[-1]) if singular_values.size else 0.0,
+        "largest_singular_value": float(singular_values[0]) if singular_values.size else 0.0,
+        "row_norms": [float(value) for value in row_norms],
+        "column_norms": [float(value) for value in column_norms],
+        "zero_row_indices": [int(index) for index in np.flatnonzero(row_norms <= tiny)],
+        "zero_column_indices": [int(index) for index in np.flatnonzero(column_norms <= tiny)],
+        "block_norms": {
+            f"{row}__{column}": float(np.linalg.norm(blocks.blocks[(row, column)]))
+            for row in blocks.block_names
+            for column in blocks.block_names
+        },
+    }
+
+
+def _component_projection_is_usable(
+    component_operator: np.ndarray,
+    aggregate_operator: np.ndarray,
+    diagnostics: dict[str, Any],
+    relative_difference: float,
+    tolerance: float = 1e-4,
+) -> bool:
+    if diagnostics["zero_row_indices"] or diagnostics["zero_column_indices"]:
+        return False
+    if not np.isfinite(diagnostics["condition_number"]):
+        return False
+    if relative_difference > tolerance:
+        return False
+    return True
+
+
 def _pressure_gauge_from_basis_summary(basis_path: Path) -> str:
     summary_path = basis_path.with_name("monolithic_pod_basis_summary.json")
     if not summary_path.exists():
@@ -145,6 +200,7 @@ def build_reduced_operator_bundle(
     basis_path: Path,
     snapshots_path: Path,
     theta: float | None = None,
+    equation_6_blocks: bool = False,
 ) -> dict[str, Any]:
     """Build and save one reduced operator bundle from an initialized problem."""
 
@@ -187,10 +243,81 @@ def build_reduced_operator_bundle(
     J_N_mean_shift = _project_matrix_action(problem, J_ref, phi, mean_shift)
     rhs_N = rhs_N_from_equation6_linearization(R_N_ref, J_N_mean_shift)
 
-    # Build the reduced Eq. (4) system through named blocks first, then
-    # recover the dense matrix used by the current online solver.
-    linear_operator_blocks = _project_matrix_action_blocks(problem, J_ref, block_basis, rhs_N)
-    J_N = linear_operator_blocks.as_operator()
+    # Build the reduced Eq. (3)/(4) system by assembling and projecting the
+    # named Table I component blocks. Also build the aggregate projection of the
+    # full FEniCS Jacobian, which is the safe Eq. (6) fallback whenever the
+    # visible component path is incomplete for the selected problem setup.
+    equation_3_projection = problem.projected_equation_3_component_blocks(
+        block_basis,
+        reference_state[:, 0],
+    )
+    component_linear_operator_blocks = ReducedLinearOperatorBlocks(
+        block_names=equation_3_projection.block_names,
+        blocks=equation_3_projection.blocks,
+        rhs_blocks=_split_reduced_rhs_by_blocks(
+            rhs_N,
+            {
+                name: equation_3_projection.blocks[(name, name)].shape[0]
+                for name in equation_3_projection.block_names
+            },
+        ),
+    )
+    component_J_N = component_linear_operator_blocks.as_operator()
+    aggregate_linear_operator_blocks = _project_matrix_action_blocks(problem, J_ref, block_basis, rhs_N)
+    aggregate_J_N = aggregate_linear_operator_blocks.as_operator()
+    equation_3_difference = component_J_N - aggregate_J_N
+    aggregate_norm = np.linalg.norm(aggregate_J_N)
+    equation_3_relative_difference = (
+        float(np.linalg.norm(equation_3_difference) / aggregate_norm)
+        if aggregate_norm > 0.0
+        else (0.0 if np.linalg.norm(equation_3_difference) == 0.0 else float("inf"))
+    )
+    component_diagnostics = _operator_diagnostics(
+        component_J_N,
+        component_linear_operator_blocks,
+    )
+    aggregate_diagnostics = _operator_diagnostics(
+        aggregate_J_N,
+        aggregate_linear_operator_blocks,
+    )
+    use_component_operator = _component_projection_is_usable(
+        component_J_N,
+        aggregate_J_N,
+        component_diagnostics,
+        equation_3_relative_difference,
+    )
+    if use_component_operator:
+        linear_operator_blocks = component_linear_operator_blocks
+        J_N = component_J_N
+        operator_source = "equation_3_component_blocks"
+        operator_diagnostics = component_diagnostics
+        operator_selection_reason = "component projection has no zero rows/columns and matches aggregate projection"
+    else:
+        linear_operator_blocks = aggregate_linear_operator_blocks
+        J_N = aggregate_J_N
+        operator_source = "aggregate_projected_jacobian"
+        operator_diagnostics = aggregate_diagnostics
+        operator_selection_reason = "component projection is incomplete or disagrees with aggregate projection"
+
+    named_equation_6 = None
+    if equation_6_blocks:
+        named_equation_6 = problem.projected_equation_6(
+            block_basis, reference_state[:, 0], constrain_basis=False,
+        )
+        J_N = named_equation_6["J_N"]
+        names = tuple(linear_operator_blocks.block_names)
+        counts = linear_operator_blocks.block_mode_counts
+        offsets = np.cumsum([0] + [counts[name] for name in names])
+        slices = {name: slice(offsets[i], offsets[i + 1]) for i, name in enumerate(names)}
+        linear_operator_blocks = ReducedLinearOperatorBlocks(
+            block_names=names,
+            blocks={(row, col): J_N[slices[row], slices[col]] for row in names for col in names},
+            rhs_blocks=linear_operator_blocks.rhs_blocks,
+        )
+        operator_source = "equation_6_named_operators"
+        operator_selection_reason = "Named equation (4) projections match full Jacobian; boundary correction added separately"
+        use_component_operator = True
+        operator_diagnostics = _operator_diagnostics(J_N, linear_operator_blocks)
 
     operators = ReducedLinearOperators(
         basis=block_basis,
@@ -198,23 +325,19 @@ def build_reduced_operator_bundle(
         rhs=rhs_N,
         full_operator_shape=(problem.vector_size, problem.vector_size),
     )
-    singular_values = np.linalg.svd(J_N, compute_uv=False)
-    smallest = singular_values[-1] if singular_values.size else 0.0
-    condition_number = (
-        float(singular_values[0] / smallest)
-        if smallest > 0.0
-        else float("inf")
-    )
+    condition_number = operator_diagnostics["condition_number"]
     metadata = {
         "problem": problem_name,
         "basis": str(basis_path),
+        "basis_summary": str(basis_path.with_name("monolithic_pod_basis_summary.json")),
         "snapshots": str(snapshots_path),
         "assembly_stage": "offline",
         "online_requires_fenics_assembly": False,
         "offline_assembled_quantities": [
             "R_N_ref",
-            "J_N_blocks",
-            "J_N",
+            "equation_3_J_N_blocks",
+            "equation_3_J_N",
+            "aggregate_J_N_diagnostic",
             "J_N_mean_shift",
             "rhs_N_blocks",
             "rhs_N",
@@ -226,21 +349,43 @@ def build_reduced_operator_bundle(
         "dt": float(problem.namespace["dt"]),
         "theta": theta,
         "linearization": "R(y_ref) + J(y_ref) (y - y_ref)",
+        "operator_source": operator_source,
+        "operator_selection_reason": operator_selection_reason,
+        "used_component_operator": bool(use_component_operator),
+        "equation_3_component_count": len(equation_3_projection.component_blocks),
+        "equation_3_component_block_count": sum(
+            len(blocks) for blocks in equation_3_projection.component_blocks.values()
+        ),
+        "equation_3_vs_aggregate_difference_norm": float(np.linalg.norm(equation_3_difference)),
+        "equation_3_vs_aggregate_relative_difference_norm": equation_3_relative_difference,
+        "component_operator_diagnostics": component_diagnostics,
+        "aggregate_operator_diagnostics": aggregate_diagnostics,
+        "selected_operator_diagnostics": operator_diagnostics,
         "R_N_ref_norm": float(np.linalg.norm(R_N_ref)),
         "J_N_condition_number": condition_number,
         "projected_residual_norm": float(np.linalg.norm(R_N_ref)),
         "reduced_operator_condition_number": condition_number,
+        "reduced_operator_equilibrated_condition_number": operator_diagnostics["equilibrated_condition_number"],
+        "J_N_singular_values": operator_diagnostics["singular_values"],
+        "J_N_zero_row_indices": operator_diagnostics["zero_row_indices"],
+        "J_N_zero_column_indices": operator_diagnostics["zero_column_indices"],
         "num_reduced_dofs": int(phi.shape[1]),
         "num_full_dofs": int(problem.vector_size),
         "pressure_gauge": pressure_gauge,
     }
+    if named_equation_6 is not None:
+        metadata["equation_6_operator_names"] = list(named_equation_6)
+        metadata["equation_6_physical_difference_norm"] = float(np.linalg.norm(named_equation_6["equation_6_difference_N"]))
+        metadata["equation_6_boundary_correction_norm"] = float(np.linalg.norm(named_equation_6["equation_6_boundary_correction_N"]))
     save_reduced_operator_bundle(
         output,
         operators,
         projected_residual_at_reference=R_N_ref,
         projected_jacobian_mean_shift=J_N_mean_shift,
         linear_operator_blocks=linear_operator_blocks,
+        component_operator_blocks=equation_3_projection.component_blocks,
         metadata=metadata,
+        named_equation_6_operators=named_equation_6,
     )
     summary_path = output.with_suffix(".summary.json")
     with open(summary_path, "w", encoding="ascii") as handle:
@@ -290,6 +435,7 @@ def main() -> None:
         basis_path=basis_path,
         snapshots_path=snapshots_path,
         theta=args.theta,
+        equation_6_blocks=args.equation_6_blocks,
     )
     print(json.dumps(metadata, indent=2, sort_keys=True))
 

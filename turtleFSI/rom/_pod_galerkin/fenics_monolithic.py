@@ -64,6 +64,31 @@ class ProjectedEquation3Components:
         return np.vstack(rows)
 
 
+@dataclass
+class Equation3ProjectionCheck:
+    """Comparison between aggregate projected Jacobian and Table I block sum."""
+
+    projected_jacobian: np.ndarray
+    equation_3_operator: np.ndarray
+    difference: np.ndarray
+    component_projection: ProjectedEquation3Components
+
+    @property
+    def difference_norm(self) -> float:
+        return float(np.linalg.norm(self.difference))
+
+    @property
+    def jacobian_norm(self) -> float:
+        return float(np.linalg.norm(self.projected_jacobian))
+
+    @property
+    def relative_difference_norm(self) -> float:
+        denominator = self.jacobian_norm
+        if denominator == 0.0:
+            return 0.0 if self.difference_norm == 0.0 else float("inf")
+        return float(self.difference_norm / denominator)
+
+
 class FEniCSMonolithicProblem:
     """Reusable monolithic FEniCS problem for ROM projection."""
 
@@ -200,6 +225,54 @@ class FEniCSMonolithicProblem:
             jacobian=jacobian,
         )
 
+    def projected_equation_6(self, block_basis, state=None, constrain_basis=True):
+        """Assemble named equation (6) operators and check their block sum.
+
+        Compare physical forms before boundary modifications. Then add the
+        separately reported Dirichlet/inactive-row correction so the resulting
+        J_N matches the production projected Jacobian for the same basis.
+        Reassemble on each call: the operators depend on the current state.
+        """
+        from turtleFSI.modules.equation_4 import build_equation_4_forms
+        from turtleFSI.rom._pod_galerkin.equation_6 import project_equation_6
+
+        if state is not None:
+            self.set_state(state)
+        forms = build_equation_4_forms(**self.namespace)
+        def matrix(form):
+            if isinstance(form, (int, float)) and form == 0:
+                return None
+            return assemble(form, form_compiler_parameters=self.compiler_parameters, keep_diagonal=True)
+
+        operators = {name: matrix(form) for name, form in forms["operators"].items()}
+        transform = self.constrain_increment_basis if constrain_basis else np.asarray
+        Z_d = transform(block_basis.displacement)
+        Z_u_s = transform(block_basis.velocity_enriched)
+        Z_p = transform(block_basis.pressure)
+        phi = np.hstack([Z_d, Z_u_s, Z_p])
+        named = project_equation_6(operators, Z_d, Z_u_s, Z_p, self._project_matrix_between_bases)
+        aggregate_raw = self._project_matrix_between_bases(matrix(self.J), phi, phi)
+        physical = named.pop("J_N")
+        difference = physical - aggregate_raw
+        if not np.allclose(physical, aggregate_raw, rtol=1e-8, atol=1e-10):
+            raise ValueError(
+                "Equation (6) named operators disagree with the full Jacobian: "
+                f"difference norm {np.linalg.norm(difference):.6g}. "
+                "Check additional loads/supports and equation (4) model compatibility."
+            )
+        aggregate = self.projected_jacobian(phi)
+        boundary_correction = aggregate - aggregate_raw
+        named.update(
+            equation_6_physical_J_N=physical,
+            equation_6_aggregate_raw_J_N=aggregate_raw,
+            equation_6_difference_N=difference,
+            equation_6_boundary_correction_N=boundary_correction,
+            equation_6_aggregate_J_N=aggregate,
+            J_N=physical + boundary_correction,
+        )
+        self.last_equation_6 = named
+        return named
+
     def projected_equation_3_component_blocks(
         self,
         block_basis,
@@ -217,12 +290,34 @@ class FEniCSMonolithicProblem:
         if state is not None:
             self.set_state(state)
 
-        component_tree = self.namespace.get("equation_3_component_blocks", {})
         named_basis = self._equation_3_named_basis_blocks(block_basis, constrain_basis)
         block_names = tuple(named_basis.keys())
         totals = self._zero_reduced_blocks(named_basis, block_names)
         component_blocks: dict[tuple[str, ...], dict[tuple[str, str], np.ndarray]] = {}
 
+        equation_3_jacobian = self.namespace.get("equation_3_jacobian")
+        if equation_3_jacobian is not None and equation_3_jacobian != 0:
+            matrix = assemble(
+                equation_3_jacobian,
+                form_compiler_parameters=self.compiler_parameters,
+                keep_diagonal=True,
+            )
+            projected = {}
+            for row_name in block_names:
+                row_basis = named_basis[row_name]
+                for column_name in block_names:
+                    column_basis = named_basis[column_name]
+                    block = self._project_matrix_between_bases(matrix, row_basis, column_basis)
+                    projected[(row_name, column_name)] = block
+                    totals[(row_name, column_name)] += block
+            component_blocks[("equation_3_jacobian",)] = projected
+            return ProjectedEquation3Components(
+                block_names=block_names,
+                blocks=totals,
+                component_blocks=component_blocks,
+            )
+
+        component_tree = self.namespace.get("equation_3_component_blocks", {})
         for path, form in self._iter_equation_3_component_forms(component_tree):
             row_names = self._equation_3_row_names(path, block_names)
             column_names = self._equation_3_column_names(path, block_names)
@@ -247,6 +342,29 @@ class FEniCSMonolithicProblem:
             block_names=block_names,
             blocks=totals,
             component_blocks=component_blocks,
+        )
+
+    def check_equation_3_projection(
+        self,
+        block_basis,
+        state: np.ndarray | None = None,
+        constrain_basis: bool = True,
+    ) -> Equation3ProjectionCheck:
+        """Compare the summed Table I component blocks with ``Phi.T J Phi``."""
+        named_basis = self._equation_3_named_basis_blocks(block_basis, constrain_basis)
+        phi = np.hstack([named_basis[name] for name in named_basis])
+        projected_jacobian = self.projected_jacobian(phi, state)
+        component_projection = self.projected_equation_3_component_blocks(
+            block_basis,
+            state=None,
+            constrain_basis=constrain_basis,
+        )
+        equation_3_operator = component_projection.as_operator()
+        return Equation3ProjectionCheck(
+            projected_jacobian=projected_jacobian,
+            equation_3_operator=equation_3_operator,
+            difference=equation_3_operator - projected_jacobian,
+            component_projection=component_projection,
         )
 
     def _matrix_vector_product(self, matrix, vector_values: np.ndarray) -> np.ndarray:
@@ -378,6 +496,9 @@ def build_monolithic_namespace(
 
     mesh, domains, boundaries = problem.get_mesh_domain_and_boundaries(**variables)
     variables.update(mesh=mesh, domains=domains, boundaries=boundaries)
+    variables["rom_replay"] = True
+    if hasattr(problem, "setup_reference_geometry"):
+        variables.update(problem.setup_reference_geometry(**variables))
 
     de = VectorElement("CG", mesh.ufl_cell(), variables["d_deg"])
     ve = VectorElement("CG", mesh.ufl_cell(), variables["v_deg"])
@@ -442,7 +563,10 @@ def build_monolithic_namespace(
     F = F_lin + F_nonlin
     chi = TrialFunction(DVP)
     J = derivative(F, dvp_["n"], chi)
-    variables.update(build_equation_3_blocks(DVP=DVP, dvp_=dvp_, **variables))
+    equation_3_namespace = dict(variables)
+    equation_3_namespace.pop("DVP", None)
+    equation_3_namespace.pop("dvp_", None)
+    variables.update(build_equation_3_blocks(DVP=DVP, dvp_=dvp_, **equation_3_namespace))
     variables.update(F=F, J=J, chi=chi, problem=problem_name, problem_module=problem)
 
     return variables

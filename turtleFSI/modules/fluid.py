@@ -4,7 +4,7 @@
 # PURPOSE.
 
 from turtleFSI.modules import *
-from dolfin import Constant, inner, inv, grad, div
+from dolfin import Constant, inner, inv, grad, tr
 
 # sets up the fluid equations on the fluid subdomain:
 # ALE Navier-Stokes plus incompressibility. It adds terms for fluid inertia,
@@ -54,7 +54,8 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k,
                                        theta1 * (v_["n"] - v_["n-1"]), psi) * dx_f[fluid_region]
 
         F_fluid_nonlinear += m_f_nonlinear
-        F_fluid_linear += m_f_linear
+        # The previous displacement changes between steps; do not cache this derivative.
+        F_fluid_nonlinear += m_f_linear
         fluid_paper_terms["m_f"] += m_f_nonlinear + m_f_linear
 
         # fluid stiffness: a_f
@@ -104,14 +105,18 @@ def fluid_setup(v_, p_, d_, psi, gamma, dx_f, dx_f_id_list, fluid_properties, k,
         if body_force_f is not None:
             f_f = inner(K_shape * J_(d_["n"], shape_displacement) *
                         rho_f * body_force_f, psi) * dx_f[fluid_region]
-            F_fluid_linear -= f_f
+            # J(d) makes this derivative depend on the current Newton state.
+            F_fluid_nonlinear -= f_f
             fluid_paper_terms["f_f"] -= f_f
 
         # section 2.3 B
         # fluid incompressibility: b_f: divergence free term
-        b_f_continuity = inner(div(K_shape * J_(d_["n"], shape_displacement) *
-                                   inv(F_(d_["n"], shape_displacement)) *
-                                   G_shape_inv * v_["n"]), gamma) * dx_f[fluid_region]
+        # The total mapping is F*G, so its inverse is G^-1*F^-1. This
+        # trace form agrees with Table I; Section 2.3(B) reverses the factors.
+        # Keep the positive continuity-row sign used by the Newton blocks.
+        b_f_continuity = (K_shape * J_(d_["n"], shape_displacement)
+                          * tr(G_shape_inv * inv(F_(d_["n"], shape_displacement))
+                               * grad(v_["n"])) * gamma * dx_f[fluid_region])
         F_fluid_nonlinear += b_f_continuity
         fluid_paper_terms["b_f_continuity"] += b_f_continuity
 

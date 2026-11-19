@@ -5,6 +5,12 @@
 The production solver can keep using the aggregate UFL derivative. These helpers
 expose the same linearization term-by-term so equation block (3) from
 Ballarin/Rozza can be inspected, assembled, or projected later.
+
+Equation block (4) in the paper is the algebraic Newton system obtained after
+assembling these component derivatives on the high-fidelity basis. The ROM-side
+projection of that system lives in ``turtleFSI.rom._pod_galerkin``.
+
+See paper/GALERKIN_EQUATION_AUDIT.md for mapping, sign, and summation conventions.
 """
 
 from dolfin import Constant, TrialFunction, derivative, grad, inner, inv, split, tr
@@ -20,6 +26,8 @@ from turtleFSI.modules.common import (
     sigma_f_p,
     sigma_f_u,
     vector_body_force,
+    paper_fluid_indicator,
+    paper_interface_ids,
 )
 
 
@@ -35,7 +43,9 @@ def _add_form(total, form):
     return total + form
 
 
-def _differentiate_terms(terms, dvp, chi):
+def _differentiate_terms(terms, dvp, chi, aliases=(), signs=None):
+    """Keep named derivatives, but sum unique residual terms with their signs."""
+    signs = signs or {}
     differentiated = {}
     total = 0
     for name, form in terms.items():
@@ -44,7 +54,8 @@ def _differentiate_terms(terms, dvp, chi):
             continue
         block = derivative(form, dvp, chi)
         differentiated[name] = block
-        total = _add_form(total, block)
+        if name not in aliases:
+            total = _add_form(total, signs.get(name, 1) * block)
     return differentiated, total
 
 
@@ -88,10 +99,15 @@ def _build_fluid_component_blocks(chi_parts, namespace):
         transformed_velocity_gradient = grad(v_["n"]) * A
         transformed_velocity_strain = transformed_velocity_gradient + B * grad(v_["n"]).T
 
+# Table 1: expressions
+        # fluid time derivatives: m_f
+        # m_f derivative w.r.t displacement
         delta_d_m_f = rho_f / k * inner(
             K_shape * theta0 * J_current * dJ_trace * current_velocity_difference,
             psi,
         ) * dx_f[fluid_region]
+
+        # m_f derivative w.r.t velocity
         delta_u_m_f = rho_f / k * inner(
             K_shape * (theta0 * J_current + theta1 * J_previous)
             * delta_u, psi, ) * dx_f[fluid_region]
@@ -103,16 +119,20 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             blocks["fluid_momentum"].get("delta_u_m_f", 0), delta_u_m_f
         )
 
+        # fluid stiffness derivatives: a_f
+        # a_f derivative w.r.t displacement
         delta_d_a_f = theta0 * inner(
             K_shape * J_current * mu_f * (
-                dJ_trace * transformed_velocity_strain * B
-                - grad(v_["n"]) * A * grad(delta_d) * A * B
-                - B * grad(delta_d).T * B * grad(v_["n"]).T * B
-                - grad(v_["n"]) * A * B * grad(delta_d).T * B
-                - B * grad(v_["n"]).T * B * grad(delta_d).T * B
+                dJ_trace * transformed_velocity_strain * B # terms 1 & 2
+                - grad(v_["n"]) * A * grad(delta_d) * A * B # term 3
+                - B * grad(delta_d).T * B * grad(v_["n"]).T * B # term 4
+                - grad(v_["n"]) * A * B * grad(delta_d).T * B # term 5
+                - B * grad(v_["n"]).T * B * grad(delta_d).T * B # term 6
             ),
             grad(psi),
         ) * dx_f[fluid_region]
+
+        # a_f derivative w.r.t velocity
         delta_u_a_f = theta0 * inner(
             K_shape
             * J_current
@@ -120,6 +140,7 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             * B,
             grad(psi),
         ) * dx_f[fluid_region]
+
         blocks["fluid_momentum"]["delta_d_a_f"] = _add_form(
             blocks["fluid_momentum"].get("delta_d_a_f", 0), delta_d_a_f
         )
@@ -127,6 +148,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             blocks["fluid_momentum"].get("delta_u_a_f", 0), delta_u_a_f
         )
 
+        # fluid incompressibility derivatives: b_f: pressure
+        # b_f derivative w.r.t displacement
         delta_d_b_f_momentum = inner(
             K_shape
             * J_current
@@ -136,6 +159,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             ),
             grad(psi),
         ) * dx_f[fluid_region]
+
+        # b_f derivative w.r.t pressure
         delta_p_b_f = inner(
             K_shape
             * J_current
@@ -143,6 +168,7 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             * B,
             grad(psi),
         ) * dx_f[fluid_region]
+
         blocks["fluid_momentum"]["delta_d_b_f"] = _add_form(
             blocks["fluid_momentum"].get("delta_d_b_f", 0), delta_d_b_f_momentum
         )
@@ -150,6 +176,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             blocks["fluid_momentum"].get("delta_p_b_f", 0), delta_p_b_f
         )
 
+        # fluid advection derivatives: c_f
+        # c_f derivative w.r.t displacement
         delta_d_c_f = theta0 * rho_f * inner(
             K_shape
             * J_current
@@ -159,6 +187,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             ),
             psi,
         ) * dx_f[fluid_region]
+
+        # c_f derivative w.r.t velocity
         delta_u_c_f = theta0 * rho_f * inner(
             K_shape
             * J_current
@@ -168,6 +198,7 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             ),
             psi,
         ) * dx_f[fluid_region]
+
         blocks["fluid_momentum"]["delta_d_c_f"] = _add_form(
             blocks["fluid_momentum"].get("delta_d_c_f", 0), delta_d_c_f
         )
@@ -175,6 +206,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             blocks["fluid_momentum"].get("delta_u_c_f", 0), delta_u_c_f
         )
 
+        # fluid ALE derivatives: c_f_ALE
+        # c_f_ALE derivative w.r.t displacement
         delta_d_c_f_ALE = -(rho_f / k) * inner(
             K_shape
             * J_current
@@ -185,6 +218,8 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             ),
             psi,
         ) * dx_f[fluid_region]
+
+        # c_f_ALE derivative w.r.t velocity
         delta_u_c_f_ALE = -(rho_f / k) * inner(
             K_shape
             * J_current
@@ -193,6 +228,7 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             * mesh_velocity_difference,
             psi,
         ) * dx_f[fluid_region]
+
         blocks["fluid_momentum"]["delta_d_c_f_ALE"] = _add_form(
             blocks["fluid_momentum"].get("delta_d_c_f_ALE", 0), delta_d_c_f_ALE
         )
@@ -202,15 +238,21 @@ def _build_fluid_component_blocks(chi_parts, namespace):
 
         body_force_f = namespace.get("fluid_body_force")
         force = vector_body_force(region_value(body_force_f, fluid_region), get_dimension(v_["n"]))
+
         if force is not None:
+            # fluid forcing term derivatives: f_f
+            # f_f derivative w.r.t displacement
             delta_d_f_f = -inner(
                 K_shape * J_current * rho_f * dJ_trace * force,
                 psi,
             ) * dx_f[fluid_region]
+
             blocks["fluid_momentum"]["delta_d_f_f"] = _add_form(
                 blocks["fluid_momentum"].get("delta_d_f_f", 0), delta_d_f_f
             )
 
+        # fluid incompressibility derivatives: b_f: divergence free term
+        # b_f_continuity derivative w.r.t displacement
         delta_d_b_f_continuity = (
             K_shape
             * J_current
@@ -221,10 +263,13 @@ def _build_fluid_component_blocks(chi_parts, namespace):
             * gamma
             * dx_f[fluid_region]
         )
+
+        # b_f_continuity derivative w.r.t velocity
         delta_u_b_f_continuity = inner(
             K_shape * J_current * tr(A * grad(delta_u)),
             gamma,
         ) * dx_f[fluid_region]
+
         blocks["fluid_continuity"]["delta_d_b_f"] = _add_form(
             blocks["fluid_continuity"].get("delta_d_b_f", 0), delta_d_b_f_continuity
         )
@@ -263,11 +308,17 @@ def _build_extension_component_blocks(chi_parts, namespace):
         dJ_trace = tr(A * grad(delta_d))
         GG_T = G_shape_inv * G_shape_inv.T
 
+        # extension fluid time derivative: m_e_f
+        # m_e_f derivative w.r.t displacement
         delta_d_m_e_f = K_shape * (1 / k) * inner(delta_d, phi) * dx_f[fluid_region]
+
+        # extension fluid stiffness derivatives: a_e_f
+        # a_e_f derivative w.r.t displacement
         delta_d_a_e_f = inner(
             (1 / J_current) * (-dJ_trace * grad(d_["n"]) * GG_T + grad(delta_d) * GG_T),
             grad(phi),
         ) * dx_f[fluid_region]
+
         blocks["extension_fluid"]["delta_d_m_e_f"] = _add_form(
             blocks["extension_fluid"].get("delta_d_m_e_f", 0), delta_d_m_e_f
         )
@@ -275,33 +326,34 @@ def _build_extension_component_blocks(chi_parts, namespace):
             blocks["extension_fluid"].get("delta_d_a_e_f", 0), delta_d_a_e_f
         )
 
-    if all(key in namespace for key in ("dS", "n", "fsi_id")):
-        dS = namespace.get("dS")
-        n = namespace.get("n")
-        fsi_id = namespace.get("fsi_id")
-        if dS is not None and n is not None and fsi_id is not None:
-            interface_ids = fsi_id if isinstance(fsi_id, list) else [fsi_id]
-            d_plus = d_["n"]("+")
-            delta_d_plus = delta_d("+")
-            phi_plus = phi("+")
-            shape_plus = None if shape_displacement is None else shape_displacement("+")
-            G_plus_inv = inv(G_(d_plus, shape_plus))
-            F_plus_inv = inv(F_(d_plus, shape_plus))
-            A_plus = G_plus_inv * F_plus_inv
-            J_plus = J_(d_plus, shape_plus)
-            dJ_trace_plus = tr(A_plus * grad(delta_d_plus))
-            GG_T_plus = G_plus_inv * G_plus_inv.T
-            positive_flux_derivative = (
-                (1 / J_plus)
-                * (-dJ_trace_plus * grad(d_plus) * GG_T_plus + grad(delta_d_plus) * GG_T_plus)
-                * n("+")
+    dS, n = namespace.get("dS"), namespace.get("n")
+    interface_ids = paper_interface_ids(namespace.get("fsi_id"), dS, n)
+    if interface_ids:
+        fluid_indicator = namespace.get("fluid_indicator")
+        if fluid_indicator is None:
+            fluid_indicator = paper_fluid_indicator(dx_f, dx_f_id_list)
+        interface_derivative = 0
+        for side in ("+", "-"):
+            d_side = d_["n"](side)
+            delta_d_side = delta_d(side)
+            shape_side = None if shape_displacement is None else shape_displacement(side)
+            G_side_inv = inv(G_(d_side, shape_side))
+            A_side = G_side_inv * inv(F_(d_side, shape_side))
+            J_side = J_(d_side, shape_side)
+            dJ_trace_side = tr(A_side * grad(delta_d_side))
+            GG_T_side = G_side_inv * G_side_inv.T
+            flux_derivative = (
+                (1 / J_side)
+                * (-dJ_trace_side * grad(d_side) * GG_T_side
+                   + grad(delta_d_side) * GG_T_side) * n(side)
             )
-            for marker in interface_ids:
-                # The residual contains ``-a_e_df``; store the derivative with that sign.
-                delta_d_a_e_df = -inner(positive_flux_derivative, phi_plus) * dS(marker)
-                blocks["extension_fluid"]["delta_d_a_e_df"] = _add_form(
-                    blocks["extension_fluid"].get("delta_d_a_e_df", 0), delta_d_a_e_df
-                )
+            interface_derivative += fluid_indicator(side) * inner(flux_derivative, phi(side))
+        for marker in interface_ids:
+            # The residual contains -a_e_df; use the same fluid trace and sign.
+            delta_d_a_e_df = -interface_derivative * dS(marker)
+            blocks["extension_fluid"]["delta_d_a_e_df"] = _add_form(
+                blocks["extension_fluid"].get("delta_d_a_e_df", 0), delta_d_a_e_df
+            )
 
     return blocks
 
@@ -394,8 +446,11 @@ def build_equation_3_blocks(
 ):
     """Build term-by-term Newton derivatives for the paper's equation (3).
 
-    Each returned entry is the directional derivative of one named residual term
-    with respect to the full mixed unknown ``dvp_["n"]`` in direction ``chi``.
+    Each named entry is differentiated with respect to the full mixed unknown
+    ``dvp_["n"]`` in direction ``chi``. Inspection aliases remain available, and
+    ``f_e_s`` retains its positive named-form convention. Only the returned
+    ``equation_3_jacobian`` sums unique paper terms with their residual signs;
+    summing the inspection dictionaries directly is not equivalent.
     For example, ``fluid["m_f"]`` contains all increment contributions coming
     from the fluid mass residual, including the paper's delta-d and delta-u parts.
     """
@@ -403,9 +458,15 @@ def build_equation_3_blocks(
     current_state = dvp_["n"]
 
     fluid_blocks, fluid_total = _differentiate_terms(fluid_paper_terms or {}, current_state, chi)
-    solid_blocks, solid_total = _differentiate_terms(solid_paper_terms or {}, current_state, chi)
+    # Combined relations are inspection aliases, not additional equations.
+    # f_e_s is a positive named form, but enters the residual with a minus sign.
+    solid_blocks, solid_total = _differentiate_terms(
+        solid_paper_terms or {}, current_state, chi,
+        aliases=("extension_relation_s",), signs={"f_e_s": -1},
+    )
     extension_blocks, extension_total = _differentiate_terms(
-        extension_paper_terms or {}, current_state, chi
+        extension_paper_terms or {}, current_state, chi,
+        aliases=("extension_relation_f",),
     )
 
     total = 0

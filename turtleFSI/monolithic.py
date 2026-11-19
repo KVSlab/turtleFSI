@@ -16,6 +16,7 @@ from pprint import pprint
 
 from turtleFSI.utils import *
 from turtleFSI.problems import *
+from turtleFSI.cases.snapshots.dvp_export import save_dvp_rom_snapshot
 
 # Get user input
 args = parse()
@@ -52,6 +53,11 @@ if default_variables["restart_folder"] is not None:
 # Set variables in global namespace
 vars().update(default_variables)
 
+adaptive_controller = None
+if adaptive_time_step:
+    from turtleFSI.modules.adaptive import configure, advance
+    adaptive_controller = configure(vars())
+
 # Print out variables
 if MPI.rank(MPI.comm_world) == 0 and verbose:
     pprint(default_variables)
@@ -61,6 +67,7 @@ vars().update(create_folders(**vars()))
 
 # Get mesh information
 mesh, domains, boundaries = get_mesh_domain_and_boundaries(**vars())
+vars().update(setup_reference_geometry(**vars()))
 
 # Save mesh, domains, and boundaries for post-processing
 if restart_folder is None:
@@ -166,15 +173,18 @@ timer.start()
 previous_t = 0.0
 stop = False
 first_step_num = counter # This is so that the solver will recompute the jacobian on the first step of the simulation
-while t <= T + dt / 10 and not stop:  # + dt / 10 is a hack to ensure that we take the final time step t == T
-    t += dt
-    # Pre solve hook
-    tmp_dict = pre_solve(**vars())
-    if tmp_dict is not None:
-        vars().update(tmp_dict)
+while (t < T - 1e-12 if adaptive_time_step else t <= T + dt / 10) and not stop:
+    if adaptive_time_step:
+        adaptive_output_due = advance(vars(), adaptive_controller)
+    else:
+        t += dt
+        # Pre solve hook
+        tmp_dict = pre_solve(**vars())
+        if tmp_dict is not None:
+            vars().update(tmp_dict)
 
-    # Solve
-    vars().update(newtonsolver(**vars()))
+        # Solve
+        vars().update(newtonsolver(**vars()))
 
     # Update vectors
     for i, t_tmp in enumerate(times[:-1]):
@@ -191,8 +201,13 @@ while t <= T + dt / 10 and not stop:  # + dt / 10 is a hack to ensure that we ta
         checkpoint(**vars())
 
     # Store results
-    if counter % save_step == 0:
+    if (adaptive_output_due if adaptive_time_step else counter % save_step == 0):
         vars().update(save_files_visualization(**vars()))
+
+    if rom_export_dvp:
+        export_step = save_step if rom_export_step is None else rom_export_step
+        if (adaptive_output_due if adaptive_time_step else counter % export_step == 0):
+            vars().update(save_dvp_rom_snapshot(**vars()))
 
     # Update the time step counter
     counter += 1

@@ -38,6 +38,13 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
         "extension_relation_f": 0,
     }
 
+    fluid_indicator = None
+    interface_ids = []
+    if extrapolation_sub_type == "paper":
+        interface_ids = paper_interface_ids(fsi_id, dS, n)
+        if interface_ids:
+            fluid_indicator = paper_fluid_indicator(dx_f, dx_f_id_list)
+
     if extrapolation_sub_type == "volume_change":
         alfa = 1.0 / (J_(d_["n"]))
     elif extrapolation_sub_type == "volume":
@@ -74,19 +81,21 @@ def extrapolate_setup(F_fluid_linear, extrapolation_sub_type, mesh, d_, phi,
             F_extrapolate = alfa * inner(grad(d_["n"]), grad(phi)) * dx_f[fluid_region]
             F_fluid_linear += F_extrapolate
 
-    if extrapolation_sub_type == "paper" and fsi_id is not None and dS is not None and n is not None:
-        interface_ids = fsi_id if isinstance(fsi_id, list) else [fsi_id]
-        d_plus = d_["n"]("+")
-        phi_plus = phi("+")
-        shape_plus = None if shape_displacement is None else shape_displacement("+")
-        G_plus_inv = inv(G_(d_plus, shape_plus))
-        extension_flux = K_(d_plus, shape_plus) * sigma_ext(d_plus, shape_plus) * G_plus_inv.T * n("+")
-
-        # extension fluid interface stiffness: a_e_df
+    if interface_ids:
+        # Section 2.3, Remark 1 requires the fluid trace and its outward normal.
+        # Select it with cell markers, independently of facet +/- ordering.
+        interface_integrand = 0
+        for side in ("+", "-"):
+            d_side = d_["n"](side)
+            shape_side = None if shape_displacement is None else shape_displacement(side)
+            G_side_inv = inv(G_(d_side, shape_side))
+            flux = (K_(d_side, shape_side) * sigma_ext(d_side, shape_side)
+                    * G_side_inv.T * n(side))
+            interface_integrand += fluid_indicator(side) * inner(flux, phi(side))
         for marker in interface_ids:
-            a_e_df = inner(extension_flux, phi_plus) * dS(marker)
+            a_e_df = interface_integrand * dS(marker)
             F_fluid_nonlinear -= a_e_df
             extension_paper_terms["a_e_df"] -= a_e_df
 
     return dict(F_fluid_linear=F_fluid_linear, F_fluid_nonlinear=F_fluid_nonlinear,
-                extension_paper_terms=extension_paper_terms)
+                extension_paper_terms=extension_paper_terms, fluid_indicator=fluid_indicator)

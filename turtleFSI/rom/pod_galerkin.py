@@ -43,7 +43,7 @@ def default_output_dir(snapshots_path: Path) -> Path:
 
 
 def infer_problem_name(snapshots_path: Path) -> str | None:
-    summary_path = snapshots_path.with_name("dvp_snapshots_summary.json")
+    summary_path = snapshots_path.with_name(snapshots_path.stem + "_summary.json")
     if not summary_path.exists():
         return None
     with open(summary_path, encoding="ascii") as handle:
@@ -564,6 +564,7 @@ def main() -> None:
         "snapshots": str(snapshots_path),
         "output_dir": str(output_dir),
         "basis_dir": str(basis_dir),
+        "basis_summary": str(basis_dir / "monolithic_pod_basis_summary.json"),
         "basis": summary,
         "action": args.action,
         "preset": args.preset,
@@ -771,7 +772,17 @@ def main() -> None:
                 workflow_summary["validation_metrics"] = str(metrics_path)
                 workflow_summary["validation_field_relative_errors"] = metrics["field_relative_errors"]
                 workflow_summary["validation_reference_relative_error"] = metrics["reference_relative_error"]
-                if not args.skip_validation_plots:
+                if not args.skip_validation_plots and problem == "TF_fsi":
+                    physical_dir = output_dir / "physical_comparison"
+                    run_module(
+                        "turtleFSI.cases.plots.compare_fsi",
+                        ["--run-dir", str(snapshots_path.resolve().parent.parent),
+                         "--rollout", str(action_dir / "fenics_pod_galerkin_rollout.npz"),
+                         "--output-dir", str(physical_dir),
+                         "--fps", str(args.plot_fps)],
+                    )
+                    workflow_summary["physical_comparison_dir"] = str(physical_dir)
+                elif not args.skip_validation_plots:
                     plot_common = [
                         "--rollout",
                         str(action_dir / "fenics_pod_galerkin_rollout.npz"),

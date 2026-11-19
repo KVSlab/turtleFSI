@@ -1,5 +1,6 @@
 # Compiled files
 *.pyc
+__pycache__/
 
 # Temporary files
 *.vtp
@@ -10,6 +11,10 @@
 # IDE files
 .idea
 .idea/workspace.xml
+
+# Local Python environments
+.venv/
+venv/
 
 # Setuptools distribution folder.
 /dist/
@@ -29,6 +34,23 @@ turtleFSI/utils/probe/*.so
 *.xml.gz
 *.txt
 *.pvd
+
+# Generated simulation and analysis output
+/results/
+/simulations/*
+!/simulations/README.md
+/*_results/
+/*-results/
+/flag-30s-results/
+/rom_training/
+/vasp_runs/
+/Normal_Stiffness*/
+/np
+/paper/generated/*
+!/paper/generated/README.md
+/turtleFSI/problems/*_results/
+/turtleFSI/problems/Test_Cylinder/Normal_Stiffness*/
+/turtleFSI/problems/Test_Cylinder/Normal_Stiffness*.png
 
 # Distribution / packaging
 lib/

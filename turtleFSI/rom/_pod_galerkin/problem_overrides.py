@@ -46,6 +46,12 @@ def checkpoint_overrides_from_snapshots(snapshots_path: Path) -> dict[str, Any]:
     snapshots.
     """
 
+    local_checkpoint = snapshots_path.parent.parent / "Checkpoint" / "default_variables.json"
+    if local_checkpoint.exists():
+        values = json.loads(local_checkpoint.read_text())
+        if not isinstance(values, dict):
+            raise ValueError(f"Checkpoint variables must be a JSON object: {local_checkpoint}")
+        return values
     summary_path = snapshots_path.with_name("dvp_snapshots_summary.json")
     if not summary_path.exists():
         return {}
@@ -72,6 +78,9 @@ def replay_overrides(
 
     overrides = checkpoint_overrides_from_snapshots(snapshots_path)
     overrides["verbose"] = False
+    local_run = snapshots_path.resolve().parent.parent
+    if (local_run / "Mesh/shape_displacement.h5").exists():
+        overrides["reference_run_dir"] = str(local_run)
     if explicit_overrides:
         overrides.update(explicit_overrides)
     return overrides

@@ -1,0 +1,122 @@
+{
+  "kept": [
+    {
+      "name": "aneurysm-200ms-stvk",
+      "target_time": 0.2,
+      "saved_end": 0.20100000000000015,
+      "snapshots": 201,
+      "supremizers": false,
+      "sha256": "ef3ac683824347e33255604bd1cc34323a31d3d1e802740058f4c421cf1f3b61",
+      "archive_bytes": 40508410
+    },
+    {
+      "name": "aneurysm-20ms-stvk",
+      "target_time": 0.02,
+      "saved_end": 0.02100000000000001,
+      "snapshots": 21,
+      "supremizers": false,
+      "sha256": "2606323a454a35199054ccd3fe74bf13afaaed0576140b33cd7bd3d39a5cf78f",
+      "archive_bytes": 4274520
+    },
+    {
+      "name": "aneurysm-500ms-stvk",
+      "target_time": 0.5,
+      "saved_end": 0.5010000000000003,
+      "snapshots": 501,
+      "supremizers": false,
+      "sha256": "31ea709a84fb377cb9da96f7918e76c9c8efc4f282af9c6e1cda9753cbd4cee6",
+      "archive_bytes": 100893984
+    },
+    {
+      "name": "aneurysm-50ms-stvk",
+      "target_time": 0.05,
+      "saved_end": 0.05100000000000004,
+      "snapshots": 51,
+      "supremizers": true,
+      "sha256": "46aefc60c6e0c00b172004ffcd30ed82a3d949428b67b82e82f0b98b3bd74c60",
+      "archive_bytes": 15618718
+    },
+    {
+      "name": "arterial-stenosis-200ms-stvk",
+      "target_time": 0.2,
+      "saved_end": 0.20100000000000015,
+      "snapshots": 201,
+      "supremizers": true,
+      "sha256": "349fa3321379d5142a3f7e2ab71d8a8327ce466b80ec21c3ca0d961de896d0b2",
+      "archive_bytes": 382651971
+    },
+    {
+      "name": "arterial-stenosis-20ms-stvk",
+      "target_time": 0.02,
+      "saved_end": 0.02100000000000001,
+      "snapshots": 21,
+      "supremizers": true,
+      "sha256": "3e3f26b72f1796ed3ab6cfdab1b5c1957d5a3f50050b7222298280b66166b63a",
+      "archive_bytes": 40263617
+    },
+    {
+      "name": "flag-pole-100ms-stvk",
+      "target_time": 0.1,
+      "saved_end": 0.10999999999999999,
+      "snapshots": 11,
+      "supremizers": false,
+      "sha256": "1702970b46622410e15c08573195789dc5ae7cf85d25e2968418351415865bf5",
+      "archive_bytes": 2611153
+    },
+    {
+      "name": "flag-pole-10s-stvk",
+      "target_time": 10.0,
+      "saved_end": 10.009999999999831,
+      "snapshots": 1001,
+      "supremizers": false,
+      "sha256": "21503755ad63970bff7e6250c07fa61c2c18b8ef5bec9f9987742983a599bc73",
+      "archive_bytes": 232805503
+    }
+  ],
+  "removed_incomplete_runs": [
+    {
+      "path": "simulations/flag-pole-30s-linear-elastic",
+      "reason": "Only 1.61 s of requested 30 s saved",
+      "requested_T": 30.0,
+      "summary_time_end": 1.6100000000000012,
+      "archive_bytes": 25936160
+    },
+    {
+      "path": "simulations/flag-pole-30s-stvk",
+      "reason": "Empty snapshot archive; requested 30 s not completed",
+      "requested_T": 30.0,
+      "summary_time_end": 6.7699999999999,
+      "archive_bytes": 0
+    }
+  ],
+  "historical_rom_deletion": "Completed after explicit user approval",
+  "preserved_check_source": "tests/manual/flag_paper_check.py",
+  "removed_historical_outputs": [
+    {
+      "path": "simulations/rom",
+      "files": 451,
+      "bytes": 5274400091
+    },
+    {
+      "path": "simulations/flag_paper_check",
+      "files": 4,
+      "bytes": 356001
+    },
+    {
+      "path": "simulations/logs",
+      "files": 4,
+      "bytes": 607491
+    },
+    {
+      "path": "simulations/metadata",
+      "files": 8,
+      "bytes": 38686
+    },
+    {
+      "path": "simulations/MOVED_FROM.md",
+      "files": 1,
+      "bytes": 3291
+    }
+  ],
+  "retained_files_checksum_verified": 24
+}

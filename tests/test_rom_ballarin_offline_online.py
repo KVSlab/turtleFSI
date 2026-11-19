@@ -7,9 +7,14 @@ from turtleFSI.rom._pod_galerkin.ballarin_monolithic import (
     reconstruct_ballarin_state,
     split_ballarin_state,
 )
+from turtleFSI.rom._pod_galerkin.build_ballarin_operator_bundle import (
+    _component_projection_is_usable,
+    _operator_diagnostics,
+)
 from turtleFSI.rom._pod_galerkin.build_monolithic_pod_basis import _build_blocked_dvp_basis
 from turtleFSI.rom._pod_galerkin.monolithic_pod import save_monolithic_pod_basis
 from turtleFSI.rom._pod_galerkin.offline_online import (
+    ReducedLinearOperatorBlocks,
     ReducedLinearOperators,
     affine_rhs_from_linearized_residual,
     equilibrate_linear_system,
@@ -31,6 +36,33 @@ from turtleFSI.rom._pod_galerkin.problem_overrides import replay_overrides
 from turtleFSI.rom._pod_galerkin import run_ballarin_operator_solve
 from turtleFSI.rom._pod_galerkin import run_ballarin_operator_series_solve
 from turtleFSI.rom import pod_galerkin
+
+
+def test_component_projection_with_zero_rows_is_not_usable():
+    blocks = ReducedLinearOperatorBlocks(
+        block_names=("displacement", "velocity"),
+        blocks={
+            ("displacement", "displacement"): np.zeros((1, 1)),
+            ("displacement", "velocity"): np.zeros((1, 1)),
+            ("velocity", "displacement"): np.array([[1.0]]),
+            ("velocity", "velocity"): np.array([[2.0]]),
+        },
+        rhs_blocks={
+            "displacement": np.zeros((1, 1)),
+            "velocity": np.ones((1, 1)),
+        },
+    )
+    component = blocks.as_operator()
+    aggregate = np.array([[3.0, 0.0], [1.0, 2.0]])
+    diagnostics = _operator_diagnostics(component, blocks)
+
+    assert diagnostics["zero_row_indices"] == [0]
+    assert not _component_projection_is_usable(
+        component,
+        aggregate,
+        diagnostics,
+        relative_difference=1.0,
+    )
 
 
 def _blocked_monolithic_basis(tmp_path):
@@ -150,13 +182,34 @@ def test_reduced_operator_bundle_roundtrips_explicit_blocks(tmp_path):
     blocks = project_linear_operator_blocks(operator, rhs, basis)
     bundle_path = tmp_path / "reduced_operators.npz"
 
-    save_reduced_operator_bundle(bundle_path, reduced, linear_operator_blocks=blocks)
+    component_blocks = {
+        ("fluid", "fluid_momentum", "delta_d_m_f"): {
+            ("velocity", "displacement"): np.array([[1.25]]),
+            ("supremizer", "displacement"): np.array([[2.5]]),
+        },
+        ("fluid", "fluid_momentum", "delta_u_m_f"): {
+            ("velocity", "velocity"): np.array([[3.75]]),
+        },
+    }
+
+    save_reduced_operator_bundle(
+        bundle_path,
+        reduced,
+        linear_operator_blocks=blocks,
+        component_operator_blocks=component_blocks,
+    )
     bundle = load_reduced_operator_bundle(bundle_path)
 
     assert bundle.linear_operator_blocks is not None
     assert bundle.linear_operator_blocks.block_mode_counts == blocks.block_mode_counts
     assert np.allclose(bundle.linear_operator_blocks.as_operator(), bundle.J_N)
     assert np.allclose(bundle.linear_operator_blocks.as_rhs(), bundle.rhs_N)
+    assert bundle.component_operator_blocks is not None
+    assert bundle.component_operator_blocks.keys() == component_blocks.keys()
+    for component_path, expected_blocks in component_blocks.items():
+        assert bundle.component_operator_blocks[component_path].keys() == expected_blocks.keys()
+        for block_key, expected in expected_blocks.items():
+            assert np.allclose(bundle.component_operator_blocks[component_path][block_key], expected)
 
 
 def test_offline_linear_projection_matches_full_projection(tmp_path):

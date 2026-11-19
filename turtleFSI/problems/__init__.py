@@ -41,6 +41,11 @@ def info_red(s, check=True):
 default_variables = dict(
     # Temporal settings
     dt=0.001,        # time step
+    adaptive_time_step=False,  # opt-in serial reference-flag controller
+    adaptive_dt_min=0.00015625,
+    adaptive_dt_max=None,      # initial dt when omitted
+    adaptive_output_interval=0.05,
+    adaptive_output_start=0.01,
     theta=0.501,     # temporal integration
                      # (theta=0 : first order explicit forward Euler scheme)
                      # (theta=1 : first order implicit backward Euler scheme)
@@ -65,7 +70,7 @@ default_variables = dict(
     rho_f=1.0E3,     # Density of the fluid
     mu_f=1.0,        # Fluid dynamic viscosity
     solid_properties=[], 
-    material_model="StVenantKirchoff",  # ["StVenantKirchoff",""StVenantKirchoffEnergy","NeoHookean","MooneyRivlin"*,"Gent"*] Material model for solid 
+    material_model="StVenantKirchoff",  # ["LinearElastic", "BallarinRozzaLinearElastic", "StVenantKirchoff", "StVenantKirchoffEnergy", "NeoHookean", "MooneyRivlin"*, "Gent"*] Material model for solid 
     # *Note: For MooneyRivlin and Gent material models, you need to pass in all material properties as a dict, or a list of dicts if there are multiple solid regions.
     # currently there are no "default" properties for the Gent or Mooney-Rivlin models; all model parameters must be defined in the probelm file, following the examples below:
     # Gent material model example:
@@ -81,6 +86,8 @@ default_variables = dict(
     k_s = 0.0,       # elastic response necesary for RobinBC
     c_s = 0.0,       # viscoelastic response necesary for RobinBC 
     gravity=None,    # Gravitational force on the solid
+    fluid_body_force=None,  # Fluid body force/acceleration vector b_f in the weak form
+    solid_body_force=None,  # Solid body force/acceleration vector b_s in the weak form
     Um=0.8,          # Maximum velocity at inlet
 
     # Variational formulations
@@ -88,7 +95,7 @@ default_variables = dict(
     solid="solid",                             # ["solid", "no_solid"] Turn off solid and only solve the fluid problem
     robin_bc = False,                          # [True, False] Use Robin boundary conditions for solid
     extrapolation="laplace",                   # laplace, elastic, biharmonic, no_extrapolation
-    extrapolation_sub_type="constant",         # small_constant, volume, constant, constrained_disp, constrained_disp_vel
+    extrapolation_sub_type="constant",         # small_constant, volume, constant, paper, constrained_disp, constrained_disp_vel
     bc_ids=[],                                 # List of ids for weak form of biharmonic mesh lifting operator with 'constrained_disp_vel'
 
     # Solver settings
@@ -111,6 +118,9 @@ default_variables = dict(
     folder="results",                          # Folder to store results and checkpoint files
     sub_folder=None,                           # The unique name of the sub directory under folder where the results are stored
     restart_folder=None,                       # Path to a potential restart folder
+    rom_export_dvp=False,                      # Export exact mixed-space DoF snapshots for POD-Galerkin
+    rom_export_step=None,                      # DoF snapshot frequency, defaults to save_step when None
+    rom_export_folder="ROM",                   # Subfolder for exact DoF ROM snapshots
 
     # Misc settings
     killtime=None,                             # Stop simulations cleanly after the given number of seconds
@@ -487,6 +497,11 @@ def initiate(**namespace):
     Initiate any variables or data files before entering the time loop of the simulation.
     """
 
+    return {}
+
+
+def setup_reference_geometry(**namespace):
+    """Optional fixed shape fields, initialized before variational assembly."""
     return {}
 
 
